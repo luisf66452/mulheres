@@ -82,6 +82,14 @@ export type PushSubscriptionRow = {
   criado_em: string;
 };
 
+export type AcessoAdministrativo = {
+  id: string;
+  usuaria_id: string;
+  acessado_por: string;
+  motivo: string;
+  criado_em: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -93,6 +101,7 @@ export interface Database {
       recursos_seguranca: { Row: RecursoSeguranca; Insert: Partial<RecursoSeguranca>; Update: Partial<RecursoSeguranca>; Relationships: [] };
       intencao_pagamento: { Row: IntencaoPagamento; Insert: Omit<IntencaoPagamento, 'id' | 'criado_em'>; Update: Partial<IntencaoPagamento>; Relationships: [] };
       push_subscriptions: { Row: PushSubscriptionRow; Insert: Omit<PushSubscriptionRow, 'id' | 'criado_em'>; Update: Partial<PushSubscriptionRow>; Relationships: [] };
+      acessos_administrativos: { Row: AcessoAdministrativo; Insert: Omit<AcessoAdministrativo, 'id' | 'criado_em'>; Update: Partial<AcessoAdministrativo>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

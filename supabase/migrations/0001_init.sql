@@ -168,7 +168,7 @@ create policy "usuaria gerencia proprias subscriptions"
 -- Acessos administrativos (log de acesso pontual a dados individuais; sem acesso via client, só service role)
 create table public.acessos_administrativos (
   id uuid primary key default gen_random_uuid(),
-  usuaria_id uuid not null references public.perfis(id),
+  usuaria_id uuid not null references public.perfis(id) on delete cascade,
   acessado_por text not null,
   motivo text not null,
   criado_em timestamptz not null default now()

@@ -85,14 +85,16 @@ export interface PushSubscriptionRow {
 export interface Database {
   public: {
     Tables: {
-      perfis: { Row: Perfil; Insert: Partial<Perfil> & { id: string }; Update: Partial<Perfil> };
-      checkins: { Row: Checkin; Insert: Omit<Checkin, 'id' | 'criado_em'>; Update: Partial<Checkin> };
-      praticas: { Row: Pratica; Insert: Partial<Pratica>; Update: Partial<Pratica> };
-      regras_recomendacao: { Row: RegraRecomendacao; Insert: Partial<RegraRecomendacao>; Update: Partial<RegraRecomendacao> };
-      sessoes: { Row: Sessao; Insert: Omit<Sessao, 'id' | 'criado_em'>; Update: Partial<Sessao> };
-      recursos_seguranca: { Row: RecursoSeguranca; Insert: Partial<RecursoSeguranca>; Update: Partial<RecursoSeguranca> };
-      intencao_pagamento: { Row: IntencaoPagamento; Insert: Omit<IntencaoPagamento, 'id' | 'criado_em'>; Update: Partial<IntencaoPagamento> };
-      push_subscriptions: { Row: PushSubscriptionRow; Insert: Omit<PushSubscriptionRow, 'id' | 'criado_em'>; Update: Partial<PushSubscriptionRow> };
+      perfis: { Row: Perfil; Insert: Partial<Perfil> & { id: string }; Update: Partial<Perfil>; Relationships: [] };
+      checkins: { Row: Checkin; Insert: Omit<Checkin, 'id' | 'criado_em'>; Update: Partial<Checkin>; Relationships: [] };
+      praticas: { Row: Pratica; Insert: Partial<Pratica>; Update: Partial<Pratica>; Relationships: [] };
+      regras_recomendacao: { Row: RegraRecomendacao; Insert: Partial<RegraRecomendacao>; Update: Partial<RegraRecomendacao>; Relationships: [] };
+      sessoes: { Row: Sessao; Insert: Omit<Sessao, 'id' | 'criado_em'>; Update: Partial<Sessao>; Relationships: [] };
+      recursos_seguranca: { Row: RecursoSeguranca; Insert: Partial<RecursoSeguranca>; Update: Partial<RecursoSeguranca>; Relationships: [] };
+      intencao_pagamento: { Row: IntencaoPagamento; Insert: Omit<IntencaoPagamento, 'id' | 'criado_em'>; Update: Partial<IntencaoPagamento>; Relationships: [] };
+      push_subscriptions: { Row: PushSubscriptionRow; Insert: Omit<PushSubscriptionRow, 'id' | 'criado_em'>; Update: Partial<PushSubscriptionRow>; Relationships: [] };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 }

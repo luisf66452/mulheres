@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 
 const ROTAS_PUBLICAS = ['/login', '/auth/callback', '/privacidade'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

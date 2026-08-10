@@ -35,6 +35,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
+  if (user && !isRotaPublica && !request.nextUrl.pathname.startsWith('/onboarding')) {
+    const { data: perfil } = await supabase
+      .from('perfis')
+      .select('consentimento_dados_sensiveis_em')
+      .eq('id', user.id)
+      .single();
+
+    if (!perfil?.consentimento_dados_sensiveis_em) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+  }
+
   return response;
 }
 

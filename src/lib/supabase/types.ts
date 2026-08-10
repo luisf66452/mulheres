@@ -2,16 +2,16 @@ export type Plano = 'free' | 'premium';
 export type StatusPratica = 'rascunho' | 'revisada' | 'publicada';
 export type TipoPratica = 'respiracao' | 'reflexao' | 'afirmacao' | 'movimento';
 
-export interface Perfil {
+export type Perfil = {
   id: string;
   plano: Plano;
   pais: string;
   horario_preferido_notificacao: string | null;
   consentimento_dados_sensiveis_em: string | null;
   criado_em: string;
-}
+};
 
-export interface Checkin {
+export type Checkin = {
   id: string;
   usuaria_id: string;
   data: string; // YYYY-MM-DD
@@ -21,9 +21,9 @@ export interface Checkin {
   texto_livre: string | null;
   sinal_seguranca: boolean;
   criado_em: string;
-}
+};
 
-export interface Pratica {
+export type Pratica = {
   id: string;
   categoria: string;
   tipo: TipoPratica;
@@ -31,9 +31,9 @@ export interface Pratica {
   conteudo: string;
   status: StatusPratica;
   criado_em: string;
-}
+};
 
-export interface RegraRecomendacao {
+export type RegraRecomendacao = {
   id: string;
   humor_min: number;
   humor_max: number;
@@ -45,9 +45,9 @@ export interface RegraRecomendacao {
   categoria_pratica: string | null;
   prioridade: number;
   ativa: boolean;
-}
+};
 
-export interface Sessao {
+export type Sessao = {
   id: string;
   checkin_id: string;
   usuaria_id: string;
@@ -55,32 +55,32 @@ export interface Sessao {
   sensacao_antes: number | null;
   sensacao_depois: number | null;
   criado_em: string;
-}
+};
 
-export interface RecursoSeguranca {
+export type RecursoSeguranca = {
   id: string;
   pais: string;
   titulo: string;
   corpo: string;
   ordem: number;
-}
+};
 
-export interface IntencaoPagamento {
+export type IntencaoPagamento = {
   id: string;
   usuaria_id: string;
   plano_escolhido: string;
   preco_hipotetico: number | null;
   criado_em: string;
-}
+};
 
-export interface PushSubscriptionRow {
+export type PushSubscriptionRow = {
   id: string;
   usuaria_id: string;
   endpoint: string;
   p256dh: string;
   auth: string;
   criado_em: string;
-}
+};
 
 export interface Database {
   public: {

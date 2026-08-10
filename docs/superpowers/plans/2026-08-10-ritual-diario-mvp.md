@@ -6,7 +6,9 @@
 
 **Architecture:** Next.js (App Router, TypeScript) deployed on Vercel, with Supabase (Postgres + Auth + Row Level Security) as the only backend. All clinical decision logic (recommendation, safety-signal detection) is pure, unit-tested TypeScript operating on data rows the psychologist edits directly in Supabase Studio — no custom CMS, no AI in the decision path. Push notifications use the Web Push API with a Vercel Cron job as the daily trigger.
 
-**Tech Stack:** Next.js 15 (App Router) + TypeScript, Tailwind CSS, Supabase (`@supabase/supabase-js`, `@supabase/ssr`), Vitest + Testing Library, `web-push`, Vercel (hosting + Cron).
+**Tech Stack:** Next.js 16 (App Router) + TypeScript, Tailwind CSS v4, Supabase (`@supabase/supabase-js`, `@supabase/ssr`), Vitest + Testing Library, `web-push`, Vercel (hosting + Cron).
+
+**Amendment (post Task 1 review, resolved by human partner 2026-08-10):** the plan originally said "Next.js 15" while Task 1's scaffold command (`create-next-app@latest`) installed Next.js 16.3.0. Ruling: keep Next.js 16 — the project has no legacy dependency forcing 15, and this line is updated to match. All later tasks should assume Next.js 16 App Router conventions (e.g. typed route props) and Tailwind v4's CSS-first config (no `tailwind.config.ts` file — configuration lives in `postcss.config.mjs` and the `@import "tailwindcss"` in `globals.css`).
 
 ## Global Constraints
 

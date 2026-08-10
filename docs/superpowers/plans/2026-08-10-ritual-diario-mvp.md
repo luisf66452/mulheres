@@ -10,6 +10,8 @@
 
 **Amendment (post Task 1 review, resolved by human partner 2026-08-10):** the plan originally said "Next.js 15" while Task 1's scaffold command (`create-next-app@latest`) installed Next.js 16.3.0. Ruling: keep Next.js 16 — the project has no legacy dependency forcing 15, and this line is updated to match. All later tasks should assume Next.js 16 App Router conventions (e.g. typed route props) and Tailwind v4's CSS-first config (no `tailwind.config.ts` file — configuration lives in `postcss.config.mjs` and the `@import "tailwindcss"` in `globals.css`).
 
+**Amendment (post Task 7 review, resolved by human partner 2026-08-10):** Task 7's brief specified `src/middleware.ts` with `export function middleware(...)`, but Next.js 16 deprecates the `middleware` file/export convention in favor of `proxy` (`src/proxy.ts`, `export function proxy(...)`; `skipMiddlewareUrlNormalize` renamed to `skipProxyUrlNormalize`) — confirmed in `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`. Ruling: use `proxy.ts`/`proxy(...)` — the old convention still works but is deprecated, and no reason exists to build Task 8's consent-gate extension on deprecated ground. Every `middleware.ts` / `middleware(...)` reference below in Tasks 7 and 8 should be read as `proxy.ts` / `proxy(...)`.
+
 ## Global Constraints
 
 - Idioma: português do Brasil em toda a interface e conteúdo.
@@ -916,11 +918,11 @@ git commit -m "feat: add 7-day progress and streak calculation"
 - Create: `src/app/login/page.tsx`
 - Create: `src/app/login/actions.ts`
 - Create: `src/app/auth/callback/route.ts`
-- Create: `src/middleware.ts`
+- Create: `src/proxy.ts`
 
 **Interfaces:**
 - Consumes: `createSupabaseBrowserClient`, `createSupabaseServerClient` (Task 3).
-- Produces: middleware that redirects unauthenticated requests to `/login` for any path except `/login`, `/auth/callback`, `/privacidade`, and Next.js internals. Task 8 extends this middleware with the consent gate.
+- Produces: proxy (Next.js 16's renamed middleware convention) that redirects unauthenticated requests to `/login` for any path except `/login`, `/auth/callback`, `/privacidade`, and Next.js internals. Task 8 extends this proxy with the consent gate.
 
 - [ ] **Step 1: Create the magic-link login page**
 
@@ -1029,9 +1031,9 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 4: Create route-protection middleware**
+- [ ] **Step 4: Create route-protection proxy**
 
-Create `src/middleware.ts`:
+Create `src/proxy.ts`:
 
 ```ts
 import { NextRequest, NextResponse } from 'next/server';
@@ -1039,7 +1041,7 @@ import { createServerClient } from '@supabase/ssr';
 
 const ROTAS_PUBLICAS = ['/login', '/auth/callback', '/privacidade'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -1086,7 +1088,7 @@ Run `npm run dev`. Visit `/checkin` while logged out — confirm redirect to `/l
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/app/login src/app/auth src/middleware.ts .env.local.example
+git add src/app/login src/app/auth src/proxy.ts .env.local.example
 git commit -m "feat: add magic-link authentication and route protection"
 ```
 
@@ -1097,11 +1099,11 @@ git commit -m "feat: add magic-link authentication and route protection"
 **Files:**
 - Create: `src/app/onboarding/page.tsx`
 - Create: `src/app/onboarding/actions.ts`
-- Modify: `src/middleware.ts`
+- Modify: `src/proxy.ts`
 
 **Interfaces:**
 - Consumes: `createSupabaseServerClient` (Task 3), `Perfil` type (Task 2).
-- Produces: middleware redirect to `/onboarding` for authenticated users whose `perfis.consentimento_dados_sensiveis_em` is null, on any route other than `/onboarding` itself and the public routes from Task 7.
+- Produces: proxy redirect to `/onboarding` for authenticated users whose `perfis.consentimento_dados_sensiveis_em` is null, on any route other than `/onboarding` itself and the public routes from Task 7.
 
 - [ ] **Step 1: Write the onboarding consent page**
 
@@ -1199,9 +1201,9 @@ export async function registrarConsentimento() {
 }
 ```
 
-- [ ] **Step 3: Extend middleware with the consent gate**
+- [ ] **Step 3: Extend proxy with the consent gate**
 
-Modify `src/middleware.ts` — after the existing `if (!user && !isRotaPublica)` block, add:
+Modify `src/proxy.ts` — after the existing `if (!user && !isRotaPublica)` block, add:
 
 ```ts
   if (user && !isRotaPublica && !request.nextUrl.pathname.startsWith('/onboarding')) {
@@ -1226,7 +1228,7 @@ Log in with a fresh test email (or manually set `consentimento_dados_sensiveis_e
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/app/onboarding src/middleware.ts
+git add src/app/onboarding src/proxy.ts
 git commit -m "feat: add LGPD sensitive-data consent onboarding gate"
 ```
 
@@ -2361,7 +2363,7 @@ export default function PrivacidadePage() {
 
 - [ ] **Step 2: Manual verification**
 
-Visit `/privacidade` while logged out (it's in the middleware's public-route allowlist from Task 7) and confirm it renders without requiring login. Confirm the onboarding page's link (Task 8) navigates here correctly.
+Visit `/privacidade` while logged out (it's in the proxy's public-route allowlist from Task 7) and confirm it renders without requiring login. Confirm the onboarding page's link (Task 8) navigates here correctly.
 
 - [ ] **Step 3: Commit**
 

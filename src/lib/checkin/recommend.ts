@@ -4,6 +4,7 @@ export interface CheckinAnswers {
   humor: number;
   imagemCorporal: number;
   comida: number;
+  textoLivre?: string;
 }
 
 export type Recomendacao =

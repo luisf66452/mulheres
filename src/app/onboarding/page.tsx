@@ -1,18 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { registrarConsentimento } from './actions';
 
 export default function OnboardingPage() {
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [aceitouDadosSensiveis, setAceitouDadosSensiveis] = useState(false);
-  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, startTransition] = useTransition();
 
   const podeContinuar = aceitouTermos && aceitouDadosSensiveis;
 
-  async function handleContinuar() {
-    setEnviando(true);
-    await registrarConsentimento();
+  function handleContinuar() {
+    setErro(null);
+    startTransition(async () => {
+      const resultado = await registrarConsentimento();
+      if (resultado?.erro) {
+        setErro(resultado.erro);
+      }
+    });
   }
 
   return (
@@ -48,12 +54,14 @@ export default function OnboardingPage() {
         </span>
       </label>
 
+      {erro && <p className="text-red-600">{erro}</p>}
+
       <button
         disabled={!podeContinuar || enviando}
         onClick={handleContinuar}
         className="w-full rounded bg-black p-3 text-white disabled:opacity-40"
       >
-        Continuar
+        {enviando ? 'Enviando...' : 'Continuar'}
       </button>
     </main>
   );

@@ -177,3 +177,18 @@ create table public.acessos_administrativos (
 alter table public.acessos_administrativos enable row level security;
 -- Nenhuma policy criada de propósito: sem policy, nenhuma role de client (anon/authenticated)
 -- consegue ler ou escrever. Só a service role key (usada em Task 17) tem acesso.
+
+-- Privilégios de tabela: RLS só restringe QUAIS linhas uma role pode tocar, não concede
+-- acesso à tabela em si. Sem estes GRANTs, toda operação falha com "permission denied"
+-- (42501) mesmo com uma política de RLS correta permitindo a linha. acessos_administrativos
+-- fica de fora de propósito — só a service role (que ignora RLS) acessa essa tabela.
+grant usage on schema public to authenticated;
+
+grant select, update on public.perfis to authenticated;
+grant select, insert on public.checkins to authenticated;
+grant select on public.praticas to authenticated;
+grant select on public.regras_recomendacao to authenticated;
+grant select, insert on public.sessoes to authenticated;
+grant select on public.recursos_seguranca to authenticated;
+grant select, insert on public.intencao_pagamento to authenticated;
+grant select, insert, update, delete on public.push_subscriptions to authenticated;

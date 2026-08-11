@@ -23,6 +23,8 @@ export type Checkin = {
   criado_em: string;
 };
 
+export type CheckinResumo = Pick<Checkin, 'id' | 'data' | 'humor' | 'imagem_corporal' | 'comida'>;
+
 export type Pratica = {
   id: string;
   categoria: string;

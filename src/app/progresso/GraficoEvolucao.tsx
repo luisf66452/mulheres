@@ -1,6 +1,6 @@
 import { decidirEstadoGrafico } from '@/lib/grafico/estado';
 import { calcularPontosLinha, type PontoGrafico } from '@/lib/grafico/pontos';
-import type { Checkin } from '@/lib/supabase/types';
+import type { CheckinResumo } from '@/lib/supabase/types';
 
 const LARGURA = 300;
 const ALTURA = 140;
@@ -9,7 +9,7 @@ function construirPath(pontos: PontoGrafico[]): string {
   return pontos.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
 }
 
-export default function GraficoEvolucao({ checkins }: { checkins: Checkin[] }) {
+export default function GraficoEvolucao({ checkins }: { checkins: CheckinResumo[] }) {
   const estado = decidirEstadoGrafico(checkins.length);
 
   if (estado === 'sem_dados') {

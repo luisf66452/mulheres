@@ -15,7 +15,7 @@ export default async function ProgressoPage() {
 
   const { data: checkins, error: erroCheckins } = await supabase
     .from('checkins')
-    .select('*')
+    .select('id, data, humor, imagem_corporal, comida')
     .eq('usuaria_id', user!.id)
     .order('data', { ascending: true });
 
@@ -39,33 +39,34 @@ export default async function ProgressoPage() {
 
   const checkinIds = checkinsRecentes.map((c) => c.id);
 
-  const sessoesDoHistorico =
+  const { data: sessoesDoHistorico, error: erroSessoes } =
     checkinIds.length > 0
-      ? ((await supabase.from('sessoes').select('*').eq('usuaria_id', user!.id).in('checkin_id', checkinIds))
-          .data ?? [])
-      : [];
+      ? await supabase.from('sessoes').select('*').eq('usuaria_id', user!.id).in('checkin_id', checkinIds)
+      : { data: [], error: null };
 
-  const praticaIds = sessoesDoHistorico
+  const praticaIds = (sessoesDoHistorico ?? [])
     .map((s) => s.pratica_id)
     .filter((id): id is string => id !== null);
-  const atividadeIds = sessoesDoHistorico
+  const atividadeIds = (sessoesDoHistorico ?? [])
     .map((s) => s.jornada_atividade_id)
     .filter((id): id is string => id !== null);
 
-  const praticasDoHistorico =
+  const [praticasResultado, atividadesResultado] = await Promise.all([
     praticaIds.length > 0
-      ? ((await supabase.from('praticas').select('id, titulo').in('id', praticaIds)).data ?? [])
-      : [];
-  const atividadesDoHistorico =
+      ? supabase.from('praticas').select('id, titulo').in('id', praticaIds)
+      : Promise.resolve({ data: [] as { id: string; titulo: string }[], error: null }),
     atividadeIds.length > 0
-      ? ((await supabase.from('jornada_atividades').select('id, titulo').in('id', atividadeIds)).data ?? [])
-      : [];
+      ? supabase.from('jornada_atividades').select('id, titulo').in('id', atividadeIds)
+      : Promise.resolve({ data: [] as { id: string; titulo: string }[], error: null }),
+  ]);
 
-  const tituloPorPratica = new Map(praticasDoHistorico.map((p) => [p.id, p.titulo]));
-  const tituloPorAtividade = new Map(atividadesDoHistorico.map((a) => [a.id, a.titulo]));
+  const erroHistorico = Boolean(erroSessoes || praticasResultado.error || atividadesResultado.error);
+
+  const tituloPorPratica = new Map((praticasResultado.data ?? []).map((p) => [p.id, p.titulo]));
+  const tituloPorAtividade = new Map((atividadesResultado.data ?? []).map((a) => [a.id, a.titulo]));
   const itensHistorico = resolverItensHistorico(
     checkinsRecentes,
-    sessoesDoHistorico,
+    sessoesDoHistorico ?? [],
     tituloPorPratica,
     tituloPorAtividade
   );
@@ -97,7 +98,13 @@ export default async function ProgressoPage() {
 
       <GraficoEvolucao checkins={checkinsParaGrafico} />
 
-      <Historico itens={itensHistorico} />
+      {erroHistorico ? (
+        <p className="text-sm text-alerta">
+          Não foi possível carregar o que você fez nesses dias. Tente novamente em instantes.
+        </p>
+      ) : (
+        <Historico itens={itensHistorico} />
+      )}
 
       <a
         href="/checkin"

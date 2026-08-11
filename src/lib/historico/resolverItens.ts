@@ -1,12 +1,12 @@
-import type { Checkin, Sessao } from '@/lib/supabase/types';
+import type { CheckinResumo, Sessao } from '@/lib/supabase/types';
 
 export type ItemHistorico = {
-  checkin: Checkin;
+  checkin: CheckinResumo;
   descricaoRitual: string | null;
 };
 
 export function resolverItensHistorico(
-  checkins: Checkin[],
+  checkins: CheckinResumo[],
   sessoes: Sessao[],
   tituloPorPratica: Map<string, string>,
   tituloPorAtividade: Map<string, string>

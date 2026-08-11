@@ -36,7 +36,10 @@ export default function GraficoEvolucao({ checkins }: { checkins: CheckinResumo[
 
   const pontosHumor = calcularPontosLinha(checkins.map((c) => c.humor), LARGURA, ALTURA);
   const pontosCorpo = calcularPontosLinha(checkins.map((c) => c.imagem_corporal), LARGURA, ALTURA);
-  const pontosComida = calcularPontosLinha(checkins.map((c) => c.comida), LARGURA, ALTURA);
+  // comida agora pode ser null ("prefiro não responder") -- 3 é o ponto
+  // neutro da escala 1-5, usado só para não quebrar o traçado da linha;
+  // nunca é gravado no banco, é puramente para exibição do gráfico.
+  const pontosComida = calcularPontosLinha(checkins.map((c) => c.comida ?? 3), LARGURA, ALTURA);
 
   return (
     <div className="space-y-3">

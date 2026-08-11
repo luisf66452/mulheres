@@ -19,7 +19,8 @@ export default function Historico({ itens }: { itens: ItemHistorico[] }) {
           <Cartao key={checkin.id} className="space-y-1">
             <p className="text-sm font-medium text-texto">{checkin.data}</p>
             <p className="text-xs text-texto-suave">
-              Humor {checkin.humor}/5 · Corpo {checkin.imagem_corporal}/5 · Comida {checkin.comida}/5
+              Humor {checkin.humor}/5 · Corpo {checkin.imagem_corporal}/5 · Comida{' '}
+              {checkin.comida !== null ? `${checkin.comida}/5` : 'não informado'}
             </p>
             <p className="text-xs text-texto-suave">{descricaoRitual ?? 'Nenhuma atividade registrada'}</p>
           </Cartao>

@@ -1,10 +1,11 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia } from '@/lib/progress/streak';
+import { resolverItensHistorico } from '@/lib/historico/resolverItens';
 import ProgressoBlobs from '@/app/components/ProgressoBlobs';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import MelhorSequencia from './MelhorSequencia';
 import GraficoEvolucao from './GraficoEvolucao';
-import Historico, { type ItemHistorico } from './Historico';
+import Historico from './Historico';
 
 export default async function ProgressoPage() {
   const supabase = await createSupabaseServerClient();
@@ -62,18 +63,12 @@ export default async function ProgressoPage() {
 
   const tituloPorPratica = new Map(praticasDoHistorico.map((p) => [p.id, p.titulo]));
   const tituloPorAtividade = new Map(atividadesDoHistorico.map((a) => [a.id, a.titulo]));
-  const sessaoPorCheckin = new Map(sessoesDoHistorico.map((s) => [s.checkin_id, s]));
-
-  const itensHistorico: ItemHistorico[] = checkinsRecentes.map((checkin) => {
-    const sessao = sessaoPorCheckin.get(checkin.id);
-    let descricaoRitual: string | null = null;
-    if (sessao?.pratica_id) {
-      descricaoRitual = tituloPorPratica.get(sessao.pratica_id) ?? null;
-    } else if (sessao?.jornada_atividade_id) {
-      descricaoRitual = tituloPorAtividade.get(sessao.jornada_atividade_id) ?? null;
-    }
-    return { checkin, descricaoRitual };
-  });
+  const itensHistorico = resolverItensHistorico(
+    checkinsRecentes,
+    sessoesDoHistorico,
+    tituloPorPratica,
+    tituloPorAtividade
+  );
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">

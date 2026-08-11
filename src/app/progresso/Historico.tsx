@@ -1,10 +1,5 @@
 import Cartao from '@/app/components/Cartao';
-import type { Checkin } from '@/lib/supabase/types';
-
-export type ItemHistorico = {
-  checkin: Checkin;
-  descricaoRitual: string | null;
-};
+import type { ItemHistorico } from '@/lib/historico/resolverItens';
 
 export default function Historico({ itens }: { itens: ItemHistorico[] }) {
   if (itens.length === 0) {

@@ -51,7 +51,8 @@ export type Sessao = {
   id: string;
   checkin_id: string;
   usuaria_id: string;
-  pratica_id: string;
+  pratica_id: string | null;
+  jornada_atividade_id: string | null;
   sensacao_antes: number | null;
   sensacao_depois: number | null;
   criado_em: string;
@@ -90,6 +91,38 @@ export type AcessoAdministrativo = {
   criado_em: string;
 };
 
+export type StatusJornada = 'rascunho' | 'revisada' | 'publicada';
+export type StatusJornadaUsuaria = 'em_andamento' | 'pausada' | 'concluida';
+
+export type Jornada = {
+  id: string;
+  titulo: string;
+  descricao: string;
+  duracao_dias: number;
+  status: StatusJornada;
+  criado_em: string;
+};
+
+export type JornadaAtividade = {
+  id: string;
+  jornada_id: string;
+  numero_dia: number;
+  titulo: string;
+  conteudo: string;
+  criado_em: string;
+};
+
+export type JornadaUsuaria = {
+  id: string;
+  usuaria_id: string;
+  jornada_id: string;
+  dias_completados: number;
+  status: StatusJornadaUsuaria;
+  iniciada_em: string;
+  atualizada_em: string;
+  concluida_em: string | null;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -102,6 +135,14 @@ export interface Database {
       intencao_pagamento: { Row: IntencaoPagamento; Insert: Omit<IntencaoPagamento, 'id' | 'criado_em'>; Update: Partial<IntencaoPagamento>; Relationships: [] };
       push_subscriptions: { Row: PushSubscriptionRow; Insert: Omit<PushSubscriptionRow, 'id' | 'criado_em'>; Update: Partial<PushSubscriptionRow>; Relationships: [] };
       acessos_administrativos: { Row: AcessoAdministrativo; Insert: Omit<AcessoAdministrativo, 'id' | 'criado_em'>; Update: Partial<AcessoAdministrativo>; Relationships: [] };
+      jornadas: { Row: Jornada; Insert: Partial<Jornada>; Update: Partial<Jornada>; Relationships: [] };
+      jornada_atividades: { Row: JornadaAtividade; Insert: Omit<JornadaAtividade, 'id' | 'criado_em'>; Update: Partial<JornadaAtividade>; Relationships: [] };
+      jornadas_usuarias: {
+        Row: JornadaUsuaria;
+        Insert: Pick<JornadaUsuaria, 'usuaria_id' | 'jornada_id'> & Partial<Omit<JornadaUsuaria, 'usuaria_id' | 'jornada_id'>>;
+        Update: Partial<JornadaUsuaria>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

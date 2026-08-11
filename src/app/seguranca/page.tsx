@@ -11,13 +11,16 @@ export default async function SegurancaPage() {
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
       {(recursos ?? []).map((recurso) => (
-        <div key={recurso.id} className="space-y-1">
-          <h2 className="text-xl font-semibold">{recurso.titulo}</h2>
-          <p>{recurso.corpo}</p>
+        <div key={recurso.id} className="space-y-1 border-l-4 border-alerta pl-4">
+          <h2 className="font-display text-xl text-texto">{recurso.titulo}</h2>
+          <p className="text-texto">{recurso.corpo}</p>
         </div>
       ))}
 
-      <a href="/checkin" className="block w-full rounded border p-3 text-center">
+      <a
+        href="/checkin"
+        className="block w-full rounded-2xl border border-borda p-3 text-center text-texto-suave transition-colors hover:bg-superficie"
+      >
         Voltar
       </a>
     </main>

@@ -18,7 +18,7 @@ export async function registrarSessao(params: {
     redirect('/login');
   }
 
-  await supabase.from('sessoes').insert({
+  const { error } = await supabase.from('sessoes').insert({
     checkin_id: params.checkinId,
     usuaria_id: user.id,
     pratica_id: params.praticaId,
@@ -26,6 +26,10 @@ export async function registrarSessao(params: {
     sensacao_antes: params.sensacaoAntes,
     sensacao_depois: params.sensacaoDepois,
   });
+
+  if (error) {
+    throw new Error('Não foi possível registrar a sessão. Tente novamente.');
+  }
 
   redirect('/progresso');
 }

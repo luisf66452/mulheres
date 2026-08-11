@@ -14,6 +14,17 @@ export async function ativarJornada(jornadaAlvoId: string) {
     redirect('/login');
   }
 
+  const { data: jornadaAlvo } = await supabase
+    .from('jornadas')
+    .select('id')
+    .eq('id', jornadaAlvoId)
+    .eq('status', 'publicada')
+    .maybeSingle();
+
+  if (!jornadaAlvo) {
+    throw new Error('Jornada não encontrada.');
+  }
+
   const { data: jornadaAtivaAtual } = await supabase
     .from('jornadas_usuarias')
     .select('id, jornada_id')
@@ -39,23 +50,35 @@ export async function ativarJornada(jornadaAlvoId: string) {
   });
 
   if (decisao.pausar) {
-    await supabase
+    const { error: erroPausar } = await supabase
       .from('jornadas_usuarias')
       .update({ status: 'pausada' })
       .eq('id', decisao.pausar.id);
+
+    if (erroPausar) {
+      throw new Error('Não foi possível pausar a jornada atual. Tente novamente.');
+    }
   }
 
   if (decisao.ativar === 'criar_nova') {
-    await supabase.from('jornadas_usuarias').insert({
+    const { error: erroCriar } = await supabase.from('jornadas_usuarias').insert({
       usuaria_id: user.id,
       jornada_id: jornadaAlvoId,
       status: 'em_andamento',
     });
+
+    if (erroCriar) {
+      throw new Error('Não foi possível iniciar a jornada. Tente novamente.');
+    }
   } else {
-    await supabase
+    const { error: erroAtivar } = await supabase
       .from('jornadas_usuarias')
       .update({ status: 'em_andamento' })
       .eq('id', decisao.ativar.id);
+
+    if (erroAtivar) {
+      throw new Error('Não foi possível retomar a jornada. Tente novamente.');
+    }
   }
 
   redirect('/jornadas');

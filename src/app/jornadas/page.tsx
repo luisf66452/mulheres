@@ -38,7 +38,7 @@ export default async function JornadasPage() {
             </p>
             <AtivarJornadaButton
               jornadaId={jornada.id}
-              jaAtiva={progresso?.status === 'em_andamento'}
+              jaAtiva={progresso?.status === 'em_andamento' || progresso?.status === 'concluida'}
               label={progresso ? 'Continuar' : 'Começar'}
             />
           </div>

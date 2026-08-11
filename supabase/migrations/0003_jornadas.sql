@@ -70,6 +70,21 @@ create policy "usuaria atualiza proprio progresso de jornadas"
   on public.jornadas_usuarias for update
   using (auth.uid() = usuaria_id);
 
+-- Mantém atualizada_em sempre em dia a cada UPDATE em jornadas_usuarias, para que
+-- a coluna reflita a última atividade real em vez de ficar congelada no valor de
+-- iniciada_em.
+create function public.set_atualizada_em_jornadas_usuarias()
+returns trigger as $$
+begin
+  new.atualizada_em = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger jornadas_usuarias_atualizada_em
+  before update on public.jornadas_usuarias
+  for each row execute procedure public.set_atualizada_em_jornadas_usuarias();
+
 -- sessoes passa a aceitar atividades de jornada, não só práticas avulsas
 alter table public.sessoes alter column pratica_id drop not null;
 alter table public.sessoes add column jornada_atividade_id uuid references public.jornada_atividades(id);
@@ -82,6 +97,14 @@ alter table public.sessoes add constraint sessoes_uma_fonte_de_atividade
 -- Garante idempotência: no máximo uma sessão por check-in, mesmo sob requisições
 -- concorrentes (double-click, retry de rede). Fecha também uma race condition que
 -- já existia no fluxo de prática avulsa.
+--
+-- Antes de rodar esta migração, verifique se já existem check-ins duplicados
+-- na tabela sessoes (a query abaixo deve retornar zero linhas). Se retornar
+-- linhas, esta constraint vai falhar e abortar o resto da migração — resolva
+-- as duplicatas antes (ex: mantendo a linha de criado_em mais antigo por
+-- checkin_id) e só então rode este arquivo:
+--
+--   select checkin_id, count(*) from public.sessoes group by checkin_id having count(*) > 1;
 alter table public.sessoes add constraint sessoes_checkin_unico unique (checkin_id);
 
 -- Privilégios de tabela — RLS só restringe QUAIS linhas, não concede acesso à tabela em si.

@@ -28,11 +28,16 @@ export async function registrarSessaoJornada(params: {
     sensacao_depois: params.sensacaoDepois,
   });
 
-  // Se a inserção falhar (ex: constraint sessoes_checkin_unico por uma segunda
-  // requisição concorrente pro mesmo check-in), não avança o progresso de novo —
-  // essa sessão já foi registrada antes. Redireciona igual ao caminho de sucesso.
+  // Se a inserção falhar por violação da constraint sessoes_checkin_unico (ex: uma
+  // segunda requisição concorrente pro mesmo check-in), não avança o progresso de
+  // novo — essa sessão já foi registrada antes. Redireciona igual ao caminho de
+  // sucesso. Qualquer outro erro (RLS, FK, rede) é um problema real e não deve ser
+  // tratado como sucesso.
   if (error) {
-    redirect('/progresso');
+    if (error.code === '23505') {
+      redirect('/progresso');
+    }
+    throw new Error('Não foi possível registrar a atividade. Tente novamente.');
   }
 
   const { data: atividade } = await supabase
@@ -70,7 +75,7 @@ export async function registrarSessaoJornada(params: {
       .update({
         dias_completados: novoDiasCompletados,
         status: jornadaConcluida ? 'concluida' : 'em_andamento',
-        concluida_em: jornadaConcluida ? new Date().toISOString() : null,
+        ...(jornadaConcluida ? { concluida_em: new Date().toISOString() } : {}),
       })
       .eq('id', progresso.id);
   }

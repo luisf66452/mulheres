@@ -22,6 +22,7 @@ export async function registrarSessao(params: {
     checkin_id: params.checkinId,
     usuaria_id: user.id,
     pratica_id: params.praticaId,
+    jornada_atividade_id: null,
     sensacao_antes: params.sensacaoAntes,
     sensacao_depois: params.sensacaoDepois,
   });

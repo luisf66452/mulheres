@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgresso7Dias } from '@/lib/progress/streak';
+import ProgressoBlobs from '@/app/components/ProgressoBlobs';
 
 export default async function ProgressoPage() {
   const supabase = await createSupabaseServerClient();
@@ -16,32 +17,31 @@ export default async function ProgressoPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Seu progresso</h1>
+      <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
 
-      <p>
+      <p className="text-texto">
         Você completou o ritual em <strong>{progresso.diasCompletos} de 7</strong> dias esta semana.
       </p>
 
       {progresso.diasConsecutivosAtuais > 0 && (
-        <p>Você está em uma sequência de {progresso.diasConsecutivosAtuais} dia(s) seguidos. 🌱</p>
+        <p className="text-texto">
+          Você está em uma sequência de {progresso.diasConsecutivosAtuais} dia(s) seguidos. 🌱
+        </p>
       )}
 
-      <div className="flex gap-2">
-        {progresso.ultimos7Dias.map((dia) => (
-          <div
-            key={dia.data}
-            className={`h-10 w-10 rounded-full ${dia.completou ? 'bg-black' : 'bg-gray-200'}`}
-            title={dia.data}
-          />
-        ))}
-      </div>
+      <ProgressoBlobs
+        dias={progresso.ultimos7Dias.map((dia) => ({ rotulo: dia.data, completo: dia.completou }))}
+      />
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-texto-suave">
         Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo
         dos seus dias serem como foram.
       </p>
 
-      <a href="/checkin" className="block w-full rounded border p-3 text-center">
+      <a
+        href="/checkin"
+        className="block w-full rounded-2xl border border-borda p-3 text-center text-texto-suave transition-colors hover:bg-superficie"
+      >
         Voltar ao início
       </a>
     </main>

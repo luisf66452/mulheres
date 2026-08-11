@@ -18,8 +18,7 @@ export async function enviarLinkMagico(email: string): Promise<{ erro?: string }
       code: error.code,
       message: error.message,
     });
-    // TEMPORÁRIO: expõe a mensagem real do Supabase para diagnóstico ao vivo — reverter depois.
-    return { erro: `[debug] ${error.status ?? '?'} ${error.code ?? '?'}: ${error.message}` };
+    return { erro: 'Não foi possível enviar o link. Tente novamente.' };
   }
 
   return {};

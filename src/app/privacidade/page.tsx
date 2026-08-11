@@ -1,11 +1,11 @@
 export default function PrivacidadePage() {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Política de Privacidade e Termos de Uso</h1>
+      <h1 className="font-display text-2xl text-texto">Política de Privacidade e Termos de Uso</h1>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">O que coletamos</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">O que coletamos</h2>
+        <p className="text-texto">
           Coletamos seu e-mail para autenticação, e as respostas do seu check-in diário (humor,
           imagem corporal, relação com a comida, e um texto livre opcional). Esses são dados
           sensíveis de saúde nos termos da Lei Geral de Proteção de Dados (LGPD), e só os coletamos
@@ -14,8 +14,8 @@ export default function PrivacidadePage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Como usamos e quem acessa</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">Como usamos e quem acessa</h2>
+        <p className="text-texto">
           Seus dados individuais são usados para gerar sua recomendação diária e seu progresso
           pessoal. Por padrão, ninguém da nossa equipe visualiza dados ou respostas individuais de
           uma usuária específica. Qualquer acesso pontual só ocorre com finalidade definida,
@@ -26,24 +26,24 @@ export default function PrivacidadePage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">O texto livre do check-in</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">O texto livre do check-in</h2>
+        <p className="text-texto">
           O campo opcional de texto livre não é analisado nem monitorado nesta versão do app — é
           apenas armazenado como parte do seu diário pessoal.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Retenção e exclusão</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">Retenção e exclusão</h2>
+        <p className="text-texto">
           Seus dados são mantidos enquanto sua conta estiver ativa. Ao excluir sua conta, seus dados
           são apagados ou anonimizados em até 30 dias.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Seus direitos</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">Seus direitos</h2>
+        <p className="text-texto">
           Você pode solicitar a exportação ou exclusão dos seus dados a qualquer momento, e pode
           tirar qualquer dúvida sobre como seus dados são tratados, escrevendo para{' '}
           <a href="mailto:almeidaferreiraluisgustavo@gmail.com" className="underline">
@@ -54,8 +54,8 @@ export default function PrivacidadePage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">O que este app não é</h2>
-        <p>
+        <h2 className="font-display text-xl text-texto">O que este app não é</h2>
+        <p className="text-texto">
           Este app não é terapia, não faz diagnóstico e não substitui acompanhamento profissional de
           saúde física ou mental.
         </p>

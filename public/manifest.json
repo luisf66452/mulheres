@@ -2,10 +2,10 @@
   "name": "Ritual Diário",
   "short_name": "Ritual",
   "description": "Um ritual diário de 5 minutos para autoestima, imagem corporal e relação com a comida.",
-  "start_url": "/checkin",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#EDE6DC",
-  "theme_color": "#EDE6DC",
+  "background_color": "#FBF6F0",
+  "theme_color": "#FBF6F0",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }

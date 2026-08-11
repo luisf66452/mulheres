@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import AtivarJornadaButton from './AtivarJornadaButton';
 import Cartao from '@/app/components/Cartao';
 import BarraProgressoJornada from '@/app/components/BarraProgressoJornada';
+import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 
 export default async function JornadasPage() {
   const supabase = await createSupabaseServerClient();
@@ -22,7 +23,7 @@ export default async function JornadasPage() {
   const progressoPorJornada = new Map((progressos ?? []).map((p) => [p.jornada_id, p]));
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6">
+    <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
       <h1 className="font-display text-2xl text-texto">Jornadas</h1>
       {(jornadas ?? []).map((jornada) => {
         const progresso = progressoPorJornada.get(jornada.id);
@@ -52,6 +53,7 @@ export default async function JornadasPage() {
           </Cartao>
         );
       })}
+      <NavegacaoInferior />
     </main>
   );
 }

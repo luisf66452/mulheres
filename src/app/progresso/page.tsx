@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgresso7Dias } from '@/lib/progress/streak';
 import ProgressoBlobs from '@/app/components/ProgressoBlobs';
+import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 
 export default async function ProgressoPage() {
   const supabase = await createSupabaseServerClient();
@@ -16,7 +17,7 @@ export default async function ProgressoPage() {
   const progresso = calcularProgresso7Dias((checkins ?? []).map((c) => c.data), new Date());
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6">
+    <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
       <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
 
       <p className="text-texto">
@@ -44,6 +45,7 @@ export default async function ProgressoPage() {
       >
         Voltar ao início
       </a>
+      <NavegacaoInferior />
     </main>
   );
 }

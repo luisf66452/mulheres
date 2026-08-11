@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { submeterCheckin } from './actions';
-
-const ESCALA = [1, 2, 3, 4, 5];
+import Botao from '@/app/components/Botao';
+import Escala from '@/app/components/Escala';
 
 export default function CheckinFormClient() {
   const [humor, setHumor] = useState<number | null>(null);
@@ -34,35 +34,35 @@ export default function CheckinFormClient() {
 
   return (
     <main className="mx-auto max-w-md space-y-8 p-6">
-      <h1 className="text-2xl font-semibold">Como você está hoje?</h1>
+      <h1 className="font-display text-2xl text-texto">Como você está hoje?</h1>
 
       <EscalaPergunta label="Seu humor hoje" valor={humor} onChange={setHumor} />
-      <EscalaPergunta label="Como você se sente com seu corpo hoje" valor={imagemCorporal} onChange={setImagemCorporal} />
+      <EscalaPergunta
+        label="Como você se sente com seu corpo hoje"
+        valor={imagemCorporal}
+        onChange={setImagemCorporal}
+      />
       <EscalaPergunta label="Sua relação com a comida hoje" valor={comida} onChange={setComida} />
 
       <div className="space-y-2">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-texto-suave">
           Espaço opcional para desabafar. Este texto <strong>não é analisado nem monitorado</strong> —
           fica só no seu diário.
         </p>
         <textarea
           value={textoLivre}
           onChange={(e) => setTextoLivre(e.target.value)}
-          className="w-full rounded border p-3"
+          className="w-full rounded-2xl border border-borda bg-superficie p-3 text-texto"
           rows={4}
           placeholder="Se quiser, escreva livremente aqui..."
         />
       </div>
 
-      {erro && <p className="text-red-600">{erro}</p>}
+      {erro && <p className="text-alerta">{erro}</p>}
 
-      <button
-        disabled={!podeEnviar}
-        onClick={handleSubmit}
-        className="w-full rounded bg-black p-3 text-white disabled:opacity-40"
-      >
+      <Botao disabled={!podeEnviar} onClick={handleSubmit}>
         {enviando ? 'Enviando...' : 'Continuar'}
-      </button>
+      </Botao>
     </main>
   );
 }
@@ -78,19 +78,8 @@ function EscalaPergunta({
 }) {
   return (
     <div className="space-y-2">
-      <p>{label}</p>
-      <div className="flex gap-2">
-        {ESCALA.map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => onChange(n)}
-            className={`h-12 w-12 rounded-full border ${valor === n ? 'bg-black text-white' : ''}`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
+      <p className="text-texto">{label}</p>
+      <Escala valor={valor} onChange={onChange} />
     </div>
   );
 }

@@ -2,7 +2,7 @@ export default function LembreteBanner({ jaFezCheckinHoje }: { jaFezCheckinHoje:
   if (jaFezCheckinHoje) return null;
 
   return (
-    <div className="rounded bg-yellow-100 p-3 text-sm">
+    <div className="bg-destaque/15 p-3 text-sm text-texto">
       Você ainda não fez seu ritual hoje. Que tal 5 minutinhos agora? 🌿
     </div>
   );

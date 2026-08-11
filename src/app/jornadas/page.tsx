@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import AtivarJornadaButton from './AtivarJornadaButton';
 import Cartao from '@/app/components/Cartao';
@@ -53,6 +54,17 @@ export default async function JornadasPage() {
           </Cartao>
         );
       })}
+
+      <Link
+        href="/praticas"
+        className="block w-full rounded-2xl border border-borda bg-superficie p-4 text-center transition-colors hover:bg-fundo"
+      >
+        <p className="font-display text-base text-texto">Biblioteca de práticas</p>
+        <p className="text-sm text-texto-suave">
+          Explore práticas avulsas, sem precisar fazer o check-in.
+        </p>
+      </Link>
+
       <NavegacaoInferior />
     </main>
   );

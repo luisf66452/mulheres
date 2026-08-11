@@ -43,10 +43,10 @@ function IconePerfil({ ativo }: IconeProps) {
 }
 
 const ITENS = [
-  { href: '/', rotulo: 'Início', Icone: IconeInicio },
-  { href: '/jornadas', rotulo: 'Jornada', Icone: IconeJornada },
-  { href: '/progresso', rotulo: 'Progresso', Icone: IconeProgresso },
-  { href: '/perfil', rotulo: 'Perfil', Icone: IconePerfil },
+  { href: '/', rotulo: 'Início', Icone: IconeInicio, prefixosAtivos: ['/'] },
+  { href: '/jornadas', rotulo: 'Jornada', Icone: IconeJornada, prefixosAtivos: ['/jornadas', '/praticas'] },
+  { href: '/progresso', rotulo: 'Progresso', Icone: IconeProgresso, prefixosAtivos: ['/progresso'] },
+  { href: '/perfil', rotulo: 'Perfil', Icone: IconePerfil, prefixosAtivos: ['/perfil'] },
 ] as const;
 
 export default function NavegacaoInferior() {
@@ -58,8 +58,11 @@ export default function NavegacaoInferior() {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-borda bg-superficie/95 backdrop-blur md:hidden"
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
-        {ITENS.map(({ href, rotulo, Icone }) => {
-          const ativo = href === '/' ? pathname === '/' : pathname.startsWith(href);
+        {ITENS.map(({ href, rotulo, Icone, prefixosAtivos }) => {
+          const ativo =
+            href === '/'
+              ? pathname === '/'
+              : prefixosAtivos.some((prefixo) => pathname.startsWith(prefixo));
           return (
             <li key={href} className="flex-1">
               <Link

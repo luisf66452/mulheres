@@ -1,0 +1,79 @@
+'use server';
+
+import { redirect } from 'next/navigation';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { calcularProgressoJornada } from '@/lib/jornadas/progresso';
+
+export async function registrarSessaoJornada(params: {
+  checkinId: string;
+  jornadaAtividadeId: string;
+  sensacaoAntes: number;
+  sensacaoDepois: number;
+}) {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { error } = await supabase.from('sessoes').insert({
+    checkin_id: params.checkinId,
+    usuaria_id: user.id,
+    pratica_id: null,
+    jornada_atividade_id: params.jornadaAtividadeId,
+    sensacao_antes: params.sensacaoAntes,
+    sensacao_depois: params.sensacaoDepois,
+  });
+
+  // Se a inserção falhar (ex: constraint sessoes_checkin_unico por uma segunda
+  // requisição concorrente pro mesmo check-in), não avança o progresso de novo —
+  // essa sessão já foi registrada antes. Redireciona igual ao caminho de sucesso.
+  if (error) {
+    redirect('/progresso');
+  }
+
+  const { data: atividade } = await supabase
+    .from('jornada_atividades')
+    .select('jornada_id')
+    .eq('id', params.jornadaAtividadeId)
+    .single();
+
+  if (!atividade) {
+    redirect('/progresso');
+  }
+
+  const { data: jornada } = await supabase
+    .from('jornadas')
+    .select('duracao_dias')
+    .eq('id', atividade.jornada_id)
+    .single();
+
+  const { data: progresso } = await supabase
+    .from('jornadas_usuarias')
+    .select('id, dias_completados')
+    .eq('usuaria_id', user.id)
+    .eq('jornada_id', atividade.jornada_id)
+    .eq('status', 'em_andamento')
+    .maybeSingle();
+
+  if (jornada && progresso) {
+    const { novoDiasCompletados, jornadaConcluida } = calcularProgressoJornada(
+      progresso.dias_completados,
+      jornada.duracao_dias
+    );
+
+    await supabase
+      .from('jornadas_usuarias')
+      .update({
+        dias_completados: novoDiasCompletados,
+        status: jornadaConcluida ? 'concluida' : 'em_andamento',
+        concluida_em: jornadaConcluida ? new Date().toISOString() : null,
+      })
+      .eq('id', progresso.id);
+  }
+
+  redirect('/progresso');
+}

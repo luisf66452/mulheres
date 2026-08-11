@@ -22,8 +22,11 @@ export default function PremiumPage() {
   if (enviado) {
     return (
       <main className="mx-auto max-w-md space-y-4 p-6">
-        <p>Obrigada! Isso nos ajuda a construir a versão completa do app.</p>
-        <a href="/checkin" className="block w-full rounded border p-3 text-center">
+        <p className="text-texto">Obrigada! Isso nos ajuda a construir a versão completa do app.</p>
+        <a
+          href="/checkin"
+          className="block w-full rounded-2xl border border-borda p-3 text-center text-texto-suave transition-colors hover:bg-superficie"
+        >
           Voltar
         </a>
       </main>
@@ -32,8 +35,8 @@ export default function PremiumPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Versão Premium</h1>
-      <p>
+      <h1 className="font-display text-2xl text-texto">Versão Premium</h1>
+      <p className="text-texto">
         Histórico completo, insights semanais, biblioteca completa de práticas e jornadas guiadas.
         Ainda não cobramos por isso — queremos entender se faria sentido para você.
       </p>
@@ -42,7 +45,9 @@ export default function PremiumPage() {
           <button
             key={opcao.id}
             onClick={() => handleEscolher(opcao.id, opcao.preco)}
-            className={`w-full rounded border p-3 text-left ${escolhido === opcao.id ? 'border-black' : ''}`}
+            className={`w-full rounded-2xl border p-3 text-left text-texto transition-colors ${
+              escolhido === opcao.id ? 'border-acao bg-superficie' : 'border-borda'
+            }`}
           >
             {opcao.label} {opcao.preco > 0 && `— R$ ${opcao.preco.toFixed(2)}`}
           </button>

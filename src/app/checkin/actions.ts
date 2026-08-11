@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { avaliarCheckin, type CheckinAnswers } from '@/lib/checkin/recommend';
+import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
 
 export async function submeterCheckin(answers: CheckinAnswers) {
@@ -55,6 +56,42 @@ export async function submeterCheckin(answers: CheckinAnswers) {
 
   if (recomendacao.tipo === 'sinal_seguranca') {
     redirect('/seguranca');
+  }
+
+  // A partir daqui, recomendacao.tipo é 'pratica'.
+
+  const { data: jornadaAtivaRow } = await supabase
+    .from('jornadas_usuarias')
+    .select('id, jornada_id, dias_completados')
+    .eq('usuaria_id', user.id)
+    .eq('status', 'em_andamento')
+    .maybeSingle();
+
+  let atividadeDoDia: { id: string } | null = null;
+  if (jornadaAtivaRow) {
+    const { data } = await supabase
+      .from('jornada_atividades')
+      .select('id')
+      .eq('jornada_id', jornadaAtivaRow.jornada_id)
+      .eq('numero_dia', jornadaAtivaRow.dias_completados + 1)
+      .maybeSingle();
+    atividadeDoDia = data;
+  }
+
+  const etapa = decidirProximaEtapaCheckin({
+    recomendacao,
+    jornadaAtiva: jornadaAtivaRow
+      ? { jornadaId: jornadaAtivaRow.jornada_id, diasCompletados: jornadaAtivaRow.dias_completados }
+      : null,
+    atividadeDoDiaExiste: atividadeDoDia !== null,
+  });
+
+  if (etapa.tipo === 'jornada') {
+    redirect(`/jornada-atividade/${atividadeDoDia!.id}?checkin=${checkin.id}`);
+  }
+
+  if (recomendacao.tipo !== 'pratica') {
+    throw new Error('Estado inesperado: rota de prática escolhida sem categoria de recomendação.');
   }
 
   const { data: pratica } = await supabase

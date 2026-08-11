@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { registrarConsentimento } from './actions';
+import Botao from '@/app/components/Botao';
 
 export default function OnboardingPage() {
   const [aceitouTermos, setAceitouTermos] = useState(false);
@@ -23,13 +24,13 @@ export default function OnboardingPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Antes de começar</h1>
-      <p>
+      <h1 className="font-display text-2xl text-texto">Antes de começar</h1>
+      <p className="text-texto">
         Este app não é terapia, não faz diagnóstico e não substitui acompanhamento profissional.
         Ele te ajuda a construir um pequeno ritual diário de cuidado com você mesma.
       </p>
 
-      <label className="flex items-start gap-3">
+      <label className="flex items-start gap-3 text-texto">
         <input
           type="checkbox"
           checked={aceitouTermos}
@@ -41,7 +42,7 @@ export default function OnboardingPage() {
         </span>
       </label>
 
-      <label className="flex items-start gap-3">
+      <label className="flex items-start gap-3 text-texto">
         <input
           type="checkbox"
           checked={aceitouDadosSensiveis}
@@ -54,15 +55,11 @@ export default function OnboardingPage() {
         </span>
       </label>
 
-      {erro && <p className="text-red-600">{erro}</p>}
+      {erro && <p className="text-alerta">{erro}</p>}
 
-      <button
-        disabled={!podeContinuar || enviando}
-        onClick={handleContinuar}
-        className="w-full rounded bg-black p-3 text-white disabled:opacity-40"
-      >
+      <Botao disabled={!podeContinuar || enviando} onClick={handleContinuar}>
         {enviando ? 'Enviando...' : 'Continuar'}
-      </button>
+      </Botao>
     </main>
   );
 }

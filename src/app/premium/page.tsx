@@ -25,7 +25,7 @@ export default function PremiumPage() {
         <p className="text-texto">Obrigada! Isso nos ajuda a construir a versão completa do app.</p>
         <a
           href="/checkin"
-          className="block w-full rounded-2xl border border-borda p-3 text-center text-texto-suave transition-colors hover:bg-superficie"
+          className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
         >
           Voltar
         </a>

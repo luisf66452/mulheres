@@ -26,7 +26,7 @@ export default async function CheckinPage() {
           <p className="text-texto">Você já fez seu ritual de hoje. Volte amanhã! 🌿</p>
           <a
             href="/progresso"
-            className="block w-full rounded-2xl border border-borda p-3 text-center text-texto-suave transition-colors hover:bg-superficie"
+            className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
           >
             Ver progresso
           </a>

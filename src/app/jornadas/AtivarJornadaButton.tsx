@@ -1,6 +1,7 @@
 'use client';
 
 import { ativarJornada } from './actions';
+import Botao from '@/app/components/Botao';
 
 export default function AtivarJornadaButton({
   jornadaId,
@@ -13,18 +14,11 @@ export default function AtivarJornadaButton({
 }) {
   if (jaAtiva) {
     return (
-      <button disabled className="w-full rounded border border-black p-3 text-center opacity-60">
+      <Botao disabled variante="secundaria">
         Jornada atual
-      </button>
+      </Botao>
     );
   }
 
-  return (
-    <button
-      onClick={() => ativarJornada(jornadaId)}
-      className="w-full rounded bg-black p-3 text-white"
-    >
-      {label}
-    </button>
-  );
+  return <Botao onClick={() => ativarJornada(jornadaId)}>{label}</Botao>;
 }

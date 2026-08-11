@@ -1,5 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import AtivarJornadaButton from './AtivarJornadaButton';
+import Cartao from '@/app/components/Cartao';
+import BarraProgressoJornada from '@/app/components/BarraProgressoJornada';
 
 export default async function JornadasPage() {
   const supabase = await createSupabaseServerClient();
@@ -21,14 +23,20 @@ export default async function JornadasPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
-      <h1 className="text-2xl font-semibold">Jornadas</h1>
+      <h1 className="font-display text-2xl text-texto">Jornadas</h1>
       {(jornadas ?? []).map((jornada) => {
         const progresso = progressoPorJornada.get(jornada.id);
         return (
-          <div key={jornada.id} className="space-y-2 rounded border p-4">
-            <h2 className="text-xl font-semibold">{jornada.titulo}</h2>
-            <p>{jornada.descricao}</p>
-            <p className="text-sm text-gray-600">
+          <Cartao key={jornada.id} className="space-y-3">
+            <h2 className="font-display text-xl text-texto">{jornada.titulo}</h2>
+            <p className="text-texto">{jornada.descricao}</p>
+            {progresso && (
+              <BarraProgressoJornada
+                diasCompletados={progresso.dias_completados}
+                duracaoDias={jornada.duracao_dias}
+              />
+            )}
+            <p className="text-sm text-texto-suave">
               {progresso?.status === 'em_andamento' &&
                 `Em andamento — dia ${progresso.dias_completados} de ${jornada.duracao_dias}`}
               {progresso?.status === 'pausada' &&
@@ -41,7 +49,7 @@ export default async function JornadasPage() {
               jaAtiva={progresso?.status === 'em_andamento' || progresso?.status === 'concluida'}
               label={progresso ? 'Continuar' : 'Começar'}
             />
-          </div>
+          </Cartao>
         );
       })}
     </main>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Progresso7Dias } from '@/lib/progress/streak';
+import { formatarSequencia, type Progresso7Dias } from '@/lib/progress/streak';
 
 const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -10,7 +10,7 @@ export default function SequenciaDias({ progresso }: { progresso: Progresso7Dias
         <p className="font-display text-lg text-texto">Sua sequência</p>
         {progresso.diasConsecutivosAtuais > 0 && (
           <span className="text-sm text-texto-suave">
-            {progresso.diasConsecutivosAtuais} dia(s) seguidos
+            {formatarSequencia(progresso.diasConsecutivosAtuais)}
           </span>
         )}
       </div>

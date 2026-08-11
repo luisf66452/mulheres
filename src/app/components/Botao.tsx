@@ -6,7 +6,7 @@ type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export default function Botao({ variante = 'primaria', className = '', ...props }: BotaoProps) {
   const base =
-    'w-full rounded-2xl p-3 text-center font-medium transition-colors disabled:opacity-40';
+    'w-full rounded-2xl p-3 text-center font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none';
   const estilos =
     variante === 'primaria'
       ? 'bg-acao text-white hover:bg-acao/90'

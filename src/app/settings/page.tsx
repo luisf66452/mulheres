@@ -9,14 +9,19 @@ export default function SettingsPage() {
   const [status, setStatus] = useState<string | null>(null);
 
   async function handleAtivar() {
-    const resultado = await inscreverPush();
-    if (resultado === 'inscrita') {
-      await salvarHorarioPreferido(horario);
-      setStatus('Lembretes ativados!');
-    } else if (resultado === 'negado') {
-      setStatus('Permissão de notificação negada. Você ainda verá um lembrete visual no app.');
-    } else {
-      setStatus('Seu navegador não suporta notificações push. Você verá um lembrete visual no app.');
+    setStatus(null);
+    try {
+      const resultado = await inscreverPush();
+      if (resultado === 'inscrita') {
+        await salvarHorarioPreferido(horario);
+        setStatus('Lembretes ativados!');
+      } else if (resultado === 'negado') {
+        setStatus('Permissão de notificação negada. Você ainda verá um lembrete visual no app.');
+      } else {
+        setStatus('Seu navegador não suporta notificações push. Você verá um lembrete visual no app.');
+      }
+    } catch {
+      setStatus('Não foi possível ativar os lembretes agora. Tente novamente.');
     }
   }
 

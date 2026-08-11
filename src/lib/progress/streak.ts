@@ -38,3 +38,32 @@ export function calcularProgresso7Dias(
 
   return { diasCompletos, diasConsecutivosAtuais, ultimos7Dias };
 }
+
+export function calcularMelhorSequencia(datasCheckin: string[]): number {
+  if (datasCheckin.length === 0) {
+    return 0;
+  }
+
+  const datasOrdenadas = Array.from(new Set(datasCheckin)).sort();
+
+  let melhor = 1;
+  let atual = 1;
+
+  for (let i = 1; i < datasOrdenadas.length; i++) {
+    const anterior = new Date(`${datasOrdenadas[i - 1]}T00:00:00`);
+    const atualData = new Date(`${datasOrdenadas[i]}T00:00:00`);
+    const diffDias = Math.round((atualData.getTime() - anterior.getTime()) / 86_400_000);
+
+    atual = diffDias === 1 ? atual + 1 : 1;
+    melhor = Math.max(melhor, atual);
+  }
+
+  return melhor;
+}
+
+export function formatarSequencia(dias: number): string {
+  if (dias === 1) {
+    return '1 dia seguido';
+  }
+  return `${dias} dias seguidos`;
+}

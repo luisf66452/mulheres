@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcularProgresso7Dias } from './streak';
+import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia } from './streak';
 
 describe('calcularProgresso7Dias', () => {
   const hoje = new Date(2026, 7, 10); // 2026-08-10, a Monday
@@ -43,5 +43,55 @@ describe('calcularProgresso7Dias', () => {
     expect(porData['2026-08-10']).toBe(true);
     expect(porData['2026-08-09']).toBe(false);
     expect(porData['2026-08-08']).toBe(true);
+  });
+});
+
+describe('calcularMelhorSequencia', () => {
+  it('retorna 0 quando não há check-ins', () => {
+    expect(calcularMelhorSequencia([])).toBe(0);
+  });
+
+  it('retorna 1 para um único check-in', () => {
+    expect(calcularMelhorSequencia(['2026-08-10'])).toBe(1);
+  });
+
+  it('conta uma sequência simples de dias consecutivos', () => {
+    const datas = ['2026-08-08', '2026-08-09', '2026-08-10'];
+    expect(calcularMelhorSequencia(datas)).toBe(3);
+  });
+
+  it('ignora datas fora de ordem e retorna a maior sequência real', () => {
+    const datas = ['2026-08-10', '2026-08-08', '2026-08-09'];
+    expect(calcularMelhorSequencia(datas)).toBe(3);
+  });
+
+  it('encontra a melhor sequência mesmo quando não é a mais recente', () => {
+    const datas = ['2026-08-01', '2026-08-02', '2026-08-03', '2026-08-05', '2026-08-07'];
+    expect(calcularMelhorSequencia(datas)).toBe(3);
+  });
+
+  it('trata datas duplicadas como um único dia', () => {
+    const datas = ['2026-08-01', '2026-08-01', '2026-08-02'];
+    expect(calcularMelhorSequencia(datas)).toBe(2);
+  });
+
+  it('dias isolados (sem sequência) retornam melhor sequência 1', () => {
+    const datas = ['2026-08-01', '2026-08-05', '2026-08-09'];
+    expect(calcularMelhorSequencia(datas)).toBe(1);
+  });
+});
+
+describe('formatarSequencia', () => {
+  it('formata 0 dias', () => {
+    expect(formatarSequencia(0)).toBe('0 dias seguidos');
+  });
+
+  it('formata 1 dia no singular', () => {
+    expect(formatarSequencia(1)).toBe('1 dia seguido');
+  });
+
+  it('formata mais de 1 dia no plural', () => {
+    expect(formatarSequencia(2)).toBe('2 dias seguidos');
+    expect(formatarSequencia(10)).toBe('10 dias seguidos');
   });
 });

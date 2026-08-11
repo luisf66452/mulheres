@@ -11,15 +11,42 @@ export type Perfil = {
   criado_em: string;
 };
 
+export type EstadoGeral =
+  | 'alta_energia_desconforto'
+  | 'alta_energia_conforto'
+  | 'baixa_energia_desconforto'
+  | 'baixa_energia_conforto';
+
+export type AlimentacaoPercebida =
+  | 'tranquila'
+  | 'satisfeita'
+  | 'indiferente'
+  | 'confusa'
+  | 'ansiosa'
+  | 'culpada'
+  | 'vontade_punir'
+  | 'prefiro_nao_responder';
+
+export type ProximaAcaoEscolhida = 'guardar' | 'entender' | 'pratica_rapida';
+
 export type Checkin = {
   id: string;
   usuaria_id: string;
   data: string; // YYYY-MM-DD
   humor: number;
   imagem_corporal: number;
-  comida: number;
+  comida: number | null;
   texto_livre: string | null;
   sinal_seguranca: boolean;
+  estado_geral: EstadoGeral | null;
+  emocao_especifica: string | null;
+  intensidade: number | null;
+  alimentacao_percebida: AlimentacaoPercebida | null;
+  gatilho_local: string | null;
+  gatilho_pensamento: string | null;
+  gatilho_emocao_depois: string | null;
+  fatores: string[] | null;
+  proxima_acao: ProximaAcaoEscolhida | null;
   criado_em: string;
 };
 

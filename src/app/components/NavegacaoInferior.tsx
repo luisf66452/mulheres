@@ -23,6 +23,15 @@ function IconeJornada({ ativo }: IconeProps) {
   );
 }
 
+function IconePraticas({ ativo }: IconeProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={ativo ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 4.5h9a3 3 0 0 1 3 3V19a2.5 2.5 0 0 0-2.5-2.5H6a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 6 4.5Z" />
+      <path d="M6 16.5V19" />
+    </svg>
+  );
+}
+
 function IconeProgresso({ ativo }: IconeProps) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={ativo ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -44,7 +53,8 @@ function IconePerfil({ ativo }: IconeProps) {
 
 const ITENS = [
   { href: '/', rotulo: 'Início', Icone: IconeInicio, prefixosAtivos: ['/'] },
-  { href: '/jornadas', rotulo: 'Jornada', Icone: IconeJornada, prefixosAtivos: ['/jornadas', '/praticas'] },
+  { href: '/jornadas', rotulo: 'Jornadas', Icone: IconeJornada, prefixosAtivos: ['/jornadas'] },
+  { href: '/praticas', rotulo: 'Práticas', Icone: IconePraticas, prefixosAtivos: ['/praticas'] },
   { href: '/progresso', rotulo: 'Progresso', Icone: IconeProgresso, prefixosAtivos: ['/progresso'] },
   { href: '/perfil', rotulo: 'Perfil', Icone: IconePerfil, prefixosAtivos: ['/perfil'] },
 ] as const;

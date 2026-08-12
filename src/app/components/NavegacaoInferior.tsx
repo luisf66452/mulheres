@@ -65,7 +65,7 @@ export default function NavegacaoInferior() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-borda bg-superficie/95 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-borda bg-superficie/95 backdrop-blur"
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
         {ITENS.map(({ href, rotulo, Icone, prefixosAtivos }) => {

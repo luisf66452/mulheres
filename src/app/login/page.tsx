@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { enviarLinkMagico } from './actions';
 import Botao from '@/app/components/Botao';
+import IlustracaoBotanica from './IlustracaoBotanica';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -24,7 +25,8 @@ function LoginForm() {
 
   if (enviado) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-fundo p-6">
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-fundo p-6">
+        <IlustracaoBotanica />
         <p className="text-center text-lg text-texto">
           Enviamos um link de acesso para <strong>{email}</strong>. Abra seu e-mail para entrar.
         </p>
@@ -33,7 +35,8 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-fundo p-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-fundo p-6">
+      <IlustracaoBotanica />
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         <h1 className="font-display text-2xl text-texto">Entrar</h1>
         <input

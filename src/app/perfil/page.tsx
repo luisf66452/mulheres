@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import Cartao from '@/app/components/Cartao';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
+import EditarNomeForm from './EditarNomeForm';
 import { sair } from './actions';
 
 const LABEL_PLANO: Record<string, string> = {
@@ -16,7 +17,7 @@ export default async function PerfilPage() {
 
   const { data: perfil } = await supabase
     .from('perfis')
-    .select('plano')
+    .select('plano, nome')
     .eq('id', user!.id)
     .single();
 
@@ -33,6 +34,10 @@ export default async function PerfilPage() {
           <p className="text-xs text-texto-suave">Plano</p>
           <p className="text-texto">{LABEL_PLANO[perfil?.plano ?? 'free']}</p>
         </div>
+      </Cartao>
+
+      <Cartao>
+        <EditarNomeForm nomeAtual={perfil?.nome ?? null} />
       </Cartao>
 
       <div className="space-y-3">

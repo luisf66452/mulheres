@@ -2,8 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { normalizarNome } from '@/lib/perfil/nome';
 
-export async function registrarConsentimento(): Promise<{ erro?: string }> {
+export async function registrarConsentimento(nomeBruto?: string): Promise<{ erro?: string }> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -15,7 +16,10 @@ export async function registrarConsentimento(): Promise<{ erro?: string }> {
 
   const { error } = await supabase
     .from('perfis')
-    .update({ consentimento_dados_sensiveis_em: new Date().toISOString() })
+    .update({
+      consentimento_dados_sensiveis_em: new Date().toISOString(),
+      nome: normalizarNome(nomeBruto ?? ''),
+    })
     .eq('id', user.id);
 
   if (error) {

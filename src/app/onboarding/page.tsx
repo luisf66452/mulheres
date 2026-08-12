@@ -5,6 +5,7 @@ import { registrarConsentimento } from './actions';
 import Botao from '@/app/components/Botao';
 
 export default function OnboardingPage() {
+  const [nome, setNome] = useState('');
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [aceitouDadosSensiveis, setAceitouDadosSensiveis] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export default function OnboardingPage() {
   function handleContinuar() {
     setErro(null);
     startTransition(async () => {
-      const resultado = await registrarConsentimento();
+      const resultado = await registrarConsentimento(nome);
       if (resultado?.erro) {
         setErro(resultado.erro);
       }
@@ -29,6 +30,17 @@ export default function OnboardingPage() {
         Este app não é terapia, não faz diagnóstico e não substitui acompanhamento profissional.
         Ele te ajuda a construir um pequeno ritual diário de cuidado com você mesma.
       </p>
+
+      <label className="block text-texto">
+        Como podemos te chamar? (opcional)
+        <input
+          type="text"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          placeholder="Seu nome"
+          className="mt-1 block w-full rounded-2xl border border-borda bg-superficie p-3 text-texto"
+        />
+      </label>
 
       <label className="flex items-start gap-3 text-texto">
         <input

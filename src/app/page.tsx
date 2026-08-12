@@ -34,6 +34,7 @@ export default async function InicioPage() {
 
   const progresso = calcularProgresso7Dias((checkins ?? []).map((c) => c.data), new Date());
   const jaFezCheckinHoje = !!checkinHoje;
+  const checkinHojeId: string | null = checkinHoje?.id ?? null;
 
   const jornadaAtivaMaisRecente = escolherJornadaAtivaMaisRecente(
     (jornadasAtivas ?? []).map((j) => ({
@@ -66,7 +67,9 @@ export default async function InicioPage() {
         descricao: jornada.descricao,
         diasCompletados: jornadaAtivaMaisRecente.diasCompletados,
         duracaoDias: jornada.duracao_dias,
-        href: resolverHrefAtividadeDoDia(atividadeDoDia?.id ?? null),
+        href: jaFezCheckinHoje
+          ? '/jornadas'
+          : resolverHrefAtividadeDoDia(atividadeDoDia?.id ?? null, checkinHojeId),
       };
     }
   }

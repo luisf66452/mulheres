@@ -4,6 +4,7 @@ export type TipoPratica = 'respiracao' | 'reflexao' | 'afirmacao' | 'movimento';
 
 export type Perfil = {
   id: string;
+  nome: string | null;
   plano: Plano;
   pais: string;
   horario_preferido_notificacao: string | null;

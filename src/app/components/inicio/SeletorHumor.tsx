@@ -1,32 +1,62 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Cartao from '@/app/components/Cartao';
 
-const NIVEIS: { valor: 1 | 2 | 3 | 4 | 5; rotulo: string; cor: string }[] = [
-  { valor: 1, rotulo: 'Muito baixo', cor: 'var(--color-humor-1)' },
-  { valor: 2, rotulo: 'Baixo', cor: 'var(--color-humor-2)' },
-  { valor: 3, rotulo: 'Bem', cor: 'var(--color-humor-3)' },
-  { valor: 4, rotulo: 'Alto', cor: 'var(--color-humor-4)' },
-  { valor: 5, rotulo: 'Muito alto', cor: 'var(--color-humor-5)' },
+type Humor = 1 | 2 | 3 | 4 | 5;
+
+const NIVEIS: { valor: Humor; rotulo: string; cor: string; curvaBoca: string }[] = [
+  { valor: 1, rotulo: 'Muito bem', cor: 'var(--color-humor-1)', curvaBoca: 'M13 23 Q20 30 27 23' },
+  { valor: 2, rotulo: 'Bem', cor: 'var(--color-humor-2)', curvaBoca: 'M14 24 Q20 28 26 24' },
+  { valor: 3, rotulo: 'Neutro', cor: 'var(--color-humor-3)', curvaBoca: 'M14 26 H26' },
+  { valor: 4, rotulo: 'Mal', cor: 'var(--color-humor-4)', curvaBoca: 'M14 27 Q20 23 26 27' },
+  { valor: 5, rotulo: 'Muito mal', cor: 'var(--color-humor-5)', curvaBoca: 'M13 28 Q20 21 27 28' },
 ];
 
+function CarinhaHumor({ cor, curvaBoca }: { cor: string; curvaBoca: string }) {
+  return (
+    <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
+      <circle cx="20" cy="20" r="20" fill={cor} />
+      <circle cx="14" cy="17" r="1.8" fill="#fff" fillOpacity="0.9" />
+      <circle cx="26" cy="17" r="1.8" fill="#fff" fillOpacity="0.9" />
+      <path d={curvaBoca} stroke="#fff" strokeOpacity="0.9" strokeWidth="2" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
 export default function SeletorHumor() {
+  const router = useRouter();
+  const [selecionado, setSelecionado] = useState<Humor | null>(null);
+
+  function selecionar(valor: Humor) {
+    setSelecionado(valor);
+    setTimeout(() => router.push(`/checkin?humor=${valor}`), 180);
+  }
+
   return (
     <Cartao className="space-y-4 text-center">
-      <p className="font-display text-lg text-texto">Como você está se sentindo hoje?</p>
+      <p className="font-display text-lg text-texto">
+        Como você está
+        <br />
+        se sentindo hoje?
+      </p>
       <div className="flex justify-between gap-1">
         {NIVEIS.map((nivel) => (
-          <Link
+          <button
             key={nivel.valor}
-            href={`/checkin?humor=${nivel.valor}`}
-            className="flex flex-1 flex-col items-center gap-1.5 transition-transform hover:-translate-y-0.5"
+            type="button"
+            onClick={() => selecionar(nivel.valor)}
+            aria-label={nivel.rotulo}
+            className={`flex flex-1 flex-col items-center gap-1.5 rounded-full transition-transform duration-200 motion-reduce:transition-none ${
+              selecionado === nivel.valor
+                ? 'scale-110 ring-2 ring-acao ring-offset-2 ring-offset-superficie'
+                : ''
+            }`}
           >
-            <span
-              aria-hidden="true"
-              className="block h-10 w-10 rounded-full"
-              style={{ backgroundColor: nivel.cor }}
-            />
+            <CarinhaHumor cor={nivel.cor} curvaBoca={nivel.curvaBoca} />
             <span className="text-[11px] leading-tight text-texto-suave">{nivel.rotulo}</span>
-          </Link>
+          </button>
         ))}
       </div>
     </Cartao>

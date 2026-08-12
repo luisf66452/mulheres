@@ -18,7 +18,10 @@ export default function ResumoDoDia({ checkinHoje }: { checkinHoje: Checkin | nu
         Corpo: <strong className="text-texto">{checkinHoje.imagem_corporal}/5</strong>
       </span>
       <span>
-        Comida: <strong className="text-texto">{checkinHoje.comida}/5</strong>
+        Comida:{' '}
+        <strong className="text-texto">
+          {checkinHoje.comida !== null ? `${checkinHoje.comida}/5` : 'não informado'}
+        </strong>
       </span>
     </div>
   );

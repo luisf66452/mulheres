@@ -8,6 +8,44 @@ import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
 import type { EstadoGeral, AlimentacaoPercebida, ProximaAcaoEscolhida } from '@/lib/supabase/types';
 
+const ESTADOS_GERAIS: EstadoGeral[] = [
+  'alta_energia_desconforto',
+  'alta_energia_conforto',
+  'baixa_energia_desconforto',
+  'baixa_energia_conforto',
+];
+
+const ALIMENTACOES_PERCEBIDAS: AlimentacaoPercebida[] = [
+  'tranquila',
+  'satisfeita',
+  'indiferente',
+  'confusa',
+  'ansiosa',
+  'culpada',
+  'vontade_punir',
+  'prefiro_nao_responder',
+];
+
+const PROXIMAS_ACOES: ProximaAcaoEscolhida[] = ['guardar', 'entender', 'pratica_rapida'];
+
+function validarRespostas(answers: CheckinCompletoAnswers): void {
+  if (!ESTADOS_GERAIS.includes(answers.estadoGeral)) {
+    throw new Error('Estado geral inválido.');
+  }
+  if (!ALIMENTACOES_PERCEBIDAS.includes(answers.alimentacaoPercebida)) {
+    throw new Error('Resposta de alimentação inválida.');
+  }
+  if (!PROXIMAS_ACOES.includes(answers.proximaAcao)) {
+    throw new Error('Próxima ação inválida.');
+  }
+  if (!Number.isInteger(answers.intensidade) || answers.intensidade < 1 || answers.intensidade > 5) {
+    throw new Error('Intensidade inválida.');
+  }
+  if (!Number.isInteger(answers.confortoCorporal) || answers.confortoCorporal < 1 || answers.confortoCorporal > 5) {
+    throw new Error('Resposta sobre o corpo inválida.');
+  }
+}
+
 export interface CheckinCompletoAnswers {
   estadoGeral: EstadoGeral;
   emocaoEspecifica: string;
@@ -33,6 +71,8 @@ export async function submeterCheckin(
   if (!user) {
     redirect('/login');
   }
+
+  validarRespostas(answers);
 
   const hojeISO = formatDateISO(new Date());
 

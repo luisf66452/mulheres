@@ -74,6 +74,10 @@ const FATORES_DISPONIVEIS = [
 ];
 
 export default function CheckinFormClient({ humorInicial }: { humorInicial: HumorInicial | null }) {
+  // Captura se o componente foi aberto pelo atalho de humor da tela de início
+  // (prop não muda entre renders, então um const simples basta).
+  const entrouViaHumorInicial = humorInicial !== null;
+
   const [etapa, setEtapa] = useState<Etapa>(humorInicial ? 'emocao' : 'estado_geral');
 
   const [estadoGeral, setEstadoGeral] = useState<EstadoGeral | null>(
@@ -179,6 +183,17 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
             </button>
           ))}
         </div>
+        {entrouViaHumorInicial && (
+          <Botao
+            variante="secundaria"
+            onClick={() => {
+              setEstadoGeral(null);
+              setEtapa('estado_geral');
+            }}
+          >
+            Nenhuma dessas — escolher outro estado
+          </Botao>
+        )}
       </main>
     );
   }

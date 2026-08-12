@@ -15,6 +15,7 @@ export type SuaJornadaAtualProps =
       sessao: number;
       diasCompletados: number;
       duracaoDias: number;
+      emRevisao: boolean;
       linkAtividade: ResultadoLinkAtividade;
     }
   | {
@@ -37,7 +38,10 @@ export default function SuaJornadaAtual(props: SuaJornadaAtualProps) {
   }
 
   if (props.tipo === 'ativa') {
-    const percentual = Math.round((props.diasCompletados / props.duracaoDias) * 100);
+    const percentual =
+      props.duracaoDias > 0
+        ? Math.min(100, Math.round((props.diasCompletados / props.duracaoDias) * 100))
+        : 0;
 
     return (
       <div className="space-y-3">
@@ -66,12 +70,16 @@ export default function SuaJornadaAtual(props: SuaJornadaAtualProps) {
             </p>
           ) : (
             <>
-              <p className="text-xs text-texto-suave">Próxima sessão: ~5 minutos</p>
+              <p className="text-xs text-texto-suave">
+                {props.emRevisao
+                  ? 'Revisitando essa jornada desde o início'
+                  : 'Próxima sessão: ~5 minutos'}
+              </p>
               <Link
                 href={props.linkAtividade.href}
                 className="block w-full rounded-2xl bg-acao p-3 text-center font-medium text-white transition-colors hover:bg-acao/90"
               >
-                Continuar jornada
+                {props.emRevisao ? 'Revisitar jornada' : 'Continuar jornada'}
               </Link>
             </>
           )}

@@ -9,3 +9,7 @@ export function calcularModuloSessao(numeroDia: number): ModuloSessao {
     sessao: ((numeroDia - 1) % 7) + 1,
   };
 }
+
+export function calcularDiaExibido(diasCompletados: number, duracaoDias: number): number {
+  return Math.min(diasCompletados + 1, duracaoDias);
+}

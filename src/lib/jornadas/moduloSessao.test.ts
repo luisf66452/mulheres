@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcularModuloSessao } from './moduloSessao';
+import { calcularModuloSessao, calcularDiaExibido } from './moduloSessao';
 
 describe('calcularModuloSessao', () => {
   it('dia 1 é módulo 1, sessão 1', () => {
@@ -24,5 +24,19 @@ describe('calcularModuloSessao', () => {
 
   it('dia 15 é módulo 3, sessão 1', () => {
     expect(calcularModuloSessao(15)).toEqual({ modulo: 3, sessao: 1 });
+  });
+});
+
+describe('calcularDiaExibido', () => {
+  it('retorna dias_completados + 1 quando dentro da duração da jornada', () => {
+    expect(calcularDiaExibido(2, 7)).toBe(3);
+  });
+
+  it('nunca ultrapassa a duração da jornada quando já completou tudo', () => {
+    expect(calcularDiaExibido(7, 7)).toBe(7);
+  });
+
+  it('nunca ultrapassa a duração mesmo se dias_completados for maior (schema inconsistente)', () => {
+    expect(calcularDiaExibido(9, 7)).toBe(7);
   });
 });

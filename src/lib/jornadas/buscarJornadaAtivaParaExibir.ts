@@ -13,6 +13,7 @@ export interface JornadaAtivaParaExibir {
   descricao: string;
   duracaoDias: number;
   diasCompletados: number;
+  emRevisao: boolean;
   linkAtividade: ResultadoLinkAtividade;
 }
 
@@ -40,23 +41,25 @@ export async function buscarJornadaAtivaParaExibir(
     return null;
   }
 
-  const [{ data: jornada }, { data: atividadeDoDia }] = await Promise.all([
-    supabase
-      .from('jornadas')
-      .select('titulo, descricao, duracao_dias')
-      .eq('id', jornadaAtivaMaisRecente.jornadaId)
-      .single(),
-    supabase
-      .from('jornada_atividades')
-      .select('id')
-      .eq('jornada_id', jornadaAtivaMaisRecente.jornadaId)
-      .eq('numero_dia', jornadaAtivaMaisRecente.diasCompletados + 1)
-      .maybeSingle(),
-  ]);
+  const { data: jornada } = await supabase
+    .from('jornadas')
+    .select('titulo, descricao, duracao_dias')
+    .eq('id', jornadaAtivaMaisRecente.jornadaId)
+    .single();
 
   if (!jornada) {
     return null;
   }
+
+  const emRevisao = jornadaAtivaMaisRecente.diasCompletados >= jornada.duracao_dias;
+  const numeroDiaParaBuscar = emRevisao ? 1 : jornadaAtivaMaisRecente.diasCompletados + 1;
+
+  const { data: atividadeDoDia } = await supabase
+    .from('jornada_atividades')
+    .select('id')
+    .eq('jornada_id', jornadaAtivaMaisRecente.jornadaId)
+    .eq('numero_dia', numeroDiaParaBuscar)
+    .maybeSingle();
 
   return {
     jornadaId: jornadaAtivaMaisRecente.jornadaId,
@@ -64,6 +67,7 @@ export async function buscarJornadaAtivaParaExibir(
     descricao: jornada.descricao,
     duracaoDias: jornada.duracao_dias,
     diasCompletados: jornadaAtivaMaisRecente.diasCompletados,
+    emRevisao,
     linkAtividade: resolverLinkAtividadeDoDia(atividadeDoDia?.id ?? null, checkinHojeId),
   };
 }

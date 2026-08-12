@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatDateISO } from '@/lib/date';
 import { buscarJornadaAtivaParaExibir } from '@/lib/jornadas/buscarJornadaAtivaParaExibir';
-import { calcularModuloSessao } from '@/lib/jornadas/moduloSessao';
+import { calcularModuloSessao, calcularDiaExibido } from '@/lib/jornadas/moduloSessao';
 import { atribuirIlustracoes } from '@/lib/jornadas/ilustracoes';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import SuaJornadaAtual, { type SuaJornadaAtualProps } from '@/app/components/jornadas/SuaJornadaAtual';
@@ -61,7 +61,9 @@ export default async function JornadasPage() {
   let heroProps: SuaJornadaAtualProps;
 
   if (tipoHero === 'ativa' && jornadaAtiva) {
-    const diaExibido = Math.min(jornadaAtiva.diasCompletados + 1, jornadaAtiva.duracaoDias);
+    const diaExibido = jornadaAtiva.emRevisao
+      ? 1
+      : calcularDiaExibido(jornadaAtiva.diasCompletados, jornadaAtiva.duracaoDias);
     const { modulo, sessao } = calcularModuloSessao(diaExibido);
     heroProps = {
       tipo: 'ativa',
@@ -71,6 +73,7 @@ export default async function JornadasPage() {
       sessao,
       diasCompletados: jornadaAtiva.diasCompletados,
       duracaoDias: jornadaAtiva.duracaoDias,
+      emRevisao: jornadaAtiva.emRevisao,
       linkAtividade: jornadaAtiva.linkAtividade,
     };
   } else if (tipoHero === 'recomendada' && jornadaDestaqueId) {

@@ -16,12 +16,17 @@ export function escolherJornadaAtivaMaisRecente(
   )[0];
 }
 
-export function resolverHrefAtividadeDoDia(
+export type ResultadoLinkAtividade =
+  | { tipo: 'atividade'; href: string }
+  | { tipo: 'checkin'; href: string }
+  | { tipo: 'indisponivel' };
+
+export function resolverLinkAtividadeDoDia(
   atividadeId: string | null,
   checkinHojeId: string | null
-): string {
-  if (!atividadeId) return '/jornadas';
+): ResultadoLinkAtividade {
+  if (!atividadeId) return { tipo: 'indisponivel' };
   return checkinHojeId
-    ? `/jornada-atividade/${atividadeId}?checkin=${checkinHojeId}`
-    : '/checkin';
+    ? { tipo: 'atividade', href: `/jornada-atividade/${atividadeId}?checkin=${checkinHojeId}` }
+    : { tipo: 'checkin', href: '/checkin' };
 }

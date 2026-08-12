@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatDateISO } from '@/lib/date';
 import { calcularProgresso7Dias } from '@/lib/progress/streak';
-import { escolherJornadaAtivaMaisRecente, resolverHrefAtividadeDoDia } from '@/lib/jornadas/emAndamento';
+import { escolherJornadaAtivaMaisRecente, resolverLinkAtividadeDoDia } from '@/lib/jornadas/emAndamento';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import FundoDecorativo from '@/app/components/inicio/FundoDecorativo';
 import Saudacao from '@/app/components/inicio/Saudacao';
@@ -62,14 +62,16 @@ export default async function InicioPage() {
     ]);
 
     if (jornada) {
+      const linkAtividade = resolverLinkAtividadeDoDia(atividadeDoDia?.id ?? null, checkinHojeId);
+      const href =
+        jaFezCheckinHoje || linkAtividade.tipo === 'indisponivel' ? '/jornadas' : linkAtividade.href;
+
       jornadaEmAndamento = {
         titulo: jornada.titulo,
         descricao: jornada.descricao,
         diasCompletados: jornadaAtivaMaisRecente.diasCompletados,
         duracaoDias: jornada.duracao_dias,
-        href: jaFezCheckinHoje
-          ? '/jornadas'
-          : resolverHrefAtividadeDoDia(atividadeDoDia?.id ?? null, checkinHojeId),
+        href,
       };
     }
   }

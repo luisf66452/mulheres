@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   escolherJornadaAtivaMaisRecente,
-  resolverHrefAtividadeDoDia,
+  resolverLinkAtividadeDoDia,
   type JornadaAtivaResumo,
 } from './emAndamento';
 
@@ -38,22 +38,26 @@ describe('escolherJornadaAtivaMaisRecente', () => {
   });
 });
 
-describe('resolverHrefAtividadeDoDia', () => {
-  it('faz fallback para a lista de jornadas quando não há atividade', () => {
-    expect(resolverHrefAtividadeDoDia(null, null)).toBe('/jornadas');
+describe('resolverLinkAtividadeDoDia', () => {
+  it('retorna indisponivel quando não há atividade', () => {
+    expect(resolverLinkAtividadeDoDia(null, null)).toEqual({ tipo: 'indisponivel' });
   });
 
-  it('faz fallback para a lista de jornadas quando não há atividade, mesmo com check-in do dia', () => {
-    expect(resolverHrefAtividadeDoDia(null, 'checkin-1')).toBe('/jornadas');
+  it('retorna indisponivel quando não há atividade, mesmo com check-in do dia', () => {
+    expect(resolverLinkAtividadeDoDia(null, 'checkin-1')).toEqual({ tipo: 'indisponivel' });
   });
 
-  it('manda para /checkin quando há atividade mas ainda não houve check-in hoje', () => {
-    expect(resolverHrefAtividadeDoDia('atividade-1', null)).toBe('/checkin');
+  it('retorna checkin quando há atividade mas ainda não houve check-in hoje', () => {
+    expect(resolverLinkAtividadeDoDia('atividade-1', null)).toEqual({
+      tipo: 'checkin',
+      href: '/checkin',
+    });
   });
 
-  it('linka para a atividade com o checkin do dia quando ambos existem', () => {
-    expect(resolverHrefAtividadeDoDia('atividade-1', 'checkin-1')).toBe(
-      '/jornada-atividade/atividade-1?checkin=checkin-1'
-    );
+  it('retorna atividade com o link completo quando ambos existem', () => {
+    expect(resolverLinkAtividadeDoDia('atividade-1', 'checkin-1')).toEqual({
+      tipo: 'atividade',
+      href: '/jornada-atividade/atividade-1?checkin=checkin-1',
+    });
   });
 });

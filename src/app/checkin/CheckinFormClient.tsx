@@ -5,6 +5,7 @@ import { submeterCheckin } from './actions';
 import Escala from '@/app/components/Escala';
 import Botao from '@/app/components/Botao';
 import type { EstadoGeral, AlimentacaoPercebida } from '@/lib/supabase/types';
+import { estadoInicialParaHumor, type HumorInicial } from '@/lib/checkin/humorInicial';
 
 type Etapa =
   | 'estado_geral'
@@ -72,10 +73,12 @@ const FATORES_DISPONIVEIS = [
   'Situação social', 'Fotografia', 'Roupa', 'Espelho',
 ];
 
-export default function CheckinFormClient() {
-  const [etapa, setEtapa] = useState<Etapa>('estado_geral');
+export default function CheckinFormClient({ humorInicial }: { humorInicial: HumorInicial | null }) {
+  const [etapa, setEtapa] = useState<Etapa>(humorInicial ? 'emocao' : 'estado_geral');
 
-  const [estadoGeral, setEstadoGeral] = useState<EstadoGeral | null>(null);
+  const [estadoGeral, setEstadoGeral] = useState<EstadoGeral | null>(
+    humorInicial ? estadoInicialParaHumor(humorInicial) : null
+  );
   const [emocaoEspecifica, setEmocaoEspecifica] = useState<string | null>(null);
   const [intensidade, setIntensidade] = useState<number | null>(null);
   const [confortoCorporal, setConfortoCorporal] = useState<number | null>(null);

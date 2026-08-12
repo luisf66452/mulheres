@@ -2,8 +2,16 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatDateISO } from '@/lib/date';
 import LembreteBanner from '@/app/components/LembreteBanner';
 import CheckinFormClient from './CheckinFormClient';
+import { validarHumorParam } from '@/lib/checkin/humorInicial';
 
-export default async function CheckinPage() {
+export default async function CheckinPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ humor?: string | string[] }>;
+}) {
+  const { humor } = await searchParams;
+  const humorInicial = validarHumorParam(humor);
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -32,7 +40,7 @@ export default async function CheckinPage() {
           </a>
         </main>
       ) : (
-        <CheckinFormClient />
+        <CheckinFormClient humorInicial={humorInicial} />
       )}
     </>
   );

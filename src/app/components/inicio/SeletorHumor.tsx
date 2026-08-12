@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Cartao from '@/app/components/Cartao';
 
 type Humor = 1 | 2 | 3 | 4 | 5;
@@ -28,11 +28,23 @@ function CarinhaHumor({ cor, curvaBoca }: { cor: string; curvaBoca: string }) {
 export default function SeletorHumor() {
   const router = useRouter();
   const [selecionado, setSelecionado] = useState<Humor | null>(null);
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function selecionar(valor: Humor) {
+    if (pendingTimeoutRef.current !== null) {
+      clearTimeout(pendingTimeoutRef.current);
+    }
     setSelecionado(valor);
-    setTimeout(() => router.push(`/checkin?humor=${valor}`), 180);
+    pendingTimeoutRef.current = setTimeout(() => router.push(`/checkin?humor=${valor}`), 180);
   }
+
+  useEffect(() => {
+    return () => {
+      if (pendingTimeoutRef.current !== null) {
+        clearTimeout(pendingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Cartao className="space-y-4 text-center">

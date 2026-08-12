@@ -9,6 +9,11 @@
   --color-acao: #B8697A;
   --color-borda: #E8DDD9;
   --color-alerta: #8B4C5C;
+  --color-humor-1: #A9B7D4;
+  --color-humor-2: #9FC2B0;
+  --color-humor-3: #E3C77A;
+  --color-humor-4: #E3A26F;
+  --color-humor-5: #D48CA6;
 }
 
 @theme inline {

@@ -2,11 +2,29 @@
 
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { avaliarCheckin, type CheckinAnswers } from '@/lib/checkin/recommend';
+import { derivarHumor, derivarImagemCorporal, derivarComida } from '@/lib/checkin/derivacoes';
+import { decidirRecomendacaoComProtecao } from '@/lib/checkin/recommend';
 import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
+import type { EstadoGeral, AlimentacaoPercebida, ProximaAcaoEscolhida } from '@/lib/supabase/types';
 
-export async function submeterCheckin(answers: CheckinAnswers) {
+export interface CheckinCompletoAnswers {
+  estadoGeral: EstadoGeral;
+  emocaoEspecifica: string;
+  intensidade: number;
+  confortoCorporal: number;
+  gatilhoLocal: string | null;
+  gatilhoPensamento: string | null;
+  gatilhoEmocaoDepois: string | null;
+  alimentacaoPercebida: AlimentacaoPercebida;
+  fatores: string[];
+  anotacao?: string;
+  proximaAcao: ProximaAcaoEscolhida;
+}
+
+export async function submeterCheckin(
+  answers: CheckinCompletoAnswers
+): Promise<{ tipo: 'guardado' } | void> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -29,23 +47,39 @@ export async function submeterCheckin(answers: CheckinAnswers) {
     redirect('/progresso');
   }
 
+  const humor = derivarHumor(answers.estadoGeral, answers.intensidade);
+  const imagemCorporal = derivarImagemCorporal(answers.confortoCorporal);
+  const comida = derivarComida(answers.alimentacaoPercebida);
+
   const { data: regras } = await supabase
     .from('regras_recomendacao')
     .select('*')
     .eq('ativa', true);
 
-  const recomendacao = avaliarCheckin(answers, regras ?? []);
+  const recomendacao = decidirRecomendacaoComProtecao(
+    { humor, imagemCorporal, comida, alimentacaoPercebida: answers.alimentacaoPercebida },
+    regras ?? []
+  );
 
   const { data: checkin, error } = await supabase
     .from('checkins')
     .insert({
       usuaria_id: user.id,
       data: hojeISO,
-      humor: answers.humor,
-      imagem_corporal: answers.imagemCorporal,
-      comida: answers.comida,
-      texto_livre: answers.textoLivre ?? null,
+      humor,
+      imagem_corporal: imagemCorporal,
+      comida,
+      texto_livre: answers.anotacao ?? null,
       sinal_seguranca: recomendacao.tipo === 'sinal_seguranca',
+      estado_geral: answers.estadoGeral,
+      emocao_especifica: answers.emocaoEspecifica,
+      intensidade: answers.intensidade,
+      alimentacao_percebida: answers.alimentacaoPercebida,
+      gatilho_local: answers.gatilhoLocal,
+      gatilho_pensamento: answers.gatilhoPensamento,
+      gatilho_emocao_depois: answers.gatilhoEmocaoDepois,
+      fatores: answers.fatores.length > 0 ? answers.fatores : null,
+      proxima_acao: answers.proximaAcao,
     })
     .select()
     .single();
@@ -54,11 +88,16 @@ export async function submeterCheckin(answers: CheckinAnswers) {
     throw new Error('Não foi possível salvar o check-in. Tente novamente.');
   }
 
+  // A partir daqui, o check-in já está salvo no Supabase, independente da
+  // saída escolhida (segurança, guardar, ou prática/jornada).
+
   if (recomendacao.tipo === 'sinal_seguranca') {
     redirect('/seguranca');
   }
 
-  // A partir daqui, recomendacao.tipo é 'pratica'.
+  if (answers.proximaAcao === 'guardar') {
+    return { tipo: 'guardado' };
+  }
 
   const { data: jornadaAtivaRow } = await supabase
     .from('jornadas_usuarias')
@@ -80,6 +119,7 @@ export async function submeterCheckin(answers: CheckinAnswers) {
 
   const etapa = decidirProximaEtapaCheckin({
     recomendacao,
+    proximaAcaoEscolhida: answers.proximaAcao,
     jornadaAtiva: jornadaAtivaRow
       ? { jornadaId: jornadaAtivaRow.jornada_id, diasCompletados: jornadaAtivaRow.dias_completados }
       : null,

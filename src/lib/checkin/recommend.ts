@@ -1,4 +1,4 @@
-import type { RegraRecomendacao } from '@/lib/supabase/types';
+import type { RegraRecomendacao, AlimentacaoPercebida } from '@/lib/supabase/types';
 
 export interface CheckinAnswers {
   humor: number;
@@ -36,4 +36,23 @@ export function avaliarCheckin(
   }
 
   return { tipo: 'pratica', categoria: escolhida.categoria_pratica! };
+}
+
+export function decidirRecomendacaoComProtecao(
+  answers: {
+    humor: number;
+    imagemCorporal: number;
+    comida: number | null;
+    alimentacaoPercebida: AlimentacaoPercebida;
+  },
+  regras: RegraRecomendacao[]
+): Recomendacao {
+  if (answers.alimentacaoPercebida === 'vontade_punir') {
+    return { tipo: 'sinal_seguranca' };
+  }
+
+  return avaliarCheckin(
+    { humor: answers.humor, imagemCorporal: answers.imagemCorporal, comida: answers.comida ?? 3 },
+    regras
+  );
 }

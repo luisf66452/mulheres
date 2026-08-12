@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { avaliarCheckin, type CheckinAnswers } from './recommend';
+import { avaliarCheckin, decidirRecomendacaoComProtecao, type CheckinAnswers } from './recommend';
 import type { RegraRecomendacao } from '@/lib/supabase/types';
 
 function regra(overrides: Partial<RegraRecomendacao>): RegraRecomendacao {
@@ -62,5 +62,51 @@ describe('avaliarCheckin', () => {
     const regras = [regra({ humor_min: 1, humor_max: 1 })];
 
     expect(() => avaliarCheckin(answers, regras)).toThrow(/nenhuma regra/i);
+  });
+});
+
+describe('decidirRecomendacaoComProtecao', () => {
+  it('retorna sinal_seguranca para vontade_punir mesmo sem nenhuma regra de risco cadastrada', () => {
+    const regras = [regra({ humor_min: 1, humor_max: 5, imagem_corporal_min: 1, imagem_corporal_max: 5, comida_min: 1, comida_max: 5, eh_sinal_seguranca: false, categoria_pratica: 'geral_positivo' })];
+
+    const resultado = decidirRecomendacaoComProtecao(
+      { humor: 5, imagemCorporal: 5, comida: 1, alimentacaoPercebida: 'vontade_punir' },
+      regras
+    );
+
+    expect(resultado).toEqual({ tipo: 'sinal_seguranca' });
+  });
+
+  it('não consulta as regras quando vontade_punir está presente (a proteção não depende de faixas numéricas)', () => {
+    const regrasVazias: never[] = [];
+
+    const resultado = decidirRecomendacaoComProtecao(
+      { humor: 5, imagemCorporal: 5, comida: 1, alimentacaoPercebida: 'vontade_punir' },
+      regrasVazias
+    );
+
+    expect(resultado).toEqual({ tipo: 'sinal_seguranca' });
+  });
+
+  it('usa 3 como comida apenas para comparação quando comida é null, sem lançar erro', () => {
+    const regras = [regra({ comida_min: 1, comida_max: 5, categoria_pratica: 'geral_positivo' })];
+
+    const resultado = decidirRecomendacaoComProtecao(
+      { humor: 3, imagemCorporal: 3, comida: null, alimentacaoPercebida: 'prefiro_nao_responder' },
+      regras
+    );
+
+    expect(resultado).toEqual({ tipo: 'pratica', categoria: 'geral_positivo' });
+  });
+
+  it('delega para avaliarCheckin no caso normal, sem vontade_punir', () => {
+    const regras = [regra({ humor_min: 1, humor_max: 2, categoria_pratica: 'humor_baixo' })];
+
+    const resultado = decidirRecomendacaoComProtecao(
+      { humor: 2, imagemCorporal: 3, comida: 4, alimentacaoPercebida: 'tranquila' },
+      regras
+    );
+
+    expect(resultado).toEqual({ tipo: 'pratica', categoria: 'humor_baixo' });
   });
 });

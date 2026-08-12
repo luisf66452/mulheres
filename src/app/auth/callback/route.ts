@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.redirect(`${origin}/checkin`);
+    return NextResponse.redirect(`${origin}/`);
   }
 
   return NextResponse.redirect(

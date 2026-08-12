@@ -33,5 +33,5 @@ export async function registrarConsentimento(nomeBruto?: string): Promise<{ erro
     return { erro: 'Não foi possível registrar seu consentimento. Tente novamente.' };
   }
 
-  redirect('/checkin');
+  redirect('/');
 }

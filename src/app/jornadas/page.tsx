@@ -1,9 +1,13 @@
-import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import AtivarJornadaButton from './AtivarJornadaButton';
-import Cartao from '@/app/components/Cartao';
-import BarraProgressoJornada from '@/app/components/BarraProgressoJornada';
+import { formatDateISO } from '@/lib/date';
+import { buscarJornadaAtivaParaExibir } from '@/lib/jornadas/buscarJornadaAtivaParaExibir';
+import { calcularModuloSessao } from '@/lib/jornadas/moduloSessao';
+import { atribuirIlustracoes } from '@/lib/jornadas/ilustracoes';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
+import SuaJornadaAtual, { type SuaJornadaAtualProps } from '@/app/components/jornadas/SuaJornadaAtual';
+import CardJornadaExplorar, {
+  type CardJornadaExplorarInfo,
+} from '@/app/components/jornadas/CardJornadaExplorar';
 
 export default async function JornadasPage() {
   const supabase = await createSupabaseServerClient();
@@ -11,59 +15,119 @@ export default async function JornadasPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: jornadas } = await supabase
-    .from('jornadas')
-    .select('*')
-    .eq('status', 'publicada');
+  const hoje = formatDateISO(new Date());
 
-  const { data: progressos } = await supabase
-    .from('jornadas_usuarias')
-    .select('*')
-    .eq('usuaria_id', user!.id);
+  const [{ data: checkinHoje }, { data: jornadas }, { data: progressos }] = await Promise.all([
+    supabase.from('checkins').select('id').eq('usuaria_id', user!.id).eq('data', hoje).maybeSingle(),
+    supabase.from('jornadas').select('*').eq('status', 'publicada').order('criado_em'),
+    supabase.from('jornadas_usuarias').select('*').eq('usuaria_id', user!.id),
+  ]);
 
+  const checkinHojeId: string | null = checkinHoje?.id ?? null;
+  const todasJornadas = jornadas ?? [];
   const progressoPorJornada = new Map((progressos ?? []).map((p) => [p.jornada_id, p]));
+
+  const jornadaAtiva = await buscarJornadaAtivaParaExibir(supabase, user!.id, checkinHojeId);
+
+  let jornadaDestaqueId: string | null = null;
+  let tipoHero: 'ativa' | 'recomendada' | 'conquista' | 'vazia';
+
+  if (jornadaAtiva) {
+    jornadaDestaqueId = jornadaAtiva.jornadaId;
+    tipoHero = 'ativa';
+  } else {
+    const naoConcluida = todasJornadas.find(
+      (j) => progressoPorJornada.get(j.id)?.status !== 'concluida'
+    );
+    if (naoConcluida) {
+      jornadaDestaqueId = naoConcluida.id;
+      tipoHero = 'recomendada';
+    } else if (todasJornadas.length > 0) {
+      jornadaDestaqueId = todasJornadas[0].id;
+      tipoHero = 'conquista';
+    } else {
+      tipoHero = 'vazia';
+    }
+  }
+
+  const jornadasExplorar = todasJornadas.filter((j) => j.id !== jornadaDestaqueId);
+  const idsNaOrdemDeExibicao = [
+    ...(jornadaDestaqueId ? [jornadaDestaqueId] : []),
+    ...jornadasExplorar.map((j) => j.id),
+  ];
+  const ilustracoes = atribuirIlustracoes(idsNaOrdemDeExibicao);
+  const ilustracaoIndice = (id: string) => ilustracoes.get(id) ?? 0;
+
+  let heroProps: SuaJornadaAtualProps;
+
+  if (tipoHero === 'ativa' && jornadaAtiva) {
+    const diaExibido = Math.min(jornadaAtiva.diasCompletados + 1, jornadaAtiva.duracaoDias);
+    const { modulo, sessao } = calcularModuloSessao(diaExibido);
+    heroProps = {
+      tipo: 'ativa',
+      ilustracaoIndice: ilustracaoIndice(jornadaAtiva.jornadaId),
+      titulo: jornadaAtiva.titulo,
+      modulo,
+      sessao,
+      diasCompletados: jornadaAtiva.diasCompletados,
+      duracaoDias: jornadaAtiva.duracaoDias,
+      linkAtividade: jornadaAtiva.linkAtividade,
+    };
+  } else if (tipoHero === 'recomendada' && jornadaDestaqueId) {
+    const destaque = todasJornadas.find((j) => j.id === jornadaDestaqueId)!;
+    heroProps = {
+      tipo: 'recomendada',
+      ilustracaoIndice: ilustracaoIndice(destaque.id),
+      jornadaId: destaque.id,
+      titulo: destaque.titulo,
+      descricao: destaque.descricao,
+    };
+  } else if (tipoHero === 'conquista' && jornadaDestaqueId) {
+    heroProps = {
+      tipo: 'conquista',
+      ilustracaoIndice: ilustracaoIndice(jornadaDestaqueId),
+      jornadaId: jornadaDestaqueId,
+    };
+  } else {
+    heroProps = { tipo: 'vazia' };
+  }
+
+  const cardsExplorar: CardJornadaExplorarInfo[] = jornadasExplorar.map((jornada) => {
+    const progresso = progressoPorJornada.get(jornada.id);
+    const label =
+      progresso?.status === 'concluida'
+        ? 'Revisitar jornada'
+        : progresso?.status === 'pausada'
+          ? 'Retomar'
+          : 'Começar';
+
+    return {
+      jornadaId: jornada.id,
+      ilustracaoIndice: ilustracaoIndice(jornada.id),
+      titulo: jornada.titulo,
+      descricao: jornada.descricao,
+      duracaoDias: jornada.duracao_dias,
+      quantidadeModulos: calcularModuloSessao(jornada.duracao_dias).modulo,
+      label,
+    };
+  });
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
       <h1 className="font-display text-2xl text-texto">Jornadas</h1>
-      {(jornadas ?? []).map((jornada) => {
-        const progresso = progressoPorJornada.get(jornada.id);
-        return (
-          <Cartao key={jornada.id} className="space-y-3">
-            <h2 className="font-display text-xl text-texto">{jornada.titulo}</h2>
-            <p className="text-texto">{jornada.descricao}</p>
-            {progresso && (
-              <BarraProgressoJornada
-                diasCompletados={progresso.dias_completados}
-                duracaoDias={jornada.duracao_dias}
-              />
-            )}
-            <p className="text-sm text-texto-suave">
-              {progresso?.status === 'em_andamento' &&
-                `Em andamento — dia ${progresso.dias_completados} de ${jornada.duracao_dias}`}
-              {progresso?.status === 'pausada' &&
-                `Pausada — dia ${progresso.dias_completados} de ${jornada.duracao_dias}`}
-              {progresso?.status === 'concluida' && 'Concluída'}
-              {!progresso && `${jornada.duracao_dias} dias`}
-            </p>
-            <AtivarJornadaButton
-              jornadaId={jornada.id}
-              jaAtiva={progresso?.status === 'em_andamento' || progresso?.status === 'concluida'}
-              label={progresso ? 'Continuar' : 'Começar'}
-            />
-          </Cartao>
-        );
-      })}
 
-      <Link
-        href="/praticas"
-        className="block w-full rounded-2xl border border-borda bg-superficie p-4 text-center transition-colors hover:bg-fundo"
-      >
-        <p className="font-display text-base text-texto">Biblioteca de práticas</p>
-        <p className="text-sm text-texto-suave">
-          Explore práticas avulsas, sem precisar fazer o check-in.
-        </p>
-      </Link>
+      <SuaJornadaAtual {...heroProps} />
+
+      {cardsExplorar.length > 0 && (
+        <div className="space-y-3">
+          <p className="font-display text-lg text-texto">Explorar jornadas</p>
+          <div className="space-y-3">
+            {cardsExplorar.map((jornada) => (
+              <CardJornadaExplorar key={jornada.jornadaId} jornada={jornada} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <NavegacaoInferior />
     </main>

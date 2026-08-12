@@ -12,14 +12,14 @@ function saudacaoPorHorario(hora: number): string {
 // O horário do servidor não é o horário local da usuária, então o
 // cumprimento certo só existe no cliente — o servidor renderiza um valor
 // neutro e o suppressHydrationWarning evita o aviso da divergência esperada.
-export default function Saudacao() {
+export default function Saudacao({ nome }: { nome: string | null }) {
   const [saudacao] = useState(() =>
     typeof window === 'undefined' ? 'Olá' : saudacaoPorHorario(new Date().getHours())
   );
 
   return (
     <p className="font-display text-2xl text-texto" suppressHydrationWarning>
-      {saudacao}
+      {nome ? `${saudacao}, ${nome}` : saudacao}
     </p>
   );
 }

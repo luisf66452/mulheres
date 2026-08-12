@@ -44,9 +44,11 @@ Exemplo: dia 10 → Módulo 2, Sessão 3. Dia 1 → Módulo 1, Sessão 1. Dia 7 
 
 Usada só para exibição ("Módulo 2 · Sessão 3") — não afeta `numero_dia`, que continua sendo a chave real usada em toda a lógica de progresso/recomendação já existente.
 
+**Correção de revisão — dia exibido nunca passa da duração da jornada:** ao calcular qual dia mostrar no card "Sua jornada atual" (Seção 6.1), o valor de entrada de `calcularModuloSessao` é `Math.min(dias_completados + 1, duracao_dias)`, não `dias_completados + 1` puro. Isso evita mostrar, por exemplo, "Sessão 8" numa jornada de 7 dias quando `dias_completados` já bateu ou passou `duracao_dias` (jornada concluída ou schema inconsistente). Essa é só a fórmula de **exibição** — a busca da atividade real em `jornada_atividades` (Seção 5) continua usando `dias_completados + 1` sem capping, porque é isso que corretamente resulta em "não encontrada" quando a jornada já acabou.
+
 ## 5. Refatoração: helper compartilhado de jornada ativa + link
 
-A início (`src/app/page.tsx`) já busca a jornada ativa mais recente, a atividade do dia, e resolve o link com `resolverHrefAtividadeDoDia` (que exige o `checkin` de hoje). A tela de Jornadas precisa exatamente da mesma informação para o botão "Continuar jornada" do card principal. Em vez de duplicar essa sequência de queries nas duas páginas, ela é extraída para um helper de servidor único:
+A início (`src/app/page.tsx`) já busca a jornada ativa mais recente, a atividade do dia, e resolve o link com `resolverHrefAtividadeDoDia` (que exige o `checkin` de hoje). A tela de Jornadas precisa exatamente da mesma informação para o botão "Continuar jornada" do card principal — mas com uma diferença de comportamento importante quando não há atividade para o dia (ver correção abaixo). Em vez de duplicar essa sequência de queries nas duas páginas, ela é extraída para um helper de servidor único:
 
 ```ts
 // src/lib/jornadas/buscarJornadaAtivaParaExibir.ts
@@ -55,11 +57,38 @@ async function buscarJornadaAtivaParaExibir(
 ): Promise<{
   jornada: Jornada;
   progresso: JornadaUsuaria;
-  href: string;
+  linkAtividade: ResultadoLinkAtividade; // ver definição abaixo
 } | null>
 ```
 
-Internamente: busca as `jornadas_usuarias` com `status = 'em_andamento'`, aplica `escolherJornadaAtivaMaisRecente` (já existente, sem mudança), busca a jornada e a atividade do dia, e resolve o href com `resolverHrefAtividadeDoDia` (já existente, sem mudança). `src/app/page.tsx` passa a consumir este helper em vez de repetir a sequência de queries inline — comportamento idêntico ao de hoje, só reorganizado. Nenhuma função pura já testada (`escolherJornadaAtivaMaisRecente`, `resolverHrefAtividadeDoDia`) muda de assinatura.
+Internamente: busca as `jornadas_usuarias` com `status = 'em_andamento'`, aplica `escolherJornadaAtivaMaisRecente` (já existente, sem mudança), busca a jornada e a atividade do dia (`numero_dia = dias_completados + 1`, sem capping — ver Seção 4), e resolve o link.
+
+**Correção de revisão — `resolverHrefAtividadeDoDia` deixa de retornar só uma `string`.** Hoje ela colapsa o caso "sem atividade" dentro do próprio `href` (`'/jornadas'`), o que funciona bem para o card pequeno da início (onde `/jornadas` é um destino legítimo — "veja suas jornadas"), mas não serve para o card principal da própria tela `/jornadas` (linkar para `/jornadas` a partir de `/jornadas` só recarregaria a mesma tela). A função é renomeada para `resolverLinkAtividadeDoDia` e passa a retornar um tipo com três casos, deixando cada página decidir como renderizar o caso "indisponível":
+
+```ts
+// src/lib/jornadas/emAndamento.ts
+export type ResultadoLinkAtividade =
+  | { tipo: 'atividade'; href: string }
+  | { tipo: 'checkin'; href: string }
+  | { tipo: 'indisponivel' };
+
+export function resolverLinkAtividadeDoDia(
+  atividadeId: string | null,
+  checkinHojeId: string | null
+): ResultadoLinkAtividade {
+  if (!atividadeId) return { tipo: 'indisponivel' };
+  return checkinHojeId
+    ? { tipo: 'atividade', href: `/jornada-atividade/${atividadeId}?checkin=${checkinHojeId}` }
+    : { tipo: 'checkin', href: '/checkin' };
+}
+```
+
+**Cada consumidor mapeia o caso `indisponivel` à sua própria UI, preservando o comportamento já existente onde já existe:**
+
+- **Início** (`src/app/page.tsx`, dentro de `JornadaEmAndamentoInfo`): `tipo === 'indisponivel'` vira `href: '/jornadas'` — exatamente a `string` que já era produzida antes desta refatoração. `tipo === 'atividade'` ou `'checkin'` vira `href: resultado.href` — também idêntico a antes. O componente `JornadaEmAndamento.tsx` não muda nada; só a montagem do `href` em `page.tsx` passa a fazer essa checagem explícita. **Este mapeamento precisa ser validado explicitamente antes de considerar a tarefa concluída** (checklist na Seção 10): mesmo comportamento de check-in, atividade recomendada e links de hoje, byte a byte.
+- **Jornadas** (card "Sua jornada atual", Seção 6.1): `tipo === 'indisponivel'` **não mostra o botão "Continuar jornada"** — em vez dele, uma mensagem acolhedora (ex.: *"O próximo conteúdo dessa jornada ainda está sendo preparado."*) ocupa o lugar do botão. `tipo === 'atividade'` ou `'checkin'` mostra o botão normalmente, linkando para `resultado.href`.
+
+Nenhuma outra função pura já testada (`escolherJornadaAtivaMaisRecente`) muda de assinatura. O teste existente de `resolverHrefAtividadeDoDia` em `emAndamento.test.ts` é atualizado para o novo nome/retorno de `resolverLinkAtividadeDoDia`.
 
 ## 6. Estrutura da tela `/jornadas`
 
@@ -71,16 +100,18 @@ Duas seções, nesta ordem, dentro do mesmo `<main>` (mesmo `max-w-md`, mesmo `p
 
 - Ilustração floral/abstrata no topo do card (SVG, `aria-hidden`, na cor `--color-acao`).
 - Nome da jornada (`font-display text-xl`).
-- "Módulo {modulo} · Sessão {sessao}" — calculado a partir de `dias_completados + 1` (o dia que ela faria agora), usando a função da Seção 4. Se não houver atividade para esse dia (schema inconsistente), omite esta linha em vez de mostrar algo incorreto.
+- "Módulo {modulo} · Sessão {sessao}" — calculado a partir de `Math.min(dias_completados + 1, duracao_dias)` (ver correção na Seção 4), usando a função da Seção 4. Sempre mostrada (o capping garante um valor válido mesmo quando a jornada já está no fim).
 - Barra de progresso (`BarraProgressoJornada`, sem mudança) + percentual textual ao lado (`{Math.round(dias_completados / duracao_dias * 100)}%`).
-- "Próxima sessão: ~5 minutos" (texto fixo).
-- Botão principal "Continuar jornada" (`Botao` variante primária), usando o `href` do helper — mesmo comportamento de fallback já estabelecido (`/checkin` se não fez check-in hoje, `/jornadas` se a atividade não existe).
-- Mensagem curta e acolhedora abaixo do botão (texto fixo, ex.: *"Um passo de cada vez — você está indo bem."*), no mesmo tom das mensagens já usadas em `MensagemAcolhedora.tsx`.
+- "Próxima sessão: ~5 minutos" (texto fixo) — só aparece junto do botão "Continuar jornada" (ver abaixo); no caso `indisponivel`, some junto com o botão, já que não há uma "próxima sessão" pronta para indicar tempo.
+- **Botão principal ou mensagem, conforme `linkAtividade.tipo`** (ver correção na Seção 5):
+  - `'atividade'` ou `'checkin'`: botão "Continuar jornada" (`Botao` variante primária), linkando para `linkAtividade.href`.
+  - `'indisponivel'`: **sem botão** — em seu lugar, uma mensagem acolhedora (ex.: *"O próximo conteúdo dessa jornada ainda está sendo preparado — volte em breve."*), para nunca oferecer uma ação que só recarregaria a própria tela.
+- Mensagem curta e acolhedora abaixo do botão/mensagem de indisponibilidade (texto fixo, ex.: *"Um passo de cada vez — você está indo bem."*), no mesmo tom das mensagens já usadas em `MensagemAcolhedora.tsx`.
 
 **Sem jornada em andamento** (helper retorna nulo) — dois sub-estados, calculados a partir das mesmas jornadas/progressos já buscados na página:
 
 - **Há pelo menos uma jornada publicada que a usuária ainda não concluiu** (sem registro em `jornadas_usuarias`, ou registro com `status != 'concluida'`): recomenda a primeira dessas por ordem de `criado_em`. Card acolhedor com o nome/descrição curta dessa jornada e um botão **"Começar uma jornada"** que chama `ativarJornada` (via `AtivarJornadaButton`, reaproveitado) para essa jornada — mesmo mecanismo de ativação já existente, incluindo o caso dela estar `pausada` (o botão reativa a partir de onde parou).
-- **Todas as jornadas publicadas já foram concluídas pela usuária**: card de conquista ("Você concluiu todas as suas jornadas disponíveis! 🌸" ou tom equivalente ao resto do app) com um botão **"Revisitar jornada"** que chama `ativarJornada` (mesmo componente `AtivarJornadaButton`) para a jornada mais antiga por `criado_em` — reativa exatamente como qualquer revisão feita a partir da lista abaixo.
+- **Todas as jornadas publicadas já foram concluídas pela usuária**: card de conquista ("Você concluiu todas as suas jornadas disponíveis!" ou tom equivalente ao resto do app) com um botão **"Revisitar jornada"** que chama `ativarJornada` (mesmo componente `AtivarJornadaButton`) para a jornada mais antiga por `criado_em` — reativa exatamente como qualquer revisão feita a partir da lista abaixo. **Correção de revisão:** este card não usa emoji (🌸 ou qualquer outro) — usa uma das 5 ilustrações SVG do sistema (Seção 7), por exemplo a "flor", mantendo consistência visual com o resto da tela em vez de misturar emoji com ilustração vetorial.
 - **Nenhuma jornada publicada existe** (`jornadas` vazio): a seção inteira não aparece — mesmo padrão de "não renderizar card vazio" já usado em outros lugares do app.
 
 ### 6.2 "Explorar jornadas"
@@ -112,13 +143,41 @@ Lista das jornadas publicadas que **não** são a jornada em destaque da Seção
 Atribuição por hash simples e determinístico do `id` da jornada (soma dos code points do UUID, módulo 5) — mesma jornada sempre recebe a mesma ilustração entre renderizações, sem precisar de campo novo no banco:
 
 ```ts
-function escolherIlustracao(jornadaId: string): 0 | 1 | 2 | 3 | 4 {
+function hashIlustracao(jornadaId: string): 0 | 1 | 2 | 3 | 4 {
   const soma = [...jornadaId].reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return (soma % 5) as 0 | 1 | 2 | 3 | 4;
 }
 ```
 
-Função pura, testável de forma independente (mesmo ID sempre retorna o mesmo índice; distribuição razoável entre os 5 valores para UUIDs distintos).
+**Correção de revisão — resolução de colisão entre os cards visíveis.** Como o hash é só `soma % 5`, duas jornadas diferentes podem cair no mesmo índice — sem tratamento, isso faria duas jornadas na mesma tela mostrarem a mesma ilustração. A atribuição final não usa `hashIlustracao` isoladamente por jornada: usa uma função que recebe a lista de IDs **na ordem em que aparecem na tela** (jornada em destaque primeiro, se houver, depois "Explorar jornadas" na mesma ordem já usada — por `criado_em`) e resolve colisões deslocando para o próximo índice livre, deterministicamente:
+
+```ts
+function atribuirIlustracoes(jornadaIdsNaOrdemDeExibicao: string[]): Map<string, 0 | 1 | 2 | 3 | 4> {
+  const usados = new Set<number>();
+  const atribuicoes = new Map<string, 0 | 1 | 2 | 3 | 4>();
+
+  for (const id of jornadaIdsNaOrdemDeExibicao) {
+    let indice = hashIlustracao(id);
+
+    if (usados.has(indice) && usados.size < 5) {
+      for (let i = 1; i <= 5; i++) {
+        const candidato = ((indice + i) % 5) as 0 | 1 | 2 | 3 | 4;
+        if (!usados.has(candidato)) {
+          indice = candidato;
+          break;
+        }
+      }
+    }
+
+    usados.add(indice);
+    atribuicoes.set(id, indice);
+  }
+
+  return atribuicoes;
+}
+```
+
+Continua 100% determinística — a mesma lista de IDs na mesma ordem sempre produz a mesma atribuição, sem aleatoriedade. Quando há 5 ou menos jornadas visíveis, cada uma recebe uma ilustração diferente das demais (a colisão é sempre resolvida, porque sempre há um índice livre nesse caso). A partir da 6ª jornada visível (cenário raro, mas possível conforme o catálogo cresce), repetições voltam a acontecer — aceitável, já que "quando houver alternativas disponíveis" deixa de se aplicar. `hashIlustracao` continua exportada e testável isoladamente (mesmo ID sempre retorna o mesmo índice base); `atribuirIlustracoes` é a função usada de fato pela página.
 
 ## 8. Remoção do link redundante
 
@@ -134,7 +193,16 @@ Mesmo processo já estabelecido no projeto:
 - `tsc --noEmit` e `eslint` limpos.
 - `npm run test` limpo, incluindo testes novos para:
   - `calcularModuloSessao` (casos de borda: dia 1, múltiplo exato de 7, dia dentro do meio de um módulo).
-  - `escolherIlustracao` (determinismo — mesmo ID sempre retorna o mesmo índice — e cobertura dos 5 valores possíveis com IDs de exemplo).
+  - O uso de `Math.min(dias_completados + 1, duracao_dias)` antes de chamar `calcularModuloSessao` no card "Sua jornada atual" — caso `dias_completados >= duracao_dias`, a sessão exibida nunca ultrapassa `duracao_dias`.
+  - `resolverLinkAtividadeDoDia` (renomeada — substitui os testes existentes de `resolverHrefAtividadeDoDia`): os três casos (`atividade`, `checkin`, `indisponivel`), incluindo os valores de `href` exatos para os dois primeiros.
+  - `hashIlustracao` (determinismo — mesmo ID sempre retorna o mesmo índice — e cobertura dos 5 valores possíveis com IDs de exemplo).
+  - `atribuirIlustracoes` (colisão resolvida quando há índice livre; repetição aceita a partir de 6 jornadas; determinismo — mesma lista/ordem sempre produz a mesma atribuição).
   - `buscarJornadaAtivaParaExibir` fica como wiring fino sobre Supabase (mesmo padrão de `src/app/page.tsx`) — verificado manualmente, não por harness de integração mockado.
+- **Validação explícita de que a início não mudou de comportamento** (correção de revisão): depois de `src/app/page.tsx` passar a consumir `resolverLinkAtividadeDoDia` (via `buscarJornadaAtivaParaExibir` ou diretamente) em vez do antigo `resolverHrefAtividadeDoDia`, confirmar caso a caso, comparando com o comportamento documentado/testado antes desta rodada (spec e plano da início, seção de correções do card de jornada):
+  - Com atividade do dia disponível e check-in de hoje feito → `href` da início continua `/jornada-atividade/{atividadeId}?checkin={checkinId}` (igual a antes).
+  - Sem check-in hoje → `href` da início continua `/checkin` (igual a antes).
+  - Sem atividade do dia → `href` da início continua `/jornadas` (igual a antes — é aqui que início e Jornadas divergem de propósito: início ainda usa `/jornadas` como fallback válido, só a própria tela de Jornadas não pode).
+  - `jaFezCheckinHoje` continua controlando a visibilidade do `SeletorHumor` e do botão "Fazer check-in" exatamente como antes — nada nessa refatoração toca essa flag.
+  - A escolha da jornada mais recentemente atualizada (`escolherJornadaAtivaMaisRecente`) continua idêntica.
 - `npm run build` limpo.
-- Checagem visual manual no navegador: `/jornadas` com jornada em andamento, sem jornada em andamento (com pendentes), sem jornada em andamento (todas concluídas), sem nenhuma jornada publicada, e cada estado de cartão em "Explorar jornadas" (disponível, pausada, concluída). Confirmar que a jornada em destaque não se repete na lista de exploração, e que o botão "Continuar jornada" leva ao lugar certo (atividade do dia, ou `/checkin` se ainda não fez o check-in hoje).
+- Checagem visual manual no navegador: `/jornadas` com jornada em andamento (incluindo o caso raro de atividade indisponível para o dia — botão ausente, mensagem acolhedora no lugar), sem jornada em andamento (com pendentes), sem jornada em andamento (todas concluídas), sem nenhuma jornada publicada, e cada estado de cartão em "Explorar jornadas" (disponível, pausada, concluída). Confirmar que a jornada em destaque não se repete na lista de exploração, que as ilustrações não se repetem entre os cards visíveis (com 5 ou menos jornadas), e que o botão "Continuar jornada" leva ao lugar certo (atividade do dia, ou `/checkin` se ainda não fez o check-in hoje). Confirmar também, na tela de início, que o card "Continue sua jornada" continua se comportando exatamente como antes desta rodada.

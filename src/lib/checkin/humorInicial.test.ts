@@ -3,11 +3,11 @@ import { estadoInicialParaHumor, validarHumorParam, type HumorInicial } from './
 
 describe('estadoInicialParaHumor', () => {
   it.each([
-    [1, 'baixa_energia_desconforto'],
-    [2, 'baixa_energia_desconforto'],
+    [1, 'alta_energia_conforto'],
+    [2, 'alta_energia_conforto'],
     [3, 'baixa_energia_conforto'],
-    [4, 'alta_energia_conforto'],
-    [5, 'alta_energia_conforto'],
+    [4, 'baixa_energia_desconforto'],
+    [5, 'baixa_energia_desconforto'],
   ] as const)('mapeia humor %i para %s', (humor, esperado) => {
     expect(estadoInicialParaHumor(humor as HumorInicial)).toBe(esperado);
   });

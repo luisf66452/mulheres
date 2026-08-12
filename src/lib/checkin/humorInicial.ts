@@ -3,11 +3,11 @@ import type { EstadoGeral } from '@/lib/supabase/types';
 export type HumorInicial = 1 | 2 | 3 | 4 | 5;
 
 const QUADRANTE_POR_HUMOR: Record<HumorInicial, EstadoGeral> = {
-  1: 'baixa_energia_desconforto',
-  2: 'baixa_energia_desconforto',
+  1: 'alta_energia_conforto',
+  2: 'alta_energia_conforto',
   3: 'baixa_energia_conforto',
-  4: 'alta_energia_conforto',
-  5: 'alta_energia_conforto',
+  4: 'baixa_energia_desconforto',
+  5: 'baixa_energia_desconforto',
 };
 
 export function estadoInicialParaHumor(humor: HumorInicial): EstadoGeral {

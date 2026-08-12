@@ -70,6 +70,8 @@ Renderiza: miniatura ilustrativa (SVG), título da jornada, subtítulo/descriç�
 
 **Link para a atividade do dia:** o card busca a atividade cujo `numero_dia` corresponde a `dias_completados + 1` da jornada em `jornada_atividades` (mesmo cálculo já usado como fonte de verdade em `/jornadas` / `AtivarJornadaButton`) e linka para `/jornada-atividade/[id]` com o **ID real dessa atividade** — nunca o ID da jornada. Se essa atividade não existir (schema inconsistente, jornada concluída mas `status` não atualizado, etc.), o card faz **fallback** para `/jornadas/[jornadaId]`... como a rota de jornada individual não existe hoje, o fallback é `/jornadas` (lista geral) — nunca renderiza um link quebrado.
 
+A rota `/jornada-atividade/[id]` exige o parâmetro de busca `?checkin=<id>` (o ID do check-in de hoje) — sem ele, a página chama `notFound()`. Por isso o link do card só aponta para `/jornada-atividade/[id]?checkin=<id>` quando já existe um check-in de hoje; se a atividade existe mas a usuária ainda não fez o check-in hoje, o link vai para `/checkin` em vez disso (é o check-in que, ao ser concluído, redireciona para a atividade da jornada). Além disso, se a usuária já fez o check-in de hoje, não há "atividade do dia" para continuar agora — o link vai direto para `/jornadas`, sem sequer precisar resolver a atividade.
+
 Se não há jornada ativa, o card não aparece (mesmo padrão de "não mostrar card vazio" já usado em `ConteudoRecomendado`).
 
 ### `RitualDeHoje.tsx` — botão e estado "já concluído hoje"

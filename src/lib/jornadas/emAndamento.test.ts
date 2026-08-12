@@ -39,11 +39,21 @@ describe('escolherJornadaAtivaMaisRecente', () => {
 });
 
 describe('resolverHrefAtividadeDoDia', () => {
-  it('linka para a atividade quando o id existe', () => {
-    expect(resolverHrefAtividadeDoDia('atividade-1')).toBe('/jornada-atividade/atividade-1');
+  it('faz fallback para a lista de jornadas quando não há atividade', () => {
+    expect(resolverHrefAtividadeDoDia(null, null)).toBe('/jornadas');
   });
 
-  it('faz fallback para a lista de jornadas quando não há atividade', () => {
-    expect(resolverHrefAtividadeDoDia(null)).toBe('/jornadas');
+  it('faz fallback para a lista de jornadas quando não há atividade, mesmo com check-in do dia', () => {
+    expect(resolverHrefAtividadeDoDia(null, 'checkin-1')).toBe('/jornadas');
+  });
+
+  it('manda para /checkin quando há atividade mas ainda não houve check-in hoje', () => {
+    expect(resolverHrefAtividadeDoDia('atividade-1', null)).toBe('/checkin');
+  });
+
+  it('linka para a atividade com o checkin do dia quando ambos existem', () => {
+    expect(resolverHrefAtividadeDoDia('atividade-1', 'checkin-1')).toBe(
+      '/jornada-atividade/atividade-1?checkin=checkin-1'
+    );
   });
 });

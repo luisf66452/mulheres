@@ -16,6 +16,12 @@ export function escolherJornadaAtivaMaisRecente(
   )[0];
 }
 
-export function resolverHrefAtividadeDoDia(atividadeId: string | null): string {
-  return atividadeId ? `/jornada-atividade/${atividadeId}` : '/jornadas';
+export function resolverHrefAtividadeDoDia(
+  atividadeId: string | null,
+  checkinHojeId: string | null
+): string {
+  if (!atividadeId) return '/jornadas';
+  return checkinHojeId
+    ? `/jornada-atividade/${atividadeId}?checkin=${checkinHojeId}`
+    : '/checkin';
 }

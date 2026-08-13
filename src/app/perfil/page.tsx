@@ -22,7 +22,7 @@ export default async function PerfilPage() {
     .single();
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
+    <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
       <h1 className="font-display text-2xl text-texto">Perfil</h1>
 
       <Cartao className="space-y-3">

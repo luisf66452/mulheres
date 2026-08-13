@@ -23,7 +23,7 @@ export default async function PraticaBibliotecaPage({
   }
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
+    <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
       <span className="text-xs font-medium uppercase tracking-wide text-destaque">
         {pratica.categoria}
       </span>

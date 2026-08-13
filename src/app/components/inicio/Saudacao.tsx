@@ -40,12 +40,12 @@ export default function Saudacao({ nome }: { nome: string | null }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <p className="font-display text-2xl text-texto" suppressHydrationWarning>
-        {saudacao}, {nome ?? 'Sofia'}
+        {nome ? `${saudacao}, ${nome}` : saudacao}
       </p>
       <Link
         href="/settings"
         aria-label="Ver lembretes"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-borda bg-superficie text-texto-suave transition-colors hover:bg-fundo"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-borda bg-superficie text-texto-suave transition-colors hover:bg-fundo"
       >
         <IconeSino />
       </Link>

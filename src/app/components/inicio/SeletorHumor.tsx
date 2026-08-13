@@ -18,9 +18,9 @@ function CarinhaHumor({ cor, curvaBoca }: { cor: string; curvaBoca: string }) {
   return (
     <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
       <circle cx="20" cy="20" r="20" fill={cor} />
-      <circle cx="14" cy="17" r="1.8" fill="#fff" fillOpacity="0.9" />
-      <circle cx="26" cy="17" r="1.8" fill="#fff" fillOpacity="0.9" />
-      <path d={curvaBoca} stroke="#fff" strokeOpacity="0.9" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <circle cx="14" cy="17" r="1.8" fill="var(--color-texto)" fillOpacity="0.75" />
+      <circle cx="26" cy="17" r="1.8" fill="var(--color-texto)" fillOpacity="0.75" />
+      <path d={curvaBoca} stroke="var(--color-texto)" strokeOpacity="0.75" strokeWidth="2" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -62,7 +62,7 @@ export default function SeletorHumor() {
             aria-label={nivel.rotulo}
             className={`flex flex-1 flex-col items-center gap-1.5 rounded-full transition-transform duration-200 motion-reduce:transition-none ${
               selecionado === nivel.valor
-                ? 'scale-110 ring-2 ring-acao ring-offset-2 ring-offset-superficie'
+                ? 'scale-110 ring-2 ring-acao ring-offset-2 ring-offset-superficie motion-reduce:scale-100'
                 : ''
             }`}
           >

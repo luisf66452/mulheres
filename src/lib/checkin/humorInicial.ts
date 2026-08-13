@@ -2,6 +2,10 @@ import type { EstadoGeral } from '@/lib/supabase/types';
 
 export type HumorInicial = 1 | 2 | 3 | 4 | 5;
 
+// Escala da UI do seletor de humor inicial: 1 = melhor (Muito bem), 5 = pior
+// (Muito mal). Isso é o OPOSTO da coluna persistida checkins.humor, gerada
+// por derivarHumor em derivacoes.ts (5 = melhor, 1 = pior) — são escalas
+// intencionalmente diferentes que só compartilham o nome "humor", não um bug.
 const QUADRANTE_POR_HUMOR: Record<HumorInicial, EstadoGeral> = {
   1: 'alta_energia_conforto',
   2: 'alta_energia_conforto',

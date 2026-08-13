@@ -48,7 +48,9 @@ function LoginForm() {
           className="w-full rounded-2xl border border-borda bg-superficie p-3 text-texto"
         />
         {erro && <p className="text-alerta">{erro}</p>}
-        <Botao type="submit">Receber link de acesso</Botao>
+        <Botao type="submit" variante="roxa">
+          Receber link de acesso
+        </Botao>
       </form>
     </main>
   );

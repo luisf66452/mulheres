@@ -49,7 +49,7 @@ export default async function InicioPage() {
   }
 
   return (
-    <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-24 md:pb-6">
+    <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

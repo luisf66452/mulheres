@@ -49,22 +49,20 @@ export default async function InicioPage() {
   }
 
   return (
-    <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
+    <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />
 
-      <ResumoDoDia checkinHoje={checkinHoje} />
-
-      {!jaFezCheckinHoje && <SeletorHumor />}
-
-      <RitualDeHoje jaFezCheckinHoje={jaFezCheckinHoje} />
+      {jaFezCheckinHoje ? <ResumoDoDia checkinHoje={checkinHoje} /> : <SeletorHumor />}
 
       <SequenciaDias progresso={progresso} />
 
-      <MensagemAcolhedora />
-
       <JornadaEmAndamento jornada={jornadaEmAndamento} />
+
+      <RitualDeHoje jaFezCheckinHoje={jaFezCheckinHoje} />
+
+      <MensagemAcolhedora />
 
       <NavegacaoInferior />
     </main>

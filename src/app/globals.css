@@ -24,6 +24,11 @@
   --color-creme-rosado: #F4D9D2;
   --color-lilas-suave: #D8CCE2;
   --color-salvia-suave: #DDE5D4;
+
+  /* Lilás muito claro, usado só no cabeçalho da tela Perfil (avatar/nome).
+     Mais claro que --color-lilas-suave, que já é usado nos cartões de
+     Jornadas — nenhuma outra tela usa este tom. */
+  --color-lilas-claro: #F1E5EF;
 }
 
 @theme inline {

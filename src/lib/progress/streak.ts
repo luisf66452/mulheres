@@ -67,3 +67,31 @@ export function formatarSequencia(dias: number): string {
   }
   return `${dias} dias seguidos`;
 }
+
+export interface DescricaoSequencia {
+  titulo: string;
+  mensagem: string;
+}
+
+export function descreverSequencia(
+  diasConsecutivosAtuais: number,
+  totalCheckins: number
+): DescricaoSequencia {
+  if (totalCheckins === 0) {
+    return {
+      titulo: 'Comece hoje sua jornada',
+      mensagem: 'Toda jornada começa com um passo — e hoje pode ser o seu.',
+    };
+  }
+  if (diasConsecutivosAtuais === 0) {
+    return {
+      titulo: 'Sua sequência está pronta para recomeçar',
+      mensagem: 'Cada retorno também faz parte da jornada.',
+    };
+  }
+  const unidade = diasConsecutivosAtuais === 1 ? 'dia' : 'dias';
+  return {
+    titulo: `${diasConsecutivosAtuais} ${unidade} de sequência`,
+    mensagem: 'Que lindo ver você priorizando você.',
+  };
+}

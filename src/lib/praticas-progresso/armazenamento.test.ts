@@ -106,4 +106,20 @@ describe('listarTodasConclusoes', () => {
   it('retorna lista vazia quando não há nenhuma conclusão registrada', () => {
     expect(listarTodasConclusoes('u1')).toHaveLength(0);
   });
+
+  it('não inclui conclusões de usuárias com IDs que começam com o mesmo prefixo (ex: u1 vs u12)', () => {
+    registrarConclusao({
+      praticaId: 'respiracao',
+      usuariaId: 'u1',
+      concluidaEm: '2026-08-10T10:00:00.000Z',
+      duracaoMinutos: 3,
+    });
+    registrarConclusao({
+      praticaId: 'meditacao',
+      usuariaId: 'u12',
+      concluidaEm: '2026-08-10T11:00:00.000Z',
+      duracaoMinutos: 5,
+    });
+    expect(listarTodasConclusoes('u1')).toHaveLength(1);
+  });
 });

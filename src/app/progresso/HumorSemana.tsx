@@ -44,7 +44,7 @@ export default function HumorSemana({
           <Link
             href={`/progresso?semana=${hrefSemanaAnterior}`}
             aria-label="Ver semana anterior"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-texto-suave transition-colors hover:bg-fundo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-texto-suave transition-colors hover:bg-fundo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60"
           >
             ‹
           </Link>
@@ -52,12 +52,12 @@ export default function HumorSemana({
             <Link
               href={`/progresso?semana=${hrefSemanaSeguinte}`}
               aria-label="Ver próxima semana"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-texto-suave transition-colors hover:bg-fundo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-texto-suave transition-colors hover:bg-fundo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60"
             >
               ›
             </Link>
           ) : (
-            <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center text-borda">
+            <span aria-hidden="true" className="flex h-11 w-11 items-center justify-center text-borda">
               ›
             </span>
           )}

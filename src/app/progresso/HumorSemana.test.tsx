@@ -75,4 +75,24 @@ describe('HumorSemana', () => {
     const link = screen.getByLabelText('Ver próxima semana');
     expect(link.getAttribute('href')).toBe('/progresso?semana=2026-08-17');
   });
+
+  it('renderiza um dia passado sem registro como não interativo', () => {
+    render(
+      <HumorSemana
+        dias={semanaBase}
+        hojeISO="2026-08-13"
+        hrefSemanaAnterior="2026-08-03"
+        hrefSemanaSeguinte={null}
+      />
+    );
+    const diaPassadoSemRegistro = screen.getByLabelText(/Terça-feira, 11 de agosto, sem registro/);
+    expect(diaPassadoSemRegistro.tagName).toBe('DIV');
+    expect(diaPassadoSemRegistro.getAttribute('href')).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /Terça-feira, 11 de agosto, sem registro/ })
+    ).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: /Terça-feira, 11 de agosto, sem registro/ })
+    ).toBeNull();
+  });
 });

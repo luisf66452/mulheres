@@ -22,7 +22,10 @@ export function useCronometroRegressivo(
   const [estado, setEstado] = useState<EstadoCronometro>('parado');
   const intervaloRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const aoConcluirRef = useRef(aoConcluir);
-  aoConcluirRef.current = aoConcluir;
+
+  useEffect(() => {
+    aoConcluirRef.current = aoConcluir;
+  }, [aoConcluir]);
 
   const pararIntervalo = useCallback(() => {
     if (intervaloRef.current) {

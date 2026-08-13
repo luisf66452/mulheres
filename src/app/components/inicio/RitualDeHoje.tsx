@@ -21,18 +21,12 @@ export default function RitualDeHoje({ jaFezCheckinHoje }: { jaFezCheckinHoje: b
   }
 
   return (
-    <Cartao className="space-y-3">
-      <p className="font-display text-lg text-texto">Ritual de hoje</p>
-      <p className="text-sm text-texto-suave">
-        Reserve alguns minutos para o seu check-in diário — humor, corpo e alimentação.
-      </p>
-      <Link
-        href="/checkin"
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-acao p-3 text-center font-medium text-white transition-colors hover:bg-acao/90"
-      >
-        <IconeCoracao />
-        Fazer check-in
-      </Link>
-    </Cartao>
+    <Link
+      href="/checkin"
+      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-acao p-4 text-base font-medium text-white transition-colors hover:bg-acao/90"
+    >
+      <IconeCoracao />
+      Fazer check-in
+    </Link>
   );
 }

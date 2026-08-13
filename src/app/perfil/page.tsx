@@ -1,13 +1,23 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import Cartao from '@/app/components/Cartao';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
-import EditarNomeForm from './EditarNomeForm';
+import Botao from '@/app/components/Botao';
+import CabecalhoPerfil from '@/app/components/perfil/CabecalhoPerfil';
+import CartaoMenuPerfil from '@/app/components/perfil/CartaoMenuPerfil';
+import IconePreferencias from '@/app/components/perfil/icones/IconePreferencias';
+import IconeNotificacoes from '@/app/components/perfil/icones/IconeNotificacoes';
+import IconeAssinatura from '@/app/components/perfil/icones/IconeAssinatura';
+import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
+import IconeConfiguracoes from '@/app/components/perfil/icones/IconeConfiguracoes';
 import { sair } from './actions';
 
-const LABEL_PLANO: Record<string, string> = {
-  free: 'Gratuito',
-  premium: 'Premium',
-};
+const ITENS_MENU = [
+  { href: '/perfil/preferencias', rotulo: 'Preferências', Icone: IconePreferencias },
+  { href: '/perfil/notificacoes', rotulo: 'Notificações', Icone: IconeNotificacoes },
+  { href: '/perfil/assinatura', rotulo: 'Minha assinatura', Icone: IconeAssinatura },
+  { href: '/perfil/privacidade', rotulo: 'Privacidade', Icone: IconePrivacidade },
+  { href: '/perfil/configuracoes', rotulo: 'Configurações', Icone: IconeConfiguracoes },
+] as const;
 
 export default async function PerfilPage() {
   const supabase = await createSupabaseServerClient();
@@ -15,60 +25,40 @@ export default async function PerfilPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: perfil } = await supabase
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: perfil, error: erroPerfil } = await supabase
     .from('perfis')
-    .select('plano, nome')
-    .eq('id', user!.id)
+    .select('nome, frase_pessoal')
+    .eq('id', user.id)
     .single();
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
-      <h1 className="font-display text-2xl text-texto">Perfil</h1>
+    <main className="mx-auto max-w-md pb-24 md:pb-8">
+      <CabecalhoPerfil nome={perfil?.nome ?? null} frase={perfil?.frase_pessoal ?? null} />
 
-      <Cartao className="space-y-3">
-        <div>
-          <p className="text-xs text-texto-suave">E-mail</p>
-          <p className="text-texto">{user!.email}</p>
-        </div>
-        <div>
-          <p className="text-xs text-texto-suave">Plano</p>
-          <p className="text-texto">{LABEL_PLANO[perfil?.plano ?? 'free']}</p>
-        </div>
-      </Cartao>
+      <div className="space-y-6 px-4 pt-6">
+        {erroPerfil && (
+          <div className="rounded-2xl border border-borda bg-superficie p-4 text-sm text-texto-suave">
+            Não foi possível carregar todos os dados do seu perfil agora. Algumas informações podem
+            aparecer incompletas.
+          </div>
+        )}
 
-      <Cartao>
-        <EditarNomeForm nomeAtual={perfil?.nome ?? null} />
-      </Cartao>
+        <nav aria-label="Menu do perfil" className="space-y-3">
+          {ITENS_MENU.map((item) => (
+            <CartaoMenuPerfil key={item.href} {...item} />
+          ))}
+        </nav>
 
-      <div className="space-y-3">
-        <a
-          href="/settings"
-          className="block w-full rounded-2xl border border-borda bg-superficie p-3 text-texto transition-colors hover:bg-fundo"
-        >
-          Lembretes
-        </a>
-        <a
-          href="/premium"
-          className="block w-full rounded-2xl border border-borda bg-superficie p-3 text-texto transition-colors hover:bg-fundo"
-        >
-          Versão Premium
-        </a>
-        <a
-          href="/privacidade"
-          className="block w-full rounded-2xl border border-borda bg-superficie p-3 text-texto transition-colors hover:bg-fundo"
-        >
-          Privacidade e Termos de Uso
-        </a>
+        <form action={sair}>
+          <Botao type="submit" variante="secundaria">
+            Sair da conta
+          </Botao>
+        </form>
       </div>
-
-      <form action={sair}>
-        <button
-          type="submit"
-          className="w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
-        >
-          Sair
-        </button>
-      </form>
 
       <NavegacaoInferior />
     </main>

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { registrarConclusao, listarConclusoesDoDia } from './armazenamento';
+import { registrarConclusao, listarConclusoesDoDia, listarTodasConclusoes } from './armazenamento';
 
 describe('registrarConclusao / listarConclusoesDoDia', () => {
   beforeEach(() => {
@@ -63,5 +63,47 @@ describe('registrarConclusao / listarConclusoesDoDia', () => {
     });
     expect(listarConclusoesDoDia('u1', '2026-08-13')).toHaveLength(1);
     expect(listarConclusoesDoDia('u2', '2026-08-13')).toHaveLength(1);
+  });
+});
+
+describe('listarTodasConclusoes', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('soma conclusões de dias diferentes para a mesma usuária', () => {
+    registrarConclusao({
+      praticaId: 'respiracao',
+      usuariaId: 'u1',
+      concluidaEm: '2026-08-10T10:00:00.000Z',
+      duracaoMinutos: 3,
+    });
+    registrarConclusao({
+      praticaId: 'meditacao',
+      usuariaId: 'u1',
+      concluidaEm: '2026-08-11T10:00:00.000Z',
+      duracaoMinutos: 5,
+    });
+    expect(listarTodasConclusoes('u1')).toHaveLength(2);
+  });
+
+  it('não inclui conclusões de outras usuárias', () => {
+    registrarConclusao({
+      praticaId: 'respiracao',
+      usuariaId: 'u1',
+      concluidaEm: '2026-08-10T10:00:00.000Z',
+      duracaoMinutos: 3,
+    });
+    registrarConclusao({
+      praticaId: 'respiracao',
+      usuariaId: 'u2',
+      concluidaEm: '2026-08-10T10:00:00.000Z',
+      duracaoMinutos: 3,
+    });
+    expect(listarTodasConclusoes('u1')).toHaveLength(1);
+  });
+
+  it('retorna lista vazia quando não há nenhuma conclusão registrada', () => {
+    expect(listarTodasConclusoes('u1')).toHaveLength(0);
   });
 });

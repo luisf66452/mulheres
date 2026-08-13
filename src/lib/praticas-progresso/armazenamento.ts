@@ -45,3 +45,20 @@ export function registrarConclusao(conclusao: ConclusaoPratica): void {
 export function listarConclusoesDoDia(usuariaId: string, data: string): ConclusaoPratica[] {
   return lerConclusoesDoDia(usuariaId, data);
 }
+
+export function listarTodasConclusoes(usuariaId: string): ConclusaoPratica[] {
+  const prefixo = `praticas:conclusoes:${usuariaId}:`;
+  const todas: ConclusaoPratica[] = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const chaveArmazenada = window.localStorage.key(i);
+      if (!chaveArmazenada || !chaveArmazenada.startsWith(prefixo)) continue;
+      const bruto = window.localStorage.getItem(chaveArmazenada);
+      if (!bruto) continue;
+      todas.push(...(JSON.parse(bruto) as ConclusaoPratica[]));
+    }
+  } catch {
+    return [];
+  }
+  return todas;
+}

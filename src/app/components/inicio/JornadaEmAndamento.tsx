@@ -28,10 +28,10 @@ export default function JornadaEmAndamento({ jornada }: { jornada: JornadaEmAnda
             fill="none"
             className="shrink-0 rounded-xl"
           >
-            <rect width="56" height="56" rx="14" fill="#B9A6D4" fillOpacity="0.25" />
+            <rect width="56" height="56" rx="14" fill="var(--color-acao)" fillOpacity="0.15" />
             <path
               d="M18 38c2-10 3-15 10-20 7 5 8 10 10 20"
-              stroke="#B9A6D4"
+              stroke="var(--color-acao)"
               strokeWidth="2"
               strokeLinecap="round"
               fill="none"

@@ -81,6 +81,9 @@ export default function CartaoConquistas({
   });
 
   useEffect(() => {
+    // Sincroniza com o localStorage (sistema externo) só depois de montar no
+    // cliente — mesmo padrão já usado em usePersistedState.ts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTotalPraticasRapidas(listarTodasConclusoes(usuariaId).length);
   }, [usuariaId]);
 
@@ -89,6 +92,9 @@ export default function CartaoConquistas({
     const vistas = obterVistas(usuariaId);
     const novas = desbloqueadasAgora.filter((id) => !vistas.has(id));
     if (novas.length > 0) {
+      // Mesmo padrão de usePersistedState.ts: sincroniza estado do React com o
+      // localStorage (sistema externo) — não é um espelhamento comum de prop-em-state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecemDesbloqueadas(new Set(novas));
       registrarVistas(usuariaId, desbloqueadasAgora);
     }

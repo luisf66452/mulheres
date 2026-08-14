@@ -38,13 +38,16 @@ export default async function ProgressoPage({
 
   if (erroCheckins) {
     return (
-      <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
-        <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
-        <p className="text-sm text-alerta">
-          Não foi possível carregar seus dados agora. Tente novamente em instantes.
-        </p>
-        <NavegacaoInferior />
-      </main>
+      <>
+        {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
+        <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
+          <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
+          <p className="text-sm text-alerta">
+            Não foi possível carregar seus dados agora. Tente novamente em instantes.
+          </p>
+          <NavegacaoInferior />
+        </main>
+      </>
     );
   }
 
@@ -102,54 +105,56 @@ export default async function ProgressoPage({
   );
 
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
+    <>
       {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
-      <CabecalhoProgresso />
+      <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
+        <CabecalhoProgresso />
 
-      <CartaoSequencia
-        diasConsecutivosAtuais={progresso.diasConsecutivosAtuais}
-        totalCheckins={todosOsCheckins.length}
-        ultimos7Dias={progresso.ultimos7Dias}
-      />
+        <CartaoSequencia
+          diasConsecutivosAtuais={progresso.diasConsecutivosAtuais}
+          totalCheckins={todosOsCheckins.length}
+          ultimos7Dias={progresso.ultimos7Dias}
+        />
 
-      <HumorSemana
-        dias={diasDaSemana}
-        hojeISO={formatDateISO(hoje)}
-        hrefSemanaAnterior={semanaAnteriorISO(segundaFeiraISO)}
-        hrefSemanaSeguinte={semanaSeguinteISO(segundaFeiraISO, hoje)}
-      />
+        <HumorSemana
+          dias={diasDaSemana}
+          hojeISO={formatDateISO(hoje)}
+          hrefSemanaAnterior={semanaAnteriorISO(segundaFeiraISO)}
+          hrefSemanaSeguinte={semanaSeguinteISO(segundaFeiraISO, hoje)}
+        />
 
-      <CartaoConquistas
-        usuariaId={user!.id}
-        melhorSequencia={melhorSequencia}
-        totalCheckins={todosOsCheckins.length}
-        totalPraticasCuradas={totalPraticasCuradas ?? 0}
-      />
+        <CartaoConquistas
+          usuariaId={user!.id}
+          melhorSequencia={melhorSequencia}
+          totalCheckins={todosOsCheckins.length}
+          totalPraticasCuradas={totalPraticasCuradas ?? 0}
+        />
 
-      <MelhorSequencia melhorSequencia={melhorSequencia} />
+        <MelhorSequencia melhorSequencia={melhorSequencia} />
 
-      <p className="text-sm text-texto-suave">
-        Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo
-        dos seus dias serem como foram.
-      </p>
-
-      <GraficoEvolucao checkins={checkinsParaGrafico} />
-
-      {erroHistorico ? (
-        <p className="text-sm text-alerta">
-          Não foi possível carregar o que você fez nesses dias. Tente novamente em instantes.
+        <p className="text-sm text-texto-suave">
+          Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo
+          dos seus dias serem como foram.
         </p>
-      ) : (
-        <Historico itens={itensHistorico} />
-      )}
 
-      <a
-        href="/checkin"
-        className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
-      >
-        Voltar ao início
-      </a>
-      <NavegacaoInferior />
-    </main>
+        <GraficoEvolucao checkins={checkinsParaGrafico} />
+
+        {erroHistorico ? (
+          <p className="text-sm text-alerta">
+            Não foi possível carregar o que você fez nesses dias. Tente novamente em instantes.
+          </p>
+        ) : (
+          <Historico itens={itensHistorico} />
+        )}
+
+        <a
+          href="/checkin"
+          className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
+        >
+          Voltar ao início
+        </a>
+        <NavegacaoInferior />
+      </main>
+    </>
   );
 }

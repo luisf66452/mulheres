@@ -8,6 +8,7 @@ import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type { EstadoGeral, AlimentacaoPercebida, ProximaAcaoEscolhida } from '@/lib/supabase/types';
 
 const ESTADOS_GERAIS: EstadoGeral[] = [
@@ -131,7 +132,7 @@ export async function submeterCheckin(
   }
 
   const petalasCheckin = await concederPetalas(
-    supabase,
+    createSupabaseAdminClient(),
     user.id,
     'checkin_diario',
     checkin.id,
@@ -143,7 +144,7 @@ export async function submeterCheckin(
   // saída escolhida (segurança, guardar, ou prática/jornada).
 
   if (recomendacao.tipo === 'sinal_seguranca') {
-    redirect(petalasCheckin ? `/seguranca?petalas=${petalasCheckin}` : '/seguranca');
+    redirect('/seguranca');
   }
 
   if (answers.proximaAcao === 'guardar') {

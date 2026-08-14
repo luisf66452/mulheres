@@ -6,6 +6,7 @@ import { calcularProgressoJornada } from '@/lib/jornadas/progresso';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export async function registrarSessaoJornada(params: {
   checkinId: string;
@@ -83,7 +84,7 @@ export async function registrarSessaoJornada(params: {
 
   if (sessao && primeiraConclusaoAtividade) {
     const petalasAtividade = await concederPetalas(
-      supabase,
+      createSupabaseAdminClient(),
       user.id,
       'sessao_jornada_primeira_conclusao',
       sessao.id,
@@ -109,7 +110,7 @@ export async function registrarSessaoJornada(params: {
 
     if (jornadaConcluida) {
       const petalasJornada = await concederPetalas(
-        supabase,
+        createSupabaseAdminClient(),
         user.id,
         'jornada_completa',
         progresso.id,

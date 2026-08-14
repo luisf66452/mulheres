@@ -47,7 +47,7 @@ create or replace function handle_new_user_carteira_petalas()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   insert into carteiras_petalas (usuaria_id, saldo)

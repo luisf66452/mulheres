@@ -8,7 +8,7 @@ create or replace function conceder_petalas(
 ) returns table (concedido boolean, saldo integer)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   v_saldo integer;
@@ -23,9 +23,9 @@ begin
 
   begin
     update carteiras_petalas
-      set saldo = saldo + p_quantidade, atualizada_em = now()
+      set saldo = carteiras_petalas.saldo + p_quantidade, atualizada_em = now()
       where usuaria_id = p_usuaria_id
-      returning saldo into v_saldo;
+      returning carteiras_petalas.saldo into v_saldo;
 
     insert into transacoes_petalas
       (usuaria_id, tipo_evento, referencia_id, quantidade, saldo_resultante)
@@ -36,11 +36,19 @@ begin
     return;
   exception
     when unique_violation then
-      select saldo into v_saldo from carteiras_petalas where usuaria_id = p_usuaria_id;
+      select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id;
       return query select false, v_saldo;
       return;
   end;
 end;
 $$;
 
-grant execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) to authenticated;
+-- C2: a RPC concede Pétalas com o valor que o CHAMADOR informa (p_quantidade),
+-- sem validar contra VALORES_PETALAS nem checar auth.uid(). Se ficasse exposta
+-- à role "authenticated", qualquer usuária autenticada poderia chamar a RPC
+-- diretamente pela API REST do Supabase e creditar Pétalas arbitrárias para
+-- si mesma. A defesa correta é tirar a função do alcance do cliente: só o
+-- service_role (usado exclusivamente no servidor, nunca exposto ao navegador)
+-- pode executá-la.
+revoke execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) from authenticated, anon;
+grant execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) to service_role;

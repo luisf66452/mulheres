@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export async function registrarSessao(params: {
   checkinId: string;
@@ -49,7 +50,7 @@ export async function registrarSessao(params: {
   let petalasGanhas: number | null = null;
   if (primeiraConclusao) {
     petalasGanhas = await concederPetalas(
-      supabase,
+      createSupabaseAdminClient(),
       user.id,
       'pratica_primeira_conclusao',
       sessao.id,

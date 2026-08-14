@@ -393,19 +393,21 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
 
   // etapa === 'guardado'
   return (
-    <main className="mx-auto max-w-md space-y-4 p-6 text-center">
+    <>
       {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
-      <p className="text-3xl">🌿</p>
-      <h1 className="font-display text-2xl text-texto">Seu momento foi guardado</h1>
-      <p className="text-sm text-texto-suave">
-        Obrigada por se dar esse espaço hoje. Você pode ver seu progresso quando quiser.
-      </p>
-      <a
-        href="/progresso"
-        className="block w-full rounded-2xl bg-acao p-3 text-center font-medium text-white transition-colors hover:bg-acao/90"
-      >
-        Ver meu progresso
-      </a>
-    </main>
+      <main className="mx-auto max-w-md space-y-4 p-6 text-center">
+        <p className="text-3xl">🌿</p>
+        <h1 className="font-display text-2xl text-texto">Seu momento foi guardado</h1>
+        <p className="text-sm text-texto-suave">
+          Obrigada por se dar esse espaço hoje. Você pode ver seu progresso quando quiser.
+        </p>
+        <a
+          href="/progresso"
+          className="block w-full rounded-2xl bg-acao p-3 text-center font-medium text-white transition-colors hover:bg-acao/90"
+        >
+          Ver meu progresso
+        </a>
+      </main>
+    </>
   );
 }

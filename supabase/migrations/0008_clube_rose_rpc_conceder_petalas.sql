@@ -50,5 +50,6 @@ $$;
 -- si mesma. A defesa correta é tirar a função do alcance do cliente: só o
 -- service_role (usado exclusivamente no servidor, nunca exposto ao navegador)
 -- pode executá-la.
+revoke execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) from public;
 revoke execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) from authenticated, anon;
 grant execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) to service_role;

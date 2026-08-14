@@ -34,4 +34,9 @@ describe('concederPetalas', () => {
     const resultado = await concederPetalas(supabase, 'user-1', 'checkin_diario', 'ref-1', 5);
     expect(resultado).toBeNull();
   });
+
+  it('retorna null quando o client é null (env ausente)', async () => {
+    const resultado = await concederPetalas(null, 'user-1', 'checkin_diario', 'ref-1', 5);
+    expect(resultado).toBeNull();
+  });
 });

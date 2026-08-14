@@ -2,12 +2,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, TipoEventoPetalas } from '@/lib/supabase/types';
 
 export async function concederPetalas(
-  supabase: SupabaseClient<Database>,
+  supabase: SupabaseClient<Database> | null,
   usuariaId: string,
   tipoEvento: TipoEventoPetalas,
   referenciaId: string,
   quantidade: number
 ): Promise<number | null> {
+  if (!supabase) {
+    return null;
+  }
+
   try {
     const { data, error } = await supabase.rpc('conceder_petalas', {
       p_usuaria_id: usuariaId,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cartao from '@/app/components/Cartao';
@@ -40,6 +40,12 @@ export default function CartaoRecompensa({
   const [resgatando, setResgatando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [celebrando, setCelebrando] = useState(false);
+
+  useEffect(() => {
+    if (!celebrando) return;
+    const timer = setTimeout(() => setCelebrando(false), 4000);
+    return () => clearTimeout(timer);
+  }, [celebrando]);
 
   const percentual = Math.min(100, Math.round((saldo / recompensa.custo) * 100));
   const faltam = Math.max(0, recompensa.custo - saldo);

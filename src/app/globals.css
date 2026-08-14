@@ -83,6 +83,21 @@ body {
   }
 }
 
+@keyframes petalas-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notificacao-petalas {
+  animation: petalas-entrada 0.3s ease-out both;
+}
+
 .ilustracao-camada-caule.ilustracao-cresce-direita {
   animation: ilustracao-cresce-direita 1.3s ease-out both;
 }
@@ -108,7 +123,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .ilustracao-camada-caule,
-  .ilustracao-camada-flor {
+  .ilustracao-camada-flor,
+  .notificacao-petalas {
     animation: none;
     clip-path: none;
     opacity: 1;

@@ -1,6 +1,7 @@
 export type Plano = 'free' | 'premium';
 export type StatusPratica = 'rascunho' | 'revisada' | 'publicada';
 export type TipoPratica = 'respiracao' | 'reflexao' | 'afirmacao' | 'movimento';
+export type FaixaEtaria = '18-24' | '25-34' | '35-44' | '45-54' | '55+';
 
 export type Perfil = {
   id: string;
@@ -10,6 +11,10 @@ export type Perfil = {
   horario_preferido_notificacao: string | null;
   consentimento_dados_sensiveis_em: string | null;
   criado_em: string;
+  frase_pessoal: string | null;
+  faixa_etaria: FaixaEtaria | null;
+  fuso_horario: string;
+  idioma: string;
 };
 
 export type EstadoGeral =

@@ -7,6 +7,7 @@ import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { concederDesafioSemanalSeElegivel } from '@/lib/clube-rose/progressoDesafioSemanal';
 
 export async function registrarSessaoJornada(params: {
   checkinId: string;
@@ -119,6 +120,9 @@ export async function registrarSessaoJornada(params: {
       totalPetalas += petalasJornada ?? 0;
     }
   }
+
+  const petalasDesafio = await concederDesafioSemanalSeElegivel(supabase, user.id);
+  totalPetalas += petalasDesafio ?? 0;
 
   redirect(totalPetalas > 0 ? `/progresso?petalas=${totalPetalas}` : '/progresso');
 }

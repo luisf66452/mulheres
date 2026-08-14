@@ -182,6 +182,13 @@ export type TransacaoPetalas = {
   criado_em: string;
 };
 
+export type ResgateDesafioSemanal = {
+  id: string;
+  usuaria_id: string;
+  semana_inicio: string; // YYYY-MM-DD
+  criado_em: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -212,6 +219,12 @@ export interface Database {
         Row: TransacaoPetalas;
         Insert: Omit<TransacaoPetalas, 'id' | 'criado_em'>;
         Update: Partial<TransacaoPetalas>;
+        Relationships: [];
+      };
+      resgates_desafio_semanal: {
+        Row: ResgateDesafioSemanal;
+        Insert: Omit<ResgateDesafioSemanal, 'id' | 'criado_em'>;
+        Update: Partial<ResgateDesafioSemanal>;
         Relationships: [];
       };
     };

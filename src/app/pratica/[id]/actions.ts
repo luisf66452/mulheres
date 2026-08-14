@@ -6,6 +6,7 @@ import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { concederDesafioSemanalSeElegivel } from '@/lib/clube-rose/progressoDesafioSemanal';
 
 export async function registrarSessao(params: {
   checkinId: string;
@@ -47,16 +48,20 @@ export async function registrarSessao(params: {
     throw new Error('Não foi possível registrar a sessão. Tente novamente.');
   }
 
-  let petalasGanhas: number | null = null;
+  let totalPetalas = 0;
   if (primeiraConclusao) {
-    petalasGanhas = await concederPetalas(
+    const petalasPratica = await concederPetalas(
       createSupabaseAdminClient(),
       user.id,
       'pratica_primeira_conclusao',
       sessao.id,
       VALORES_PETALAS.praticaPrimeiraConclusao
     );
+    totalPetalas += petalasPratica ?? 0;
   }
 
-  redirect(petalasGanhas ? `/progresso?petalas=${petalasGanhas}` : '/progresso');
+  const petalasDesafio = await concederDesafioSemanalSeElegivel(supabase, user.id);
+  totalPetalas += petalasDesafio ?? 0;
+
+  redirect(totalPetalas > 0 ? `/progresso?petalas=${totalPetalas}` : '/progresso');
 }

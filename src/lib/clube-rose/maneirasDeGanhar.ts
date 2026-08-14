@@ -37,7 +37,7 @@ export const MANEIRAS_DE_GANHAR: ManeiraDeGanhar[] = [
     titulo: 'Desafio semanal',
     descricao: 'Finalize o desafio semanal do Clube Rose.',
     petalas: VALORES_PETALAS.desafioSemanal,
-    disponivel: false,
+    disponivel: true,
   },
   {
     chave: 'jornada_completa',

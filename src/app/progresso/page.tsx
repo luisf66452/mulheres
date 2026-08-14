@@ -1,13 +1,28 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia } from '@/lib/progress/streak';
+import { calcularProgresso7Dias, calcularMelhorSequencia } from '@/lib/progress/streak';
+import {
+  resolverSegundaFeira,
+  calcularSemana,
+  semanaAnteriorISO,
+  semanaSeguinteISO,
+} from '@/lib/progress/semana';
+import { formatDateISO } from '@/lib/date';
 import { resolverItensHistorico } from '@/lib/historico/resolverItens';
-import ProgressoBlobs from '@/app/components/ProgressoBlobs';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
+import CabecalhoProgresso from './CabecalhoProgresso';
+import CartaoSequencia from './CartaoSequencia';
+import HumorSemana from './HumorSemana';
+import CartaoConquistas from './CartaoConquistas';
 import MelhorSequencia from './MelhorSequencia';
 import GraficoEvolucao from './GraficoEvolucao';
 import Historico from './Historico';
 
-export default async function ProgressoPage() {
+export default async function ProgressoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ semana?: string }>;
+}) {
+  const { semana } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -32,11 +47,24 @@ export default async function ProgressoPage() {
   }
 
   const todosOsCheckins = checkins ?? [];
-  const progresso = calcularProgresso7Dias(todosOsCheckins.map((c) => c.data), new Date());
+  const hoje = new Date();
+  const progresso = calcularProgresso7Dias(todosOsCheckins.map((c) => c.data), hoje);
   const melhorSequencia = calcularMelhorSequencia(todosOsCheckins.map((c) => c.data));
+
+  const segundaFeiraISO = resolverSegundaFeira(semana, hoje);
+  const diasDaSemana = calcularSemana(
+    todosOsCheckins.map((c) => ({ data: c.data, humor: c.humor })),
+    segundaFeiraISO
+  );
+
+  const { count: totalPraticasCuradas } = await supabase
+    .from('sessoes')
+    .select('id', { count: 'exact', head: true })
+    .eq('usuaria_id', user!.id)
+    .not('pratica_id', 'is', null);
+
   const checkinsParaGrafico = todosOsCheckins.slice(-30);
   const checkinsRecentes = todosOsCheckins.slice(-20).reverse();
-
   const checkinIds = checkinsRecentes.map((c) => c.id);
 
   const { data: sessoesDoHistorico, error: erroSessoes } =
@@ -73,20 +101,26 @@ export default async function ProgressoPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-24 md:pb-6">
-      <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
+      <CabecalhoProgresso />
 
-      <p className="text-texto">
-        Você completou o ritual em <strong>{progresso.diasCompletos} de 7</strong> dias esta semana.
-      </p>
+      <CartaoSequencia
+        diasConsecutivosAtuais={progresso.diasConsecutivosAtuais}
+        totalCheckins={todosOsCheckins.length}
+        ultimos7Dias={progresso.ultimos7Dias}
+      />
 
-      {progresso.diasConsecutivosAtuais > 0 && (
-        <p className="text-texto">
-          Você está em uma sequência de {formatarSequencia(progresso.diasConsecutivosAtuais)}. 🌱
-        </p>
-      )}
+      <HumorSemana
+        dias={diasDaSemana}
+        hojeISO={formatDateISO(hoje)}
+        hrefSemanaAnterior={semanaAnteriorISO(segundaFeiraISO)}
+        hrefSemanaSeguinte={semanaSeguinteISO(segundaFeiraISO, hoje)}
+      />
 
-      <ProgressoBlobs
-        dias={progresso.ultimos7Dias.map((dia) => ({ rotulo: dia.data, completo: dia.completou }))}
+      <CartaoConquistas
+        usuariaId={user!.id}
+        melhorSequencia={melhorSequencia}
+        totalCheckins={todosOsCheckins.length}
+        totalPraticasCuradas={totalPraticasCuradas ?? 0}
       />
 
       <MelhorSequencia melhorSequencia={melhorSequencia} />

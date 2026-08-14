@@ -6,6 +6,7 @@ import Escala from '@/app/components/Escala';
 import Botao from '@/app/components/Botao';
 import type { EstadoGeral, AlimentacaoPercebida } from '@/lib/supabase/types';
 import { estadoInicialParaHumor, type HumorInicial } from '@/lib/checkin/humorInicial';
+import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 
 type Etapa =
   | 'estado_geral'
@@ -100,6 +101,7 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
 
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [petalasGanhas, setPetalasGanhas] = useState<number>(0);
 
   function alternarFator(fator: string) {
     setFatores((atual) =>
@@ -128,6 +130,7 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
         proximaAcao: acao,
       });
       if (resultado?.tipo === 'guardado') {
+        setPetalasGanhas(resultado.petalasGanhas ?? 0);
         setEtapa('guardado');
       }
     } catch {
@@ -391,6 +394,7 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
   // etapa === 'guardado'
   return (
     <main className="mx-auto max-w-md space-y-4 p-6 text-center">
+      {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
       <p className="text-3xl">🌿</p>
       <h1 className="font-display text-2xl text-texto">Seu momento foi guardado</h1>
       <p className="text-sm text-texto-suave">

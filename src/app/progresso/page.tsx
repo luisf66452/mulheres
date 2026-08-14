@@ -16,13 +16,15 @@ import CartaoConquistas from './CartaoConquistas';
 import MelhorSequencia from './MelhorSequencia';
 import GraficoEvolucao from './GraficoEvolucao';
 import Historico from './Historico';
+import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 
 export default async function ProgressoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ semana?: string }>;
+  searchParams: Promise<{ semana?: string; petalas?: string }>;
 }) {
-  const { semana } = await searchParams;
+  const { semana, petalas } = await searchParams;
+  const petalasGanhas = petalas ? Number.parseInt(petalas, 10) : 0;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -101,6 +103,7 @@ export default async function ProgressoPage({
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
+      {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
       <CabecalhoProgresso />
 
       <CartaoSequencia

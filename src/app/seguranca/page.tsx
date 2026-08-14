@@ -1,6 +1,13 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 
-export default async function SegurancaPage() {
+export default async function SegurancaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ petalas?: string }>;
+}) {
+  const { petalas } = await searchParams;
+  const petalasGanhas = petalas ? Number.parseInt(petalas, 10) : 0;
   const supabase = await createSupabaseServerClient();
   const { data: recursos } = await supabase
     .from('recursos_seguranca')
@@ -10,6 +17,7 @@ export default async function SegurancaPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
+      {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
       {(recursos ?? []).map((recurso) => (
         <div key={recurso.id} className="space-y-1 border-l-4 border-alerta pl-4">
           <h2 className="font-display text-xl text-texto">{recurso.titulo}</h2>

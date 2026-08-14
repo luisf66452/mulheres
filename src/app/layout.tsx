@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ritual Diário",
+  title: "Rose",
   description:
     "Um ritual diário de 5 minutos para autoestima, imagem corporal e relação com a comida.",
   manifest: "/manifest.json",

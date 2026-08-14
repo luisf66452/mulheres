@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify({
-            title: 'Ritual Diário',
+            title: 'Rose',
             body: 'Seu momento de cuidado de hoje está te esperando.',
           })
         );

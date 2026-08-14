@@ -16,6 +16,14 @@
   --color-humor-5: #B8697A;
   --color-pessego: #E8B894;
   --color-salvia: #8FA888;
+
+  /* Fundos pastel para os cartões da tela de Jornadas — tons mais claros que
+     os tokens de destaque acima, feitos para grandes áreas de fundo em vez
+     de acentos pequenos. */
+  --color-pessego-suave: #F3CFC1;
+  --color-creme-rosado: #F4D9D2;
+  --color-lilas-suave: #D8CCE2;
+  --color-salvia-suave: #DDE5D4;
 }
 
 @theme inline {

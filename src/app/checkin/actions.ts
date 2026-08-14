@@ -6,6 +6,8 @@ import { derivarHumor, derivarImagemCorporal, derivarComida } from '@/lib/checki
 import { decidirRecomendacaoComProtecao } from '@/lib/checkin/recommend';
 import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
+import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
+import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import type { EstadoGeral, AlimentacaoPercebida, ProximaAcaoEscolhida } from '@/lib/supabase/types';
 
 const ESTADOS_GERAIS: EstadoGeral[] = [
@@ -62,7 +64,7 @@ export interface CheckinCompletoAnswers {
 
 export async function submeterCheckin(
   answers: CheckinCompletoAnswers
-): Promise<{ tipo: 'guardado' } | void> {
+): Promise<{ tipo: 'guardado'; petalasGanhas?: number } | void> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -128,15 +130,24 @@ export async function submeterCheckin(
     throw new Error('Não foi possível salvar o check-in. Tente novamente.');
   }
 
+  const petalasCheckin = await concederPetalas(
+    supabase,
+    user.id,
+    'checkin_diario',
+    checkin.id,
+    VALORES_PETALAS.checkinDiario
+  );
+  const sufixoPetalas = petalasCheckin ? `&petalas=${petalasCheckin}` : '';
+
   // A partir daqui, o check-in já está salvo no Supabase, independente da
   // saída escolhida (segurança, guardar, ou prática/jornada).
 
   if (recomendacao.tipo === 'sinal_seguranca') {
-    redirect('/seguranca');
+    redirect(petalasCheckin ? `/seguranca?petalas=${petalasCheckin}` : '/seguranca');
   }
 
   if (answers.proximaAcao === 'guardar') {
-    return { tipo: 'guardado' };
+    return { tipo: 'guardado', petalasGanhas: petalasCheckin ?? undefined };
   }
 
   const { data: jornadaAtivaRow } = await supabase
@@ -167,7 +178,7 @@ export async function submeterCheckin(
   });
 
   if (etapa.tipo === 'jornada') {
-    redirect(`/jornada-atividade/${atividadeDoDia!.id}?checkin=${checkin.id}`);
+    redirect(`/jornada-atividade/${atividadeDoDia!.id}?checkin=${checkin.id}${sufixoPetalas}`);
   }
 
   if (recomendacao.tipo !== 'pratica') {
@@ -186,5 +197,5 @@ export async function submeterCheckin(
     throw new Error(`Nenhuma prática publicada encontrada para a categoria "${recomendacao.categoria}"`);
   }
 
-  redirect(`/pratica/${pratica.id}?checkin=${checkin.id}`);
+  redirect(`/pratica/${pratica.id}?checkin=${checkin.id}${sufixoPetalas}`);
 }

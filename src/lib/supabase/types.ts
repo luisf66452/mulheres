@@ -189,6 +189,13 @@ export type ResgateDesafioSemanal = {
   criado_em: string;
 };
 
+export type ResgateRecompensa = {
+  id: string;
+  usuaria_id: string;
+  recompensa_chave: string;
+  criado_em: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -227,6 +234,12 @@ export interface Database {
         Update: Partial<ResgateDesafioSemanal>;
         Relationships: [];
       };
+      resgates_recompensas: {
+        Row: ResgateRecompensa;
+        Insert: Omit<ResgateRecompensa, 'id' | 'criado_em'>;
+        Update: Partial<ResgateRecompensa>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -238,6 +251,14 @@ export interface Database {
           p_quantidade: number;
         };
         Returns: { concedido: boolean; saldo: number }[];
+      };
+      resgatar_recompensa: {
+        Args: {
+          p_usuaria_id: string;
+          p_recompensa_chave: string;
+          p_custo: number;
+        };
+        Returns: { resgatado: boolean; saldo: number }[];
       };
     };
   };

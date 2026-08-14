@@ -6,6 +6,8 @@ import CabecalhoClubeRose from './CabecalhoClubeRose';
 import CartaoSaldoPetalas from './CartaoSaldoPetalas';
 import CartaoDesafioSemanal from './CartaoDesafioSemanal';
 import SecaoManeirasDeGanhar from './SecaoManeirasDeGanhar';
+import SecaoRecompensas from './SecaoRecompensas';
+import HistoricoPetalas from './HistoricoPetalas';
 
 export default async function ClubeRosePage() {
   const supabase = await createSupabaseServerClient();
@@ -17,18 +19,23 @@ export default async function ClubeRosePage() {
     redirect('/login');
   }
 
-  const [{ data: carteira }, etapasConcluidas, { data: resgateSemana }] = await Promise.all([
-    supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user.id).maybeSingle(),
-    contarEtapasDesafioSemanal(supabase, user.id),
-    supabase
-      .from('resgates_desafio_semanal')
-      .select('id')
-      .eq('usuaria_id', user.id)
-      .eq('semana_inicio', semanaInicioISO())
-      .maybeSingle(),
-  ]);
+  const [{ data: carteira }, etapasConcluidas, { data: resgateSemana }, { data: perfil }, { data: resgatesRecompensas }] =
+    await Promise.all([
+      supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user.id).maybeSingle(),
+      contarEtapasDesafioSemanal(supabase, user.id),
+      supabase
+        .from('resgates_desafio_semanal')
+        .select('id')
+        .eq('usuaria_id', user.id)
+        .eq('semana_inicio', semanaInicioISO())
+        .maybeSingle(),
+      supabase.from('perfis').select('plano').eq('id', user.id).single(),
+      supabase.from('resgates_recompensas').select('recompensa_chave').eq('usuaria_id', user.id),
+    ]);
 
   const saldo = carteira?.saldo ?? 0;
+  const ehPremium = perfil?.plano === 'premium';
+  const chavesResgatadas = new Set((resgatesRecompensas ?? []).map((r) => r.recompensa_chave));
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
@@ -36,6 +43,8 @@ export default async function ClubeRosePage() {
       <CartaoSaldoPetalas saldo={saldo} />
       <CartaoDesafioSemanal etapasConcluidas={etapasConcluidas} resgatado={!!resgateSemana} />
       <SecaoManeirasDeGanhar />
+      <SecaoRecompensas saldo={saldo} ehPremium={ehPremium} chavesResgatadas={chavesResgatadas} />
+      <HistoricoPetalas supabase={supabase} usuariaId={user.id} />
       <NavegacaoInferior />
     </main>
   );

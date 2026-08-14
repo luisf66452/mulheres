@@ -3,6 +3,9 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgressoJornada } from '@/lib/jornadas/progresso';
+import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
+import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
+import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 
 export async function registrarSessaoJornada(params: {
   checkinId: string;
@@ -19,14 +22,26 @@ export async function registrarSessaoJornada(params: {
     redirect('/login');
   }
 
-  const { error } = await supabase.from('sessoes').insert({
-    checkin_id: params.checkinId,
-    usuaria_id: user.id,
-    pratica_id: null,
-    jornada_atividade_id: params.jornadaAtividadeId,
-    sensacao_antes: params.sensacaoAntes,
-    sensacao_depois: params.sensacaoDepois,
-  });
+  const { data: sessoesAnteriores } = await supabase
+    .from('sessoes')
+    .select('id')
+    .eq('usuaria_id', user.id)
+    .eq('jornada_atividade_id', params.jornadaAtividadeId);
+
+  const primeiraConclusaoAtividade = ehPrimeiraConclusao(sessoesAnteriores);
+
+  const { data: sessao, error } = await supabase
+    .from('sessoes')
+    .insert({
+      checkin_id: params.checkinId,
+      usuaria_id: user.id,
+      pratica_id: null,
+      jornada_atividade_id: params.jornadaAtividadeId,
+      sensacao_antes: params.sensacaoAntes,
+      sensacao_depois: params.sensacaoDepois,
+    })
+    .select('id')
+    .single();
 
   // Se a inserção falhar por violação da constraint sessoes_checkin_unico (ex: uma
   // segunda requisição concorrente pro mesmo check-in), não avança o progresso de
@@ -64,6 +79,19 @@ export async function registrarSessaoJornada(params: {
     .eq('status', 'em_andamento')
     .maybeSingle();
 
+  let totalPetalas = 0;
+
+  if (sessao && primeiraConclusaoAtividade) {
+    const petalasAtividade = await concederPetalas(
+      supabase,
+      user.id,
+      'sessao_jornada_primeira_conclusao',
+      sessao.id,
+      VALORES_PETALAS.sessaoJornadaPrimeiraConclusao
+    );
+    totalPetalas += petalasAtividade ?? 0;
+  }
+
   if (jornada && progresso) {
     const { novoDiasCompletados, jornadaConcluida } = calcularProgressoJornada(
       progresso.dias_completados,
@@ -78,7 +106,18 @@ export async function registrarSessaoJornada(params: {
         ...(jornadaConcluida ? { concluida_em: new Date().toISOString() } : {}),
       })
       .eq('id', progresso.id);
+
+    if (jornadaConcluida) {
+      const petalasJornada = await concederPetalas(
+        supabase,
+        user.id,
+        'jornada_completa',
+        progresso.id,
+        VALORES_PETALAS.jornadaCompleta
+      );
+      totalPetalas += petalasJornada ?? 0;
+    }
   }
 
-  redirect('/progresso');
+  redirect(totalPetalas > 0 ? `/progresso?petalas=${totalPetalas}` : '/progresso');
 }

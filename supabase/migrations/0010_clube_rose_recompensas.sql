@@ -20,6 +20,11 @@ create policy "usuaria vê seus resgates de recompensas" on resgates_recompensas
 -- conceder_petalas em 0008).
 grant select on resgates_recompensas to authenticated;
 
+-- p_custo é confiado ao chamador (não validado contra p_recompensa_chave dentro
+-- da função) — igual ao p_quantidade de conceder_petalas em 0008. Isso só é
+-- seguro porque a função é service_role-only (ver revoke/grant abaixo) e o
+-- único chamador (src/app/clube-rose/actions.ts) sempre lê o custo do catálogo
+-- em código (src/lib/clube-rose/recompensas.ts), nunca de input do cliente.
 create or replace function resgatar_recompensa(
   p_usuaria_id uuid,
   p_recompensa_chave text,
@@ -42,10 +47,10 @@ begin
     values (p_usuaria_id, p_recompensa_chave)
     returning id into v_resgate_id;
 
-    select saldo into v_saldo from carteiras_petalas where usuaria_id = p_usuaria_id for update;
+    select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id for update;
 
     if v_saldo is null or v_saldo < p_custo then
-      raise exception 'saldo insuficiente';
+      raise exception 'saldo insuficiente' using errcode = 'P0002';
     end if;
 
     update carteiras_petalas
@@ -66,7 +71,7 @@ begin
       select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id;
       return query select false, v_saldo;
       return;
-    when raise_exception then
+    when sqlstate 'P0002' then
       -- saldo insuficiente: o sub-bloco inteiro (incluindo o insert do resgate
       -- acima) é revertido, então a recompensa NÃO fica marcada como resgatada.
       select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id;

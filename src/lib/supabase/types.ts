@@ -260,6 +260,14 @@ export interface Database {
         };
         Returns: { resgatado: boolean; saldo: number }[];
       };
+      conceder_desafio_semanal: {
+        Args: {
+          p_usuaria_id: string;
+          p_semana_inicio: string;
+          p_quantidade: number;
+        };
+        Returns: { concedido: boolean; saldo: number }[];
+      };
     };
   };
 }

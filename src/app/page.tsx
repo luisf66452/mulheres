@@ -11,6 +11,7 @@ import SeletorHumor from '@/app/components/inicio/SeletorHumor';
 import SequenciaDias from '@/app/components/inicio/SequenciaDias';
 import MensagemAcolhedora from '@/app/components/inicio/MensagemAcolhedora';
 import JornadaEmAndamento, { type JornadaEmAndamentoInfo } from '@/app/components/inicio/JornadaEmAndamento';
+import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
 
 export default async function InicioPage() {
   const supabase = await createSupabaseServerClient();
@@ -20,11 +21,14 @@ export default async function InicioPage() {
 
   const hoje = formatDateISO(new Date());
 
-  const [{ data: perfil }, { data: checkinHoje }, { data: checkins }] = await Promise.all([
+  const [{ data: perfil }, { data: checkinHoje }, { data: checkins }, { data: carteira }] = await Promise.all([
     supabase.from('perfis').select('nome').eq('id', user!.id).single(),
     supabase.from('checkins').select('*').eq('usuaria_id', user!.id).eq('data', hoje).maybeSingle(),
     supabase.from('checkins').select('data').eq('usuaria_id', user!.id),
+    supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user!.id).maybeSingle(),
   ]);
+
+  const saldoPetalas = carteira?.saldo ?? 0;
 
   const progresso = calcularProgresso7Dias((checkins ?? []).map((c) => c.data), new Date());
   const jaFezCheckinHoje = !!checkinHoje;
@@ -61,6 +65,8 @@ export default async function InicioPage() {
       <JornadaEmAndamento jornada={jornadaEmAndamento} />
 
       <RitualDeHoje jaFezCheckinHoje={jaFezCheckinHoje} />
+
+      <CartaoClubeRose saldo={saldoPetalas} />
 
       <MensagemAcolhedora />
 

@@ -9,9 +9,11 @@ import IconeNotificacoes from '@/app/components/perfil/icones/IconeNotificacoes'
 import IconeAssinatura from '@/app/components/perfil/icones/IconeAssinatura';
 import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
 import IconeConfiguracoes from '@/app/components/perfil/icones/IconeConfiguracoes';
+import IconeClubeRose from '@/app/components/perfil/icones/IconeClubeRose';
 import { sair } from './actions';
 
 const ITENS_MENU = [
+  { href: '/clube-rose', rotulo: 'Clube Rose e recompensas', Icone: IconeClubeRose },
   { href: '/perfil/preferencias', rotulo: 'Preferências', Icone: IconePreferencias },
   { href: '/perfil/notificacoes', rotulo: 'Notificações', Icone: IconeNotificacoes },
   { href: '/perfil/assinatura', rotulo: 'Minha assinatura', Icone: IconeAssinatura },

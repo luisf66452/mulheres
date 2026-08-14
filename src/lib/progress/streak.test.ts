@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia } from './streak';
+import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia, descreverSequencia } from './streak';
 
 describe('calcularProgresso7Dias', () => {
   const hoje = new Date(2026, 7, 10); // 2026-08-10, a Monday
@@ -93,5 +93,30 @@ describe('formatarSequencia', () => {
   it('formata mais de 1 dia no plural', () => {
     expect(formatarSequencia(2)).toBe('2 dias seguidos');
     expect(formatarSequencia(10)).toBe('10 dias seguidos');
+  });
+});
+
+describe('descreverSequencia', () => {
+  it('mostra a mensagem de início quando não há nenhum check-in', () => {
+    const resultado = descreverSequencia(0, 0);
+    expect(resultado.titulo).toBe('Comece hoje sua jornada');
+  });
+
+  it('mostra a mensagem acolhedora de recomeço quando a sequência foi quebrada mas há histórico', () => {
+    const resultado = descreverSequencia(0, 5);
+    expect(resultado.titulo).toBe('Sua sequência está pronta para recomeçar');
+    expect(resultado.mensagem).toBe('Cada retorno também faz parte da jornada.');
+  });
+
+  it('usa singular para 1 dia de sequência', () => {
+    expect(descreverSequencia(1, 1).titulo).toBe('1 dia de sequência');
+  });
+
+  it('usa plural para mais de 1 dia de sequência', () => {
+    expect(descreverSequencia(7, 10).titulo).toBe('7 dias de sequência');
+  });
+
+  it('reflete o número real de dias recebido, nunca um valor fixo', () => {
+    expect(descreverSequencia(3, 3).titulo).toBe('3 dias de sequência');
   });
 });

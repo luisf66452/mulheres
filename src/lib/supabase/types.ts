@@ -15,6 +15,7 @@ export type Perfil = {
   faixa_etaria: FaixaEtaria | null;
   fuso_horario: string;
   idioma: string;
+  foto_url: string | null;
 };
 
 export type EstadoGeral =

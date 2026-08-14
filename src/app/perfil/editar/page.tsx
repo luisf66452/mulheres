@@ -16,7 +16,7 @@ export default async function EditarPerfilPage() {
 
   const { data: perfil, error } = await supabase
     .from('perfis')
-    .select('nome, frase_pessoal, faixa_etaria, fuso_horario')
+    .select('nome, frase_pessoal, faixa_etaria, fuso_horario, foto_url')
     .eq('id', user.id)
     .single();
 
@@ -30,10 +30,12 @@ export default async function EditarPerfilPage() {
         </div>
       ) : (
         <EditarPerfilForm
+          usuariaId={user.id}
           nomeAtual={perfil?.nome ?? null}
           frasePessoalAtual={perfil?.frase_pessoal ?? null}
           faixaEtariaAtual={perfil?.faixa_etaria ?? null}
           fusoHorarioAtual={perfil?.fuso_horario ?? 'America/Sao_Paulo'}
+          fotoUrlAtual={perfil?.foto_url ?? null}
           email={user.email ?? ''}
           criadoEm={user.created_at}
         />

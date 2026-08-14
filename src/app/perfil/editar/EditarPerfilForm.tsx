@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Botao from '@/app/components/Botao';
 import { atualizarPerfilCompleto, solicitarTrocaEmail } from './actions';
 import type { ErrosEdicaoPerfil } from '@/lib/perfil/validacaoPerfil';
+import FotoPerfilUpload from './FotoPerfilUpload';
 
 const FAIXAS_ETARIAS = [
   { valor: '', rotulo: 'Prefiro não informar' },
@@ -32,17 +33,21 @@ function formatarDataCriacao(iso: string): string {
 }
 
 export default function EditarPerfilForm({
+  usuariaId,
   nomeAtual,
   frasePessoalAtual,
   faixaEtariaAtual,
   fusoHorarioAtual,
+  fotoUrlAtual,
   email,
   criadoEm,
 }: {
+  usuariaId: string;
   nomeAtual: string | null;
   frasePessoalAtual: string | null;
   faixaEtariaAtual: string | null;
   fusoHorarioAtual: string;
+  fotoUrlAtual: string | null;
   email: string;
   criadoEm: string;
 }) {
@@ -105,6 +110,8 @@ export default function EditarPerfilForm({
 
   return (
     <div className="space-y-6">
+      <FotoPerfilUpload usuariaId={usuariaId} nome={nomeAtual} fotoUrlAtual={fotoUrlAtual} />
+
       <div className="space-y-4">
         <label className="block text-texto">
           Nome

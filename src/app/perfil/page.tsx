@@ -33,13 +33,17 @@ export default async function PerfilPage() {
 
   const { data: perfil, error: erroPerfil } = await supabase
     .from('perfis')
-    .select('nome, frase_pessoal')
+    .select('nome, frase_pessoal, foto_url')
     .eq('id', user.id)
     .single();
 
   return (
     <main className="mx-auto max-w-md pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8">
-      <CabecalhoPerfil nome={perfil?.nome ?? null} frase={perfil?.frase_pessoal ?? null} />
+      <CabecalhoPerfil
+        nome={perfil?.nome ?? null}
+        frase={perfil?.frase_pessoal ?? null}
+        fotoUrl={perfil?.foto_url ?? null}
+      />
 
       <div className="space-y-6 px-4 pt-6">
         {erroPerfil && (

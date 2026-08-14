@@ -41,6 +41,36 @@ export async function atualizarPerfilCompleto(
   return {};
 }
 
+export async function atualizarFotoPerfil(fotoUrl: string | null): Promise<{ erro?: string }> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  // O upload em si já passou pelas policies de Storage (RLS restringe cada
+  // usuária à sua própria pasta) — aqui só confirmamos que a URL recebida
+  // aponta para dentro da pasta desta usuária no bucket "avatares", em vez de
+  // aceitar qualquer URL arbitrária vinda do cliente.
+  if (fotoUrl !== null) {
+    const prefixoEsperado = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatares/${user.id}/`;
+    if (!fotoUrl.startsWith(prefixoEsperado)) {
+      return { erro: 'URL de foto inválida.' };
+    }
+  }
+
+  const { error } = await supabase.from('perfis').update({ foto_url: fotoUrl }).eq('id', user.id);
+
+  if (error) {
+    return { erro: 'Não foi possível salvar sua foto agora. Tente novamente.' };
+  }
+
+  return {};
+}
+
 export async function solicitarTrocaEmail(novoEmail: string): Promise<{ erro?: string; sucesso?: boolean }> {
   const emailLimpo = novoEmail.trim();
   if (!emailLimpo || !emailLimpo.includes('@')) {

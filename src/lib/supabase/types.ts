@@ -158,6 +158,30 @@ export type JornadaUsuaria = {
   concluida_em: string | null;
 };
 
+export type TipoEventoPetalas =
+  | 'checkin_diario'
+  | 'pratica_primeira_conclusao'
+  | 'sessao_jornada_primeira_conclusao'
+  | 'jornada_completa'
+  | 'desafio_semanal'
+  | 'resgate_recompensa';
+
+export type CarteiraPetalas = {
+  usuaria_id: string;
+  saldo: number;
+  atualizada_em: string;
+};
+
+export type TransacaoPetalas = {
+  id: string;
+  usuaria_id: string;
+  tipo_evento: TipoEventoPetalas;
+  referencia_id: string;
+  quantidade: number;
+  saldo_resultante: number;
+  criado_em: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -178,8 +202,30 @@ export interface Database {
         Update: Partial<JornadaUsuaria>;
         Relationships: [];
       };
+      carteiras_petalas: {
+        Row: CarteiraPetalas;
+        Insert: Pick<CarteiraPetalas, 'usuaria_id'> & Partial<Omit<CarteiraPetalas, 'usuaria_id'>>;
+        Update: Partial<CarteiraPetalas>;
+        Relationships: [];
+      };
+      transacoes_petalas: {
+        Row: TransacaoPetalas;
+        Insert: Omit<TransacaoPetalas, 'id' | 'criado_em'>;
+        Update: Partial<TransacaoPetalas>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      conceder_petalas: {
+        Args: {
+          p_usuaria_id: string;
+          p_tipo_evento: TipoEventoPetalas;
+          p_referencia_id: string;
+          p_quantidade: number;
+        };
+        Returns: { concedido: boolean; saldo: number }[];
+      };
+    };
   };
 }

@@ -84,11 +84,17 @@ export async function registrarSessaoJornada(params: {
   let totalPetalas = 0;
 
   if (sessao && primeiraConclusaoAtividade) {
+    // referencia_id é o id da atividade da jornada (estável), não o da sessão
+    // recém-criada: duas requisições concorrentes para a mesma atividade (ex.:
+    // duas abas, cada uma com seu próprio check-in) criam sessões com ids
+    // diferentes, então usar sessao.id como chave de idempotência não
+    // bloquearia a corrida. Como "primeira conclusão" é um evento por
+    // (usuária, atividade), a chave de idempotência precisa refletir isso.
     const petalasAtividade = await concederPetalas(
       createSupabaseAdminClient(),
       user.id,
       'sessao_jornada_primeira_conclusao',
-      sessao.id,
+      params.jornadaAtividadeId,
       VALORES_PETALAS.sessaoJornadaPrimeiraConclusao
     );
     totalPetalas += petalasAtividade ?? 0;

@@ -50,11 +50,17 @@ export async function registrarSessao(params: {
 
   let totalPetalas = 0;
   if (primeiraConclusao) {
+    // referencia_id é o id da prática (estável), não o da sessão recém-criada:
+    // duas requisições concorrentes para a mesma prática (ex.: duas abas, cada
+    // uma com seu próprio check-in) criam sessões com ids diferentes, então
+    // usar sessao.id como chave de idempotência não bloquearia a corrida. Como
+    // "primeira conclusão" é um evento por (usuária, prática), a chave de
+    // idempotência precisa refletir isso.
     const petalasPratica = await concederPetalas(
       createSupabaseAdminClient(),
       user.id,
       'pratica_primeira_conclusao',
-      sessao.id,
+      params.praticaId,
       VALORES_PETALAS.praticaPrimeiraConclusao
     );
     totalPetalas += petalasPratica ?? 0;

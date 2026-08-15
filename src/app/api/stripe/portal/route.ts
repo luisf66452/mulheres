@@ -1,0 +1,37 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { obterStripe } from '@/lib/stripe/client';
+
+// Abre o Billing Portal do Stripe (gerenciado pelo próprio Stripe) para a
+// usuária cancelar ou trocar de plano — não reimplementamos gestão de
+// assinatura no app; o Stripe já cobre isso com segurança/UX corretos.
+export async function POST() {
+  const stripe = obterStripe();
+  if (!stripe) {
+    return NextResponse.json({ erro: 'Gerenciamento de assinatura ainda não está disponível.' }, { status: 503 });
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ erro: 'Não autenticada.' }, { status: 401 });
+  }
+
+  const { data: perfil } = await supabase.from('perfis').select('stripe_customer_id').eq('id', user.id).single();
+
+  if (!perfil?.stripe_customer_id) {
+    return NextResponse.json({ erro: 'Você ainda não tem uma assinatura para gerenciar.' }, { status: 400 });
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: perfil.stripe_customer_id,
+    return_url: `${siteUrl}/perfil/assinatura`,
+  });
+
+  return NextResponse.json({ url: session.url });
+}

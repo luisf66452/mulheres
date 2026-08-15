@@ -3,15 +3,32 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
+import { stripeConfigurado } from '@/lib/stripe/planos';
+import BotaoAssinar from './BotaoAssinar';
+import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
 
 const BENEFICIOS = [
   'Histórico completo de check-ins e progresso',
   'Insights semanais sobre seus padrões',
   'Biblioteca completa de práticas',
   'Todas as jornadas guiadas',
+  'Recompensas exclusivas no Clube Rose',
 ];
 
-export default async function AssinaturaPage() {
+const ROTULOS_STATUS: Record<string, string> = {
+  active: 'Ativa',
+  trialing: 'Em teste',
+  past_due: 'Pagamento pendente',
+  canceled: 'Cancelada',
+  unpaid: 'Pagamento não realizado',
+};
+
+export default async function AssinaturaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
+  const { checkout } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -21,14 +38,31 @@ export default async function AssinaturaPage() {
     redirect('/login');
   }
 
-  const { data: perfil, error } = await supabase.from('perfis').select('plano').eq('id', user.id).single();
+  const { data: perfil, error } = await supabase
+    .from('perfis')
+    .select('plano, assinatura_status, assinatura_periodo_fim')
+    .eq('id', user.id)
+    .single();
 
   const plano = perfil?.plano ?? 'free';
   const ehPremium = plano === 'premium';
+  const assinaturaConfigurada = stripeConfigurado();
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoSubpagina titulo="Minha assinatura" subtitulo="O estado real do seu plano" />
+
+      {checkout === 'sucesso' && (
+        <div className="rounded-2xl border border-acao/40 bg-lilas-claro p-4 text-sm text-texto">
+          Assinatura confirmada! Pode levar alguns segundos para aparecer aqui — atualize a página se
+          ainda estiver como gratuito.
+        </div>
+      )}
+      {checkout === 'cancelado' && (
+        <div className="rounded-2xl border border-borda bg-superficie p-4 text-sm text-texto-suave">
+          Checkout cancelado — nenhuma cobrança foi feita.
+        </div>
+      )}
 
       {error ? (
         <div className="rounded-2xl border border-borda bg-superficie p-4 text-sm text-texto-suave">
@@ -38,16 +72,23 @@ export default async function AssinaturaPage() {
         <>
           <div className="rounded-2xl bg-superficie p-4 shadow-[0_2px_8px_rgba(74,63,53,0.08)]">
             <p className="text-xs text-texto-suave">Plano atual</p>
-            <p className="font-display text-2xl text-texto">{ehPremium ? 'Premium' : 'Gratuito'}</p>
+            <p className="font-display text-2xl text-texto">{ehPremium ? 'Rose Pro' : 'Gratuito'}</p>
             {!ehPremium && (
               <p className="mt-2 text-sm text-texto-suave">
                 Você está usando o Rose gratuitamente, sem nenhuma cobrança.
               </p>
             )}
+            {ehPremium && perfil?.assinatura_status && (
+              <p className="mt-2 text-sm text-texto-suave">
+                Status: {ROTULOS_STATUS[perfil.assinatura_status] ?? perfil.assinatura_status}
+                {perfil.assinatura_periodo_fim &&
+                  ` · Renova em ${new Date(perfil.assinatura_periodo_fim).toLocaleDateString('pt-BR')}`}
+              </p>
+            )}
           </div>
 
           <div className="rounded-2xl border border-borda bg-superficie p-4">
-            <p className="font-display text-base text-texto">O que o plano completo incluiria</p>
+            <p className="font-display text-base text-texto">O que o Rose Pro inclui</p>
             <ul className="mt-2 space-y-1.5 text-sm text-texto-suave">
               {BENEFICIOS.map((beneficio) => (
                 <li key={beneficio}>• {beneficio}</li>
@@ -55,7 +96,19 @@ export default async function AssinaturaPage() {
             </ul>
           </div>
 
-          {!ehPremium && (
+          {ehPremium && <BotaoGerenciarAssinatura />}
+
+          {!ehPremium && assinaturaConfigurada && (
+            <div className="space-y-3 rounded-2xl border border-borda bg-superficie p-4">
+              <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
+              <BotaoAssinar plano="anual" rotulo="Assinar anual (economize)" />
+              <p className="text-xs text-texto-suave">
+                Pagamento processado com segurança pelo Stripe. Você pode cancelar quando quiser.
+              </p>
+            </div>
+          )}
+
+          {!ehPremium && !assinaturaConfigurada && (
             <div className="space-y-2 rounded-2xl border border-borda bg-superficie p-4">
               <p className="text-sm text-texto">
                 Ainda não processamos pagamentos dentro do app — não existe cobrança real hoje.

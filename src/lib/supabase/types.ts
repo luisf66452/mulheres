@@ -20,6 +20,17 @@ export type Perfil = {
   fuso_horario: string;
   idioma: string;
   foto_url: string | null;
+  // Preenchidos só pelo webhook do Stripe (service role) — ver migração 0019.
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  assinatura_status: string | null;
+  assinatura_periodo_fim: string | null;
+};
+
+export type StripeEventoProcessado = {
+  id: string;
+  tipo: string;
+  processado_em: string;
 };
 
 export type EstadoGeral =
@@ -295,6 +306,12 @@ export interface Database {
         Row: ConclusaoPraticaConteudo;
         Insert: Omit<ConclusaoPraticaConteudo, 'id'> & { id?: string };
         Update: Partial<ConclusaoPraticaConteudo>;
+        Relationships: [];
+      };
+      stripe_eventos_processados: {
+        Row: StripeEventoProcessado;
+        Insert: Omit<StripeEventoProcessado, 'processado_em'> & { processado_em?: string };
+        Update: Partial<StripeEventoProcessado>;
         Relationships: [];
       };
     };

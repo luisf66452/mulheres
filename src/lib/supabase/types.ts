@@ -27,6 +27,17 @@ export type Perfil = {
   assinatura_periodo_fim: string | null;
 };
 
+export type PreferenciasNotificacao = {
+  usuaria_id: string;
+  lembrete_checkin: boolean;
+  lembrete_jornada: boolean;
+  lembrete_praticas: boolean;
+  avisos_novidades: boolean;
+  resumo_semanal: boolean;
+  dias_semana: number[];
+  atualizada_em: string;
+};
+
 export type StripeEventoProcessado = {
   id: string;
   tipo: string;
@@ -312,6 +323,12 @@ export interface Database {
         Row: StripeEventoProcessado;
         Insert: Omit<StripeEventoProcessado, 'processado_em'> & { processado_em?: string };
         Update: Partial<StripeEventoProcessado>;
+        Relationships: [];
+      };
+      preferencias_notificacoes: {
+        Row: PreferenciasNotificacao;
+        Insert: Pick<PreferenciasNotificacao, 'usuaria_id'> & Partial<Omit<PreferenciasNotificacao, 'usuaria_id'>>;
+        Update: Partial<PreferenciasNotificacao>;
         Relationships: [];
       };
     };

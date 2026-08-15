@@ -1,38 +1,47 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  obterNotificacoesPreferencias,
-  salvarNotificacoesPreferencias,
-  NOTIFICACOES_PADRAO,
-} from './notificacoesPreferencias';
+import { describe, it, expect } from 'vitest';
+import { linhaParaPreferencias, preferenciasParaColunas, NOTIFICACOES_PADRAO } from './notificacoesPreferencias';
+import type { PreferenciasNotificacao } from '@/lib/supabase/types';
 
-describe('obterNotificacoesPreferencias / salvarNotificacoesPreferencias', () => {
-  beforeEach(() => {
-    window.localStorage.clear();
+describe('linhaParaPreferencias', () => {
+  it('retorna as preferências padrão quando não há linha (usuária nova)', () => {
+    expect(linhaParaPreferencias(null)).toEqual(NOTIFICACOES_PADRAO);
   });
 
-  it('retorna as preferências padrão quando nada foi salvo', () => {
-    expect(obterNotificacoesPreferencias('u1')).toEqual(NOTIFICACOES_PADRAO);
+  it('mapeia a linha do banco (snake_case) para o formato do formulário (camelCase)', () => {
+    const linha: PreferenciasNotificacao = {
+      usuaria_id: 'u1',
+      lembrete_checkin: false,
+      lembrete_jornada: true,
+      lembrete_praticas: false,
+      avisos_novidades: true,
+      resumo_semanal: false,
+      dias_semana: [1, 2, 3],
+      atualizada_em: '2026-08-15T00:00:00.000Z',
+    };
+    expect(linhaParaPreferencias(linha)).toEqual({
+      lembreteCheckin: false,
+      lembreteJornada: true,
+      lembretePraticas: false,
+      avisosNovidades: true,
+      resumoSemanal: false,
+      diasSemana: [1, 2, 3],
+    });
+  });
+});
+
+describe('preferenciasParaColunas', () => {
+  it('converte só os campos alterados, sem inventar valores para o resto', () => {
+    expect(preferenciasParaColunas({ resumoSemanal: false })).toEqual({ resumo_semanal: false });
   });
 
-  it('salva e recupera alterações parciais mescladas com o padrão', () => {
-    salvarNotificacoesPreferencias('u1', { resumoSemanal: false });
-    const resultado = obterNotificacoesPreferencias('u1');
-    expect(resultado.resumoSemanal).toBe(false);
-    expect(resultado.lembreteCheckin).toBe(NOTIFICACOES_PADRAO.lembreteCheckin);
+  it('converte múltiplos campos de uma vez', () => {
+    expect(preferenciasParaColunas({ resumoSemanal: false, avisosNovidades: true })).toEqual({
+      resumo_semanal: false,
+      avisos_novidades: true,
+    });
   });
 
-  it('não mistura preferências de usuárias diferentes', () => {
-    salvarNotificacoesPreferencias('u1', { resumoSemanal: false });
-    salvarNotificacoesPreferencias('u2', { avisosNovidades: true });
-    expect(obterNotificacoesPreferencias('u1').avisosNovidades).toBe(NOTIFICACOES_PADRAO.avisosNovidades);
-    expect(obterNotificacoesPreferencias('u2').resumoSemanal).toBe(NOTIFICACOES_PADRAO.resumoSemanal);
-  });
-
-  it('acumula alterações sucessivas sem perder as anteriores', () => {
-    salvarNotificacoesPreferencias('u1', { resumoSemanal: false });
-    salvarNotificacoesPreferencias('u1', { avisosNovidades: true });
-    const resultado = obterNotificacoesPreferencias('u1');
-    expect(resultado.resumoSemanal).toBe(false);
-    expect(resultado.avisosNovidades).toBe(true);
+  it('retorna objeto vazio quando nada foi alterado', () => {
+    expect(preferenciasParaColunas({})).toEqual({});
   });
 });

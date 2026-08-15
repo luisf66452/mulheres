@@ -22,15 +22,30 @@ export async function GET(request: NextRequest) {
   );
 
   const agora = new Date();
+  const diaDaSemana = agora.getDay();
 
   const { data: perfis } = await supabaseAdmin
     .from('perfis')
     .select('id, horario_preferido_notificacao')
     .not('horario_preferido_notificacao', 'is', null);
 
-  const elegiveis = (perfis ?? []).filter((p) =>
-    estaNaJanelaDeEnvio(p.horario_preferido_notificacao, agora)
-  );
+  const candidatos = (perfis ?? []).filter((p) => estaNaJanelaDeEnvio(p.horario_preferido_notificacao, agora));
+
+  const { data: preferencias } = await supabaseAdmin
+    .from('preferencias_notificacoes')
+    .select('usuaria_id, lembrete_checkin, dias_semana')
+    .in('usuaria_id', candidatos.map((c) => c.id));
+
+  const preferenciaPorUsuaria = new Map((preferencias ?? []).map((p) => [p.usuaria_id, p]));
+
+  // Sem linha em preferencias_notificacoes ainda = usuária nunca abriu essa
+  // tela — mantém o padrão (lembrete ligado, todos os dias) em vez de calar
+  // silenciosamente quem nunca teve a chance de desligar.
+  const elegiveis = candidatos.filter((c) => {
+    const preferencia = preferenciaPorUsuaria.get(c.id);
+    if (!preferencia) return true;
+    return preferencia.lembrete_checkin && preferencia.dias_semana.includes(diaDaSemana);
+  });
 
   let enviados = 0;
   for (const perfil of elegiveis) {

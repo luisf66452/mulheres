@@ -1,8 +1,8 @@
-// Camada temporária baseada em localStorage — mesma justificativa de
-// src/lib/praticas-progresso/armazenamento.ts: os toggles granulares abaixo
-// ainda não têm coluna própria no Supabase (só horario_preferido_notificacao
-// existe hoje em perfis, gravado por atualizarHorarioNotificacao). Quando
-// existir uma tabela própria, só este arquivo precisa ser trocado.
+// Tipos e mapeamento puro entre a linha de preferencias_notificacoes
+// (banco, migração 0020) e o formato usado pelo formulário. A leitura/
+// escrita de verdade vive em src/app/perfil/notificacoes/actions.ts (I/O
+// via Supabase) — este arquivo fica só com lógica pura, testável sem banco.
+import type { PreferenciasNotificacao } from '@/lib/supabase/types';
 
 export interface NotificacoesPreferencias {
   lembreteCheckin: boolean;
@@ -10,7 +10,7 @@ export interface NotificacoesPreferencias {
   lembretePraticas: boolean;
   avisosNovidades: boolean;
   resumoSemanal: boolean;
-  diasSemana: number[]; // 0 = domingo … 6 = sábado
+  diasSemana: number[];
 }
 
 export const NOTIFICACOES_PADRAO: NotificacoesPreferencias = {
@@ -22,28 +22,27 @@ export const NOTIFICACOES_PADRAO: NotificacoesPreferencias = {
   diasSemana: [0, 1, 2, 3, 4, 5, 6],
 };
 
-function chave(usuariaId: string): string {
-  return `perfil:notificacoes:${usuariaId}`;
+export function linhaParaPreferencias(linha: PreferenciasNotificacao | null): NotificacoesPreferencias {
+  if (!linha) return NOTIFICACOES_PADRAO;
+  return {
+    lembreteCheckin: linha.lembrete_checkin,
+    lembreteJornada: linha.lembrete_jornada,
+    lembretePraticas: linha.lembrete_praticas,
+    avisosNovidades: linha.avisos_novidades,
+    resumoSemanal: linha.resumo_semanal,
+    diasSemana: linha.dias_semana,
+  };
 }
 
-export function obterNotificacoesPreferencias(usuariaId: string): NotificacoesPreferencias {
-  try {
-    const bruto = window.localStorage.getItem(chave(usuariaId));
-    if (!bruto) return NOTIFICACOES_PADRAO;
-    return { ...NOTIFICACOES_PADRAO, ...(JSON.parse(bruto) as Partial<NotificacoesPreferencias>) };
-  } catch {
-    return NOTIFICACOES_PADRAO;
-  }
-}
-
-export function salvarNotificacoesPreferencias(
-  usuariaId: string,
-  alteracoes: Partial<NotificacoesPreferencias>
-): void {
-  try {
-    const atuais = obterNotificacoesPreferencias(usuariaId);
-    window.localStorage.setItem(chave(usuariaId), JSON.stringify({ ...atuais, ...alteracoes }));
-  } catch {
-    // localStorage indisponível — a preferência não persiste nesta sessão, mas o app não quebra
-  }
+export function preferenciasParaColunas(
+  preferencias: Partial<NotificacoesPreferencias>
+): Partial<Omit<PreferenciasNotificacao, 'usuaria_id' | 'atualizada_em'>> {
+  const colunas: Partial<Omit<PreferenciasNotificacao, 'usuaria_id' | 'atualizada_em'>> = {};
+  if (preferencias.lembreteCheckin !== undefined) colunas.lembrete_checkin = preferencias.lembreteCheckin;
+  if (preferencias.lembreteJornada !== undefined) colunas.lembrete_jornada = preferencias.lembreteJornada;
+  if (preferencias.lembretePraticas !== undefined) colunas.lembrete_praticas = preferencias.lembretePraticas;
+  if (preferencias.avisosNovidades !== undefined) colunas.avisos_novidades = preferencias.avisosNovidades;
+  if (preferencias.resumoSemanal !== undefined) colunas.resumo_semanal = preferencias.resumoSemanal;
+  if (preferencias.diasSemana !== undefined) colunas.dias_semana = preferencias.diasSemana;
+  return colunas;
 }

@@ -3,12 +3,8 @@
 import { useEffect, useState, useTransition } from 'react';
 import { inscreverPush } from '@/lib/push/subscribe';
 import { salvarHorarioPreferido } from '@/app/settings/actions';
-import {
-  obterNotificacoesPreferencias,
-  salvarNotificacoesPreferencias,
-  NOTIFICACOES_PADRAO,
-  type NotificacoesPreferencias,
-} from '@/lib/perfil/notificacoesPreferencias';
+import type { NotificacoesPreferencias } from '@/lib/perfil/notificacoesPreferencias';
+import { salvarPreferenciasNotificacao } from './actions';
 
 const DIAS_SEMANA = [
   { id: 0, rotulo: 'D' },
@@ -27,14 +23,15 @@ function alternarDia(dias: number[], dia: number): number[] {
 }
 
 export default function NotificacoesForm({
-  usuariaId,
   horarioAtual,
+  preferenciasIniciais,
 }: {
   usuariaId: string;
   horarioAtual: string | null;
+  preferenciasIniciais: NotificacoesPreferencias;
 }) {
   const [permissao, setPermissao] = useState<PermissaoNotificacao>('default');
-  const [preferencias, setPreferencias] = useState<NotificacoesPreferencias>(NOTIFICACOES_PADRAO);
+  const [preferencias, setPreferencias] = useState<NotificacoesPreferencias>(preferenciasIniciais);
   const [horario, setHorario] = useState(horarioAtual ?? '09:00');
   const [statusAtivacao, setStatusAtivacao] = useState<string | null>(null);
   const [ativando, startTransitionAtivar] = useTransition();
@@ -42,19 +39,17 @@ export default function NotificacoesForm({
   const [horarioSalvo, setHorarioSalvo] = useState(false);
 
   useEffect(() => {
+    // Lê o estado real da permissão do navegador — sistema externo ao React,
+    // por isso a sincronização acontece só depois de montar no cliente.
     const suportado = typeof window !== 'undefined' && 'Notification' in window;
-    // Lê o estado real da permissão do navegador e as preferências locais —
-    // sistemas externos ao React, por isso a sincronização acontece só
-    // depois de montar no cliente (mesmo padrão de usePersistedState).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPermissao(suportado ? (Notification.permission as PermissaoNotificacao) : 'indisponivel');
-    setPreferencias(obterNotificacoesPreferencias(usuariaId));
-  }, [usuariaId]);
+  }, []);
 
   function atualizarPreferencia(alteracoes: Partial<NotificacoesPreferencias>) {
     const proximas = { ...preferencias, ...alteracoes };
     setPreferencias(proximas);
-    salvarNotificacoesPreferencias(usuariaId, alteracoes);
+    void salvarPreferenciasNotificacao(alteracoes);
   }
 
   function handleAtivar() {
@@ -204,9 +199,9 @@ export default function NotificacoesForm({
       </fieldset>
 
       <p className="text-xs text-texto-suave">
-        O envio automático de lembretes ainda está em construção — hoje só o horário preferido é usado
-        pelo envio geral do app. As demais preferências acima ficam salvas para quando os lembretes
-        específicos estiverem prontos.
+        Hoje enviamos só o lembrete diário de check-in, no horário e dias que você escolher acima. Os
+        demais lembretes (jornada, práticas, novidades, resumo semanal) ainda estão em construção — sua
+        preferência já fica salva para quando estiverem prontos.
       </p>
     </div>
   );

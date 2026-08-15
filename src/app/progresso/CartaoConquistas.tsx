@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { avaliarConquistas } from '@/lib/conquistas/definicoes';
 import { obterVistas, registrarVistas } from '@/lib/conquistas/armazenamentoVistas';
-import { listarTodasConclusoes } from '@/lib/praticas-progresso/armazenamento';
 import type { ConquistaAvaliada, IconeConquista } from '@/lib/conquistas/tipos';
 
 function IconeSequencia({ className }: { className?: string }) {
@@ -65,13 +64,16 @@ export default function CartaoConquistas({
   melhorSequencia,
   totalCheckins,
   totalPraticasCuradas,
+  totalPraticasRapidas,
 }: {
   usuariaId: string;
   melhorSequencia: number;
   totalCheckins: number;
   totalPraticasCuradas: number;
+  // Contado no servidor (conclusoes_praticas_conteudo) em vez de lido do
+  // localStorage no cliente — ver src/lib/praticas-progresso/armazenamento.ts.
+  totalPraticasRapidas: number;
 }) {
-  const [totalPraticasRapidas, setTotalPraticasRapidas] = useState(0);
   const [recemDesbloqueadas, setRecemDesbloqueadas] = useState<Set<string>>(new Set());
 
   const conquistas: ConquistaAvaliada[] = avaliarConquistas({
@@ -79,13 +81,6 @@ export default function CartaoConquistas({
     totalCheckins,
     totalPraticasConcluidas: totalPraticasCuradas + totalPraticasRapidas,
   });
-
-  useEffect(() => {
-    // Sincroniza com o localStorage (sistema externo) só depois de montar no
-    // cliente — mesmo padrão já usado em usePersistedState.ts.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTotalPraticasRapidas(listarTodasConclusoes(usuariaId).length);
-  }, [usuariaId]);
 
   useEffect(() => {
     const desbloqueadasAgora = conquistas.filter((c) => c.desbloqueada).map((c) => c.id);
@@ -98,8 +93,6 @@ export default function CartaoConquistas({
       setRecemDesbloqueadas(new Set(novas));
       registrarVistas(usuariaId, desbloqueadasAgora);
     }
-    // Recalcula quando o total de práticas rápidas chega do localStorage (client-only),
-    // que pode revelar uma conquista recém-desbloqueada não capturada na primeira passada.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalPraticasRapidas, usuariaId]);
 

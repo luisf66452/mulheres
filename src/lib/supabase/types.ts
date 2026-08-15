@@ -218,6 +218,14 @@ export type ResgateRecompensa = {
 export type TipoRecompensa = 'digital' | 'personalizacao' | 'conteudo' | 'experiencia' | 'futura';
 export type StatusRecompensaCatalogo = 'ativa' | 'pausada' | 'futura';
 
+export type ConclusaoPraticaConteudo = {
+  id: string;
+  usuaria_id: string;
+  pratica_id: string;
+  concluida_em: string;
+  duracao_minutos: number;
+};
+
 export type RecompensaCatalogo = {
   chave: string;
   nome: string;
@@ -281,6 +289,12 @@ export interface Database {
         Row: RecompensaCatalogo;
         Insert: Partial<RecompensaCatalogo> & { chave: string };
         Update: Partial<RecompensaCatalogo>;
+        Relationships: [];
+      };
+      conclusoes_praticas_conteudo: {
+        Row: ConclusaoPraticaConteudo;
+        Insert: Omit<ConclusaoPraticaConteudo, 'id'> & { id?: string };
+        Update: Partial<ConclusaoPraticaConteudo>;
         Relationships: [];
       };
     };

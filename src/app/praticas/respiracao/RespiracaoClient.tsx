@@ -5,6 +5,7 @@ import type { PraticaRapida } from '@/lib/praticas-conteudo/tipos';
 import { useCronometroRegressivo } from '@/lib/praticas-conteudo/useCronometroRegressivo';
 import { calcularFaseRespiracao, DURACAO_INSPIRAR_S, DURACAO_EXPIRAR_S } from '@/lib/praticas-conteudo/cicloRespiracao';
 import { registrarConclusao } from '@/lib/praticas-progresso/armazenamento';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Cronometro from '@/app/components/praticas/Cronometro';
 import ControlesSessao from '@/app/components/praticas/ControlesSessao';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
@@ -25,11 +26,15 @@ export default function RespiracaoClient({
   const cronometro = useCronometroRegressivo(DURACAO_TOTAL_S, () => {
     if (registradoRef.current) return;
     registradoRef.current = true;
-    registrarConclusao({
+    void registrarConclusao(createSupabaseBrowserClient(), {
       praticaId: pratica.id,
       usuariaId,
       concluidaEm: new Date().toISOString(),
       duracaoMinutos: pratica.duracaoMinutos,
+    }).catch(() => {
+      // Sem Pétalas envolvidas aqui — se a gravação falhar (rede etc.), a
+      // conquista de práticas rápidas pode ficar um pouco atrasada, mas o
+      // fluxo da prática em si não deve travar por isso.
     });
   });
 

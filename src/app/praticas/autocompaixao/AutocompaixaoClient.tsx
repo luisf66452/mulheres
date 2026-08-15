@@ -5,6 +5,7 @@ import type { PraticaRapida } from '@/lib/praticas-conteudo/tipos';
 import { ETAPAS_AUTOCOMPAIXAO } from '@/lib/praticas-conteudo/etapasAutocompaixao';
 import { usePersistedState } from '@/lib/persistencia-local/usePersistedState';
 import { registrarConclusao } from '@/lib/praticas-progresso/armazenamento';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import IndicadorEtapas from '@/app/components/praticas/IndicadorEtapas';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
 import Botao from '@/app/components/Botao';
@@ -42,11 +43,15 @@ export default function AutocompaixaoClient({
   function concluirExercicio() {
     if (registradoRef.current) return;
     registradoRef.current = true;
-    registrarConclusao({
+    void registrarConclusao(createSupabaseBrowserClient(), {
       praticaId: pratica.id,
       usuariaId,
       concluidaEm: new Date().toISOString(),
       duracaoMinutos: pratica.duracaoMinutos,
+    }).catch(() => {
+      // Sem Pétalas envolvidas aqui — se a gravação falhar (rede etc.), a
+      // conquista de práticas rápidas pode ficar um pouco atrasada, mas o
+      // fluxo da prática em si não deve travar por isso.
     });
     limparRespostas();
     setConcluido(true);

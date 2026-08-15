@@ -1,64 +1,56 @@
-// Camada temporária de registro de conclusão das práticas rápidas,
-// baseada em localStorage. Não usa a tabela `sessoes` existente porque
-// `sessoes.checkin_id` é NOT NULL + UNIQUE (uma sessão por check-in do
-// dia) — não comporta múltiplas práticas avulsas no mesmo dia. Quando
-// existir uma tabela própria no Supabase para isso, só este arquivo
-// precisa ser trocado — `registrarConclusao`/`listarConclusoesDoDia`
-// continuam com a mesma assinatura.
+// Registro de conclusão das práticas rápidas (Respiração, Meditação, Diário
+// guiado, Autocompaixão), persistido em conclusoes_praticas_conteudo
+// (migração 0018). Recebe o client Supabase por injeção (mesmo padrão de
+// concederPetalas) em vez de criar um internamente — mantém a função testável
+// sem depender de localStorage/globals de navegador.
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase/types';
 import type { ConclusaoPratica } from './tipos';
 
 const JANELA_IDEMPOTENCIA_MS = 5000;
 
-function chaveDoDia(usuariaId: string, data: string): string {
-  return `praticas:conclusoes:${usuariaId}:${data}`;
-}
+export async function registrarConclusao(
+  supabase: SupabaseClient<Database>,
+  conclusao: ConclusaoPratica
+): Promise<void> {
+  const instante = new Date(conclusao.concluidaEm).getTime();
+  const desde = new Date(instante - JANELA_IDEMPOTENCIA_MS).toISOString();
+  const ate = new Date(instante + JANELA_IDEMPOTENCIA_MS).toISOString();
 
-function lerConclusoesDoDia(usuariaId: string, data: string): ConclusaoPratica[] {
-  try {
-    const bruto = window.localStorage.getItem(chaveDoDia(usuariaId, data));
-    return bruto ? (JSON.parse(bruto) as ConclusaoPratica[]) : [];
-  } catch {
-    return [];
-  }
-}
+  // Evita duplicata de duplo toque/reenvio: mesma prática, mesma usuária,
+  // dentro de uma janela curta de tempo em torno do instante informado.
+  const { data: recentes } = await supabase
+    .from('conclusoes_praticas_conteudo')
+    .select('id')
+    .eq('usuaria_id', conclusao.usuariaId)
+    .eq('pratica_id', conclusao.praticaId)
+    .gte('concluida_em', desde)
+    .lte('concluida_em', ate)
+    .limit(1);
 
-export function registrarConclusao(conclusao: ConclusaoPratica): void {
-  const data = conclusao.concluidaEm.slice(0, 10);
-  const existentes = lerConclusoesDoDia(conclusao.usuariaId, data);
+  if (recentes && recentes.length > 0) return;
 
-  const instanteNovo = new Date(conclusao.concluidaEm).getTime();
-  const jaRegistrada = existentes.some((existente) => {
-    if (existente.praticaId !== conclusao.praticaId) return false;
-    const diferencaMs = Math.abs(new Date(existente.concluidaEm).getTime() - instanteNovo);
-    return diferencaMs < JANELA_IDEMPOTENCIA_MS;
+  await supabase.from('conclusoes_praticas_conteudo').insert({
+    usuaria_id: conclusao.usuariaId,
+    pratica_id: conclusao.praticaId,
+    concluida_em: conclusao.concluidaEm,
+    duracao_minutos: conclusao.duracaoMinutos,
   });
-  if (jaRegistrada) return;
-
-  const atualizadas = [...existentes, conclusao];
-  try {
-    window.localStorage.setItem(chaveDoDia(conclusao.usuariaId, data), JSON.stringify(atualizadas));
-  } catch {
-    // localStorage indisponível — conclusão não persiste, mas não quebra o fluxo
-  }
 }
 
-export function listarConclusoesDoDia(usuariaId: string, data: string): ConclusaoPratica[] {
-  return lerConclusoesDoDia(usuariaId, data);
-}
+export async function listarTodasConclusoes(
+  supabase: SupabaseClient<Database>,
+  usuariaId: string
+): Promise<ConclusaoPratica[]> {
+  const { data } = await supabase
+    .from('conclusoes_praticas_conteudo')
+    .select('pratica_id, usuaria_id, concluida_em, duracao_minutos')
+    .eq('usuaria_id', usuariaId);
 
-export function listarTodasConclusoes(usuariaId: string): ConclusaoPratica[] {
-  const prefixo = `praticas:conclusoes:${usuariaId}:`;
-  const todas: ConclusaoPratica[] = [];
-  try {
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const chaveArmazenada = window.localStorage.key(i);
-      if (!chaveArmazenada || !chaveArmazenada.startsWith(prefixo)) continue;
-      const bruto = window.localStorage.getItem(chaveArmazenada);
-      if (!bruto) continue;
-      todas.push(...(JSON.parse(bruto) as ConclusaoPratica[]));
-    }
-  } catch {
-    return [];
-  }
-  return todas;
+  return (data ?? []).map((linha) => ({
+    praticaId: linha.pratica_id,
+    usuariaId: linha.usuaria_id,
+    concluidaEm: linha.concluida_em,
+    duracaoMinutos: linha.duracao_minutos,
+  }));
 }

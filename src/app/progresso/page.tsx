@@ -62,11 +62,17 @@ export default async function ProgressoPage({
     segundaFeiraISO
   );
 
-  const { count: totalPraticasCuradas } = await supabase
-    .from('sessoes')
-    .select('id', { count: 'exact', head: true })
-    .eq('usuaria_id', user!.id)
-    .not('pratica_id', 'is', null);
+  const [{ count: totalPraticasCuradas }, { count: totalPraticasRapidas }] = await Promise.all([
+    supabase
+      .from('sessoes')
+      .select('id', { count: 'exact', head: true })
+      .eq('usuaria_id', user!.id)
+      .not('pratica_id', 'is', null),
+    supabase
+      .from('conclusoes_praticas_conteudo')
+      .select('id', { count: 'exact', head: true })
+      .eq('usuaria_id', user!.id),
+  ]);
 
   const checkinsParaGrafico = todosOsCheckins.slice(-30);
   const checkinsRecentes = todosOsCheckins.slice(-20).reverse();
@@ -128,6 +134,7 @@ export default async function ProgressoPage({
           melhorSequencia={melhorSequencia}
           totalCheckins={todosOsCheckins.length}
           totalPraticasCuradas={totalPraticasCuradas ?? 0}
+          totalPraticasRapidas={totalPraticasRapidas ?? 0}
         />
 
         <MelhorSequencia melhorSequencia={melhorSequencia} />

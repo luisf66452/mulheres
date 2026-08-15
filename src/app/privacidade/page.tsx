@@ -57,7 +57,20 @@ export default function PrivacidadePage() {
         <h2 className="font-display text-xl text-texto">O que este app não é</h2>
         <p className="text-texto">
           Este app não é terapia, não faz diagnóstico e não substitui acompanhamento profissional de
-          saúde física ou mental.
+          saúde física ou mental. Se você está em crise ou precisa de ajuda imediata, veja os{' '}
+          <a href="/seguranca" className="underline">
+            recursos de apoio e emergência
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-xl text-texto">Idade mínima</h2>
+        <p className="text-texto">
+          O Rose é destinado exclusivamente a pessoas adultas (18 anos ou mais), com foco em mulheres
+          entre 18 e 35 anos. Não criamos nem mantemos contas de pessoas que se identificam como
+          menores de idade, e não coletamos dados de saúde/emocionais de menores.
         </p>
       </section>
     </main>

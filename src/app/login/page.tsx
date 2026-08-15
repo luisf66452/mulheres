@@ -9,6 +9,7 @@ import IlustracaoBotanica from './IlustracaoBotanica';
 function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
+  const [confirmouMaioridade, setConfirmouMaioridade] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState<string | null>(searchParams.get('erro'));
 
@@ -47,8 +48,21 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-2xl border border-borda bg-superficie p-3 text-texto"
         />
+        <label className="flex items-start gap-3 text-left text-sm text-texto">
+          <input
+            type="checkbox"
+            checked={confirmouMaioridade}
+            onChange={(e) => setConfirmouMaioridade(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            Confirmo que tenho 18 anos ou mais. O Rose é destinado exclusivamente a pessoas adultas.
+          </span>
+        </label>
         {erro && <p className="text-alerta">{erro}</p>}
-        <Botao type="submit">Receber link de acesso</Botao>
+        <Botao type="submit" disabled={!confirmouMaioridade}>
+          Receber link de acesso
+        </Botao>
       </form>
     </main>
   );

@@ -3,12 +3,26 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { RECOMPENSAS } from '@/lib/clube-rose/recompensas';
 
 export type ResultadoResgate =
-  | { ok: true; saldoRestante: number }
-  | { ok: false; motivo: 'nao_autenticada' | 'nao_premium' | 'recompensa_invalida' | 'nao_permitido' };
+  | { ok: true; saldoRestante: number; status: 'solicitado' }
+  | {
+      ok: false;
+      motivo:
+        | 'nao_autenticada'
+        | 'nao_premium'
+        | 'recompensa_invalida'
+        | 'recompensa_indisponivel'
+        | 'sem_estoque'
+        | 'ja_resgatada'
+        | 'saldo_insuficiente'
+        | 'nao_permitido';
+    };
 
+// O custo/estoque/status "de verdade" vêm do banco (recompensas_catalogo,
+// migração 0014) e são revalidados de novo dentro da própria RPC — esta ação
+// só faz uma pré-checagem para dar um erro específico sem gastar uma
+// chamada de RPC à toa. Nunca confia em custo vindo do cliente.
 export async function resgatarRecompensa(recompensaChave: string): Promise<ResultadoResgate> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -19,14 +33,16 @@ export async function resgatarRecompensa(recompensaChave: string): Promise<Resul
     return { ok: false, motivo: 'nao_autenticada' };
   }
 
-  const recompensa = RECOMPENSAS.find((r) => r.chave === recompensaChave);
-  if (!recompensa || !recompensa.resgatavel) {
-    return { ok: false, motivo: 'recompensa_invalida' };
+  const [{ data: catalogo }, { data: perfil }] = await Promise.all([
+    supabase.from('recompensas_catalogo').select('status, requer_premium').eq('chave', recompensaChave).maybeSingle(),
+    supabase.from('perfis').select('plano').eq('id', user.id).single(),
+  ]);
+
+  if (!catalogo || catalogo.status !== 'ativa') {
+    return { ok: false, motivo: catalogo ? 'recompensa_indisponivel' : 'recompensa_invalida' };
   }
 
-  const { data: perfil } = await supabase.from('perfis').select('plano').eq('id', user.id).single();
-
-  if (perfil?.plano !== 'premium') {
+  if (catalogo.requer_premium && perfil?.plano !== 'premium') {
     return { ok: false, motivo: 'nao_premium' };
   }
 
@@ -37,8 +53,7 @@ export async function resgatarRecompensa(recompensaChave: string): Promise<Resul
 
   const { data, error } = await adminClient.rpc('resgatar_recompensa', {
     p_usuaria_id: user.id,
-    p_recompensa_chave: recompensa.chave,
-    p_custo: recompensa.custo,
+    p_recompensa_chave: recompensaChave,
   });
 
   if (error) {
@@ -48,10 +63,20 @@ export async function resgatarRecompensa(recompensaChave: string): Promise<Resul
 
   const resultado = Array.isArray(data) ? data[0] : data;
 
-  if (!resultado?.resgatado) {
+  if (!resultado?.resgatado || resultado.saldo === null) {
+    const motivo = resultado?.motivo;
+    if (
+      motivo === 'recompensa_invalida' ||
+      motivo === 'recompensa_indisponivel' ||
+      motivo === 'sem_estoque' ||
+      motivo === 'ja_resgatada' ||
+      motivo === 'saldo_insuficiente'
+    ) {
+      return { ok: false, motivo };
+    }
     return { ok: false, motivo: 'nao_permitido' };
   }
 
   revalidatePath('/clube-rose');
-  return { ok: true, saldoRestante: resultado.saldo };
+  return { ok: true, saldoRestante: resultado.saldo, status: 'solicitado' };
 }

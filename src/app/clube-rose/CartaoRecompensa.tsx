@@ -10,32 +10,57 @@ import { resgatarRecompensa } from './actions';
 
 type Estado =
   | 'em_breve'
+  | 'sem_estoque'
+  | 'em_analise'
+  | 'aprovado'
   | 'resgatado'
   | 'continue_florescendo'
   | 'exclusivo_pro'
   | 'disponivel';
 
-function calcularEstado(recompensa: Recompensa, saldo: number, ehPremium: boolean, jaResgatada: boolean): Estado {
-  if (!recompensa.resgatavel) return 'em_breve';
-  if (jaResgatada) return 'resgatado';
-  if (saldo < recompensa.custo) return 'continue_florescendo';
-  if (!ehPremium) return 'exclusivo_pro';
+// statusResgate reflete o pedido mais recente desta usuária para esta
+// recompensa (ou null se nunca pediu). 'recusado'/'cancelado' liberam nova
+// tentativa (ver índice parcial resgates_recompensas_ativo_unico, 0015).
+function calcularEstado(
+  disponivel: boolean,
+  semEstoque: boolean,
+  statusResgate: string | null,
+  saldo: number,
+  custo: number,
+  requerPremium: boolean,
+  ehPremium: boolean
+): Estado {
+  if (statusResgate === 'entregue') return 'resgatado';
+  if (statusResgate === 'aprovado') return 'aprovado';
+  if (statusResgate === 'solicitado' || statusResgate === 'em_analise') return 'em_analise';
+  if (!disponivel) return 'em_breve';
+  if (semEstoque) return 'sem_estoque';
+  if (saldo < custo) return 'continue_florescendo';
+  if (requerPremium && !ehPremium) return 'exclusivo_pro';
   return 'disponivel';
 }
 
 export default function CartaoRecompensa({
   recompensa,
+  custo,
+  disponivel,
+  requerPremium,
+  semEstoque,
   saldo,
   ehPremium,
-  jaResgatada,
+  statusResgate,
 }: {
   recompensa: Recompensa;
+  custo: number;
+  disponivel: boolean;
+  requerPremium: boolean;
+  semEstoque: boolean;
   saldo: number;
   ehPremium: boolean;
-  jaResgatada: boolean;
+  statusResgate: string | null;
 }) {
   const router = useRouter();
-  const estado = calcularEstado(recompensa, saldo, ehPremium, jaResgatada);
+  const estado = calcularEstado(disponivel, semEstoque, statusResgate, saldo, custo, requerPremium, ehPremium);
   const [modalAberto, setModalAberto] = useState(false);
   const [resgatando, setResgatando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -47,8 +72,15 @@ export default function CartaoRecompensa({
     return () => clearTimeout(timer);
   }, [celebrando]);
 
-  const percentual = Math.min(100, Math.round((saldo / recompensa.custo) * 100));
-  const faltam = Math.max(0, recompensa.custo - saldo);
+  const percentual = Math.min(100, Math.round((saldo / custo) * 100));
+  const faltam = Math.max(0, custo - saldo);
+
+  const MOTIVOS_ERRO: Record<string, string> = {
+    recompensa_indisponivel: 'Esta recompensa não está disponível no momento.',
+    sem_estoque: 'Esta recompensa está sem estoque no momento.',
+    ja_resgatada: 'Você já tem um pedido em andamento para esta recompensa.',
+    saldo_insuficiente: 'Seu saldo mudou e não é mais suficiente para esta recompensa.',
+  };
 
   async function confirmarResgate() {
     setResgatando(true);
@@ -57,7 +89,7 @@ export default function CartaoRecompensa({
     setResgatando(false);
 
     if (!resultado.ok) {
-      setErro('Não foi possível resgatar agora. Tente novamente em instantes.');
+      setErro(MOTIVOS_ERRO[resultado.motivo] ?? 'Não foi possível resgatar agora. Tente novamente em instantes.');
       return;
     }
 
@@ -73,7 +105,7 @@ export default function CartaoRecompensa({
           <p className="font-display text-base text-texto">{recompensa.nome}</p>
           <p className="mt-1 text-sm text-texto-suave">{recompensa.descricao}</p>
         </div>
-        <p className="shrink-0 font-display text-lg text-acao">{recompensa.custo.toLocaleString('pt-BR')}</p>
+        <p className="shrink-0 font-display text-lg text-acao">{custo.toLocaleString('pt-BR')}</p>
       </div>
 
       {estado === 'em_breve' && (
@@ -82,24 +114,37 @@ export default function CartaoRecompensa({
         </span>
       )}
 
-      {estado !== 'em_breve' && (
+      {estado === 'sem_estoque' && (
+        <span className="inline-block rounded-full bg-lilas-claro px-3 py-1 text-xs font-medium text-acao">
+          Sem estoque no momento — volte em breve.
+        </span>
+      )}
+
+      {estado !== 'em_breve' && estado !== 'sem_estoque' && (
         <>
           <div
             role="progressbar"
-            aria-valuenow={Math.min(saldo, recompensa.custo)}
+            aria-valuenow={Math.min(saldo, custo)}
             aria-valuemin={0}
-            aria-valuemax={recompensa.custo}
-            aria-label={`${saldo} de ${recompensa.custo} Pétalas`}
+            aria-valuemax={custo}
+            aria-label={`${saldo} de ${custo} Pétalas`}
             className="h-2 w-full overflow-hidden rounded-full bg-borda/50"
           >
             <div className="h-full rounded-full bg-acao transition-all" style={{ width: `${percentual}%` }} />
           </div>
           <p className="text-xs text-texto-suave">
-            Você possui {saldo.toLocaleString('pt-BR')} de {recompensa.custo.toLocaleString('pt-BR')} Pétalas.
-            {estado === 'continue_florescendo' &&
-              ` Faltam ${faltam.toLocaleString('pt-BR')} Pétalas para esta recompensa.`}
+            Você possui {saldo.toLocaleString('pt-BR')} de {custo.toLocaleString('pt-BR')} Pétalas.
+            {estado === 'continue_florescendo' && ` Faltam ${faltam.toLocaleString('pt-BR')} Pétalas para esta recompensa.`}
           </p>
         </>
+      )}
+
+      {estado === 'em_analise' && (
+        <p className="text-sm font-medium text-acao">Pedido em análise — em breve você recebe uma resposta. 🌸</p>
+      )}
+
+      {estado === 'aprovado' && (
+        <p className="text-sm font-medium text-acao">Aprovado — sua recompensa está sendo preparada. 🌸</p>
       )}
 
       {estado === 'resgatado' && (
@@ -155,13 +200,17 @@ export default function CartaoRecompensa({
             <div>
               <p className="font-display text-lg text-texto">{recompensa.nome}</p>
               <p className="mt-1 text-sm text-texto-suave">
-                Custo: {recompensa.custo.toLocaleString('pt-BR')} Pétalas
+                Custo: {custo.toLocaleString('pt-BR')} Pétalas
               </p>
               <p className="text-sm text-texto-suave">
                 Seu saldo atual: {saldo.toLocaleString('pt-BR')} Pétalas
               </p>
               <p className="text-sm text-texto-suave">
-                Saldo depois do resgate: {(saldo - recompensa.custo).toLocaleString('pt-BR')} Pétalas
+                Saldo depois do resgate: {(saldo - custo).toLocaleString('pt-BR')} Pétalas
+              </p>
+              <p className="text-xs text-texto-suave">
+                Seu pedido passa por uma análise antes da entrega — você pode acompanhar o status no
+                histórico.
               </p>
             </div>
 

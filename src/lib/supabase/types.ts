@@ -1,4 +1,5 @@
 export type Plano = 'free' | 'premium';
+export type PapelUsuaria = 'usuaria' | 'admin';
 export type StatusPratica = 'rascunho' | 'revisada' | 'publicada';
 export type TipoPratica = 'respiracao' | 'reflexao' | 'afirmacao' | 'movimento';
 export type FaixaEtaria = '18-24' | '25-34' | '35-44' | '45-54' | '55+';
@@ -7,6 +8,9 @@ export type Perfil = {
   id: string;
   nome: string | null;
   plano: Plano;
+  // Só gravável pela service role (ver migração 0016) — nenhuma usuária
+  // consegue se autopromover a admin através do client.
+  role: PapelUsuaria;
   pais: string;
   horario_preferido_notificacao: string | null;
   consentimento_dados_sensiveis_em: string | null;
@@ -165,7 +169,8 @@ export type TipoEventoPetalas =
   | 'sessao_jornada_primeira_conclusao'
   | 'jornada_completa'
   | 'desafio_semanal'
-  | 'resgate_recompensa';
+  | 'resgate_recompensa'
+  | 'estorno_resgate';
 
 export type CarteiraPetalas = {
   usuaria_id: string;
@@ -190,11 +195,42 @@ export type ResgateDesafioSemanal = {
   criado_em: string;
 };
 
+export type StatusResgateRecompensa =
+  | 'solicitado'
+  | 'em_analise'
+  | 'aprovado'
+  | 'entregue'
+  | 'recusado'
+  | 'cancelado';
+
 export type ResgateRecompensa = {
   id: string;
   usuaria_id: string;
   recompensa_chave: string;
   criado_em: string;
+  status: StatusResgateRecompensa;
+  observacao_admin: string | null;
+  revisado_por: string | null;
+  revisado_em: string | null;
+  atualizada_em: string;
+};
+
+export type TipoRecompensa = 'digital' | 'personalizacao' | 'conteudo' | 'experiencia' | 'futura';
+export type StatusRecompensaCatalogo = 'ativa' | 'pausada' | 'futura';
+
+export type RecompensaCatalogo = {
+  chave: string;
+  nome: string;
+  descricao: string;
+  mensagem: string;
+  tipo: TipoRecompensa;
+  custo: number;
+  requer_premium: boolean;
+  tem_valor_financeiro: boolean;
+  estoque: number | null;
+  status: StatusRecompensaCatalogo;
+  criado_em: string;
+  atualizada_em: string;
 };
 
 export interface Database {
@@ -241,6 +277,12 @@ export interface Database {
         Update: Partial<ResgateRecompensa>;
         Relationships: [];
       };
+      recompensas_catalogo: {
+        Row: RecompensaCatalogo;
+        Insert: Partial<RecompensaCatalogo> & { chave: string };
+        Update: Partial<RecompensaCatalogo>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -257,9 +299,17 @@ export interface Database {
         Args: {
           p_usuaria_id: string;
           p_recompensa_chave: string;
-          p_custo: number;
         };
-        Returns: { resgatado: boolean; saldo: number }[];
+        Returns: { resgatado: boolean; saldo: number | null; motivo: string | null }[];
+      };
+      revisar_resgate: {
+        Args: {
+          p_admin_id: string;
+          p_resgate_id: string;
+          p_novo_status: Exclude<StatusResgateRecompensa, 'solicitado'>;
+          p_observacao?: string | null;
+        };
+        Returns: { atualizado: boolean; motivo: string | null }[];
       };
       conceder_desafio_semanal: {
         Args: {

@@ -24,7 +24,7 @@ export default async function HistoricoPetalas({
   const itens = transacoes ?? [];
 
   const idsResgatesRecompensa = itens
-    .filter((t) => t.tipo_evento === 'resgate_recompensa')
+    .filter((t) => t.tipo_evento === 'resgate_recompensa' || t.tipo_evento === 'estorno_resgate')
     .map((t) => t.referencia_id);
 
   let chavePorResgateId = new Map<string, string>();

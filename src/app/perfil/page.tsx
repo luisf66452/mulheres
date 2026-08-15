@@ -10,6 +10,7 @@ import IconeAssinatura from '@/app/components/perfil/icones/IconeAssinatura';
 import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
 import IconeConfiguracoes from '@/app/components/perfil/icones/IconeConfiguracoes';
 import IconeClubeRose from '@/app/components/perfil/icones/IconeClubeRose';
+import IconeAjuda from '@/app/components/perfil/icones/IconeAjuda';
 import { sair } from './actions';
 
 const ITENS_MENU = [
@@ -19,6 +20,7 @@ const ITENS_MENU = [
   { href: '/perfil/assinatura', rotulo: 'Minha assinatura', Icone: IconeAssinatura },
   { href: '/perfil/privacidade', rotulo: 'Privacidade', Icone: IconePrivacidade },
   { href: '/perfil/configuracoes', rotulo: 'Configurações', Icone: IconeConfiguracoes },
+  { href: '/perfil/ajuda', rotulo: 'Ajuda e suporte', Icone: IconeAjuda },
 ] as const;
 
 export default async function PerfilPage() {

@@ -17,7 +17,7 @@ export default async function RespiracaoPage() {
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoPratica pratica={pratica} />
-      <RespiracaoClient pratica={pratica} usuariaId={user?.id ?? 'anonima'} />
+      <RespiracaoClient pratica={pratica} usuariaId={user!.id} />
       <NavegacaoInferior />
     </main>
   );

@@ -213,7 +213,7 @@ Introdução → "Começar meditação" → `Cronometro` regressivo de 8 minutos
 
 ### 9.4 Autocompaixão (`/praticas/autocompaixao`)
 
-Mesmo esqueleto do diário (`IndicadorEtapas`, autosave, Voltar/Continuar), 4 etapas com os textos exatos do enunciado (2 são só leitura, 2 têm `<textarea>` de reflexão). "Concluir exercício" grava conclusão + mensagem final. Nenhum texto do fluxo se apresenta como substituto de terapia/diagnóstico (frases fixas revisadas para tom de autocuidado, não clínico).
+Mesmo esqueleto do diário (`IndicadorEtapas`, autosave, Voltar/Continuar), 4 etapas com os textos exatos do enunciado (etapa 2 é só leitura; etapas 1, 3 e 4 têm `<textarea>` de reflexão). "Concluir exercício" grava conclusão + mensagem final. Nenhum texto do fluxo se apresenta como substituto de terapia/diagnóstico (frases fixas revisadas para tom de autocuidado, não clínico).
 
 ## 10. Acessibilidade e estado
 

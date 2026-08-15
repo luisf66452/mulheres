@@ -17,7 +17,7 @@ export default async function MeditacaoPage() {
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoPratica pratica={pratica} />
-      <MeditacaoClient pratica={pratica} usuariaId={user?.id ?? 'anonima'} />
+      <MeditacaoClient pratica={pratica} usuariaId={user!.id} />
       <NavegacaoInferior />
     </main>
   );

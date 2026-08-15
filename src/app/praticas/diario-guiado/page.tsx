@@ -17,7 +17,7 @@ export default async function DiarioGuiadoPage() {
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoPratica pratica={pratica} />
-      <DiarioGuiadoClient pratica={pratica} usuariaId={user?.id ?? 'anonima'} />
+      <DiarioGuiadoClient pratica={pratica} usuariaId={user!.id} />
       <NavegacaoInferior />
     </main>
   );

@@ -1,15 +1,25 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, TipoEventoPetalas } from '@/lib/supabase/types';
 
+export interface ResultadoConcessaoPetalas {
+  quantidade: number | null;
+  limiteGratuitoAtingido: boolean;
+}
+
+const RESULTADO_NULO: ResultadoConcessaoPetalas = {
+  quantidade: null,
+  limiteGratuitoAtingido: false,
+};
+
 export async function concederPetalas(
   supabase: SupabaseClient<Database> | null,
   usuariaId: string,
   tipoEvento: TipoEventoPetalas,
   referenciaId: string,
   quantidade: number
-): Promise<number | null> {
+): Promise<ResultadoConcessaoPetalas> {
   if (!supabase) {
-    return null;
+    return RESULTADO_NULO;
   }
 
   try {
@@ -22,18 +32,21 @@ export async function concederPetalas(
 
     if (error) {
       console.error('Falha ao conceder Pétalas:', error);
-      return null;
+      return RESULTADO_NULO;
     }
 
     const resultado = Array.isArray(data) ? data[0] : data;
 
     if (!resultado?.concedido) {
-      return null;
+      return {
+        quantidade: null,
+        limiteGratuitoAtingido: resultado?.limite_gratuito_atingido ?? false,
+      };
     }
 
-    return quantidade;
+    return { quantidade, limiteGratuitoAtingido: false };
   } catch (erro) {
     console.error('Falha inesperada ao conceder Pétalas:', erro);
-    return null;
+    return RESULTADO_NULO;
   }
 }

@@ -341,7 +341,7 @@ export interface Database {
           p_referencia_id: string;
           p_quantidade: number;
         };
-        Returns: { concedido: boolean; saldo: number }[];
+        Returns: { concedido: boolean; saldo: number; limite_gratuito_atingido: boolean }[];
       };
       resgatar_recompensa: {
         Args: {
@@ -365,7 +365,7 @@ export interface Database {
           p_semana_inicio: string;
           p_quantidade: number;
         };
-        Returns: { concedido: boolean; saldo: number }[];
+        Returns: { concedido: boolean; saldo: number; limite_gratuito_atingido: boolean }[];
       };
     };
   };

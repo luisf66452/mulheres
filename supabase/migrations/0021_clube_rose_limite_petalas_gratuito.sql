@@ -83,3 +83,66 @@ $$;
 revoke execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) from public;
 revoke execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) from authenticated, anon;
 grant execute on function conceder_petalas(uuid, tipo_evento_petalas, uuid, integer) to service_role;
+
+drop function if exists conceder_desafio_semanal(uuid, date, integer);
+
+create or replace function conceder_desafio_semanal(
+  p_usuaria_id uuid,
+  p_semana_inicio date,
+  p_quantidade integer
+) returns table (concedido boolean, saldo integer, limite_gratuito_atingido boolean)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_saldo integer;
+  v_resgate_id uuid;
+begin
+  if p_quantidade <= 0 then
+    raise exception 'quantidade deve ser positiva';
+  end if;
+
+  insert into carteiras_petalas (usuaria_id, saldo)
+  values (p_usuaria_id, 0)
+  on conflict (usuaria_id) do nothing;
+
+  select saldo into v_saldo from carteiras_petalas where usuaria_id = p_usuaria_id for update;
+
+  if petalas_limite_gratuito_atingido(p_usuaria_id, v_saldo) then
+    return query select false, v_saldo, true;
+    return;
+  end if;
+
+  begin
+    insert into resgates_desafio_semanal (usuaria_id, semana_inicio)
+    values (p_usuaria_id, p_semana_inicio)
+    returning id into v_resgate_id;
+
+    update carteiras_petalas
+      set saldo = carteiras_petalas.saldo + p_quantidade, atualizada_em = now()
+      where usuaria_id = p_usuaria_id
+      returning carteiras_petalas.saldo into v_saldo;
+
+    insert into transacoes_petalas
+      (usuaria_id, tipo_evento, referencia_id, quantidade, saldo_resultante)
+    values
+      (p_usuaria_id, 'desafio_semanal', v_resgate_id, p_quantidade, v_saldo);
+
+    return query select true, v_saldo, false;
+    return;
+  exception
+    when unique_violation then
+      -- já concedido nesta semana: o insert do resgate E o crédito de saldo
+      -- (se algum tivesse ocorrido dentro deste mesmo sub-bloco) são revertidos
+      -- juntos — nunca fica um resgate registrado sem o crédito correspondente.
+      select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id;
+      return query select false, coalesce(v_saldo, 0), false;
+      return;
+  end;
+end;
+$$;
+
+revoke execute on function conceder_desafio_semanal(uuid, date, integer) from public;
+revoke execute on function conceder_desafio_semanal(uuid, date, integer) from authenticated, anon;
+grant execute on function conceder_desafio_semanal(uuid, date, integer) to service_role;

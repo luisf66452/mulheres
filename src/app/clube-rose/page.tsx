@@ -54,7 +54,7 @@ export default async function ClubeRosePage() {
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
       <CabecalhoClubeRose />
-      <CartaoSaldoPetalas saldo={saldo} />
+      <CartaoSaldoPetalas saldo={saldo} ehPremium={ehPremium} />
       <CartaoDesafioSemanal etapasConcluidas={etapasConcluidas} resgatado={!!resgateSemana} />
       <SecaoManeirasDeGanhar />
       <SecaoRecompensas

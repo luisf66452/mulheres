@@ -9,6 +9,7 @@ import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { concederDesafioSemanalSeElegivel } from '@/lib/clube-rose/progressoDesafioSemanal';
 import { agregarResultadosPetalas } from '@/lib/clube-rose/agregarResultadosPetalas';
+import { montarSufixoPetalas } from '@/lib/clube-rose/montarSufixoPetalas';
 
 export async function registrarSessao(params: {
   checkinId: string;
@@ -73,9 +74,7 @@ export async function registrarSessao(params: {
   resultados.push(await concederDesafioSemanalSeElegivel(supabase, user.id));
 
   const { total: totalPetalas, limiteGratuitoAtingido } = agregarResultadosPetalas(resultados);
-  const sufixoPetalas =
-    (totalPetalas > 0 ? `?petalas=${totalPetalas}` : '') +
-    (limiteGratuitoAtingido ? `${totalPetalas > 0 ? '&' : '?'}limitePetalas=1` : '');
+  const sufixoPetalas = montarSufixoPetalas({ total: totalPetalas, limiteGratuitoAtingido });
 
   redirect(sufixoPetalas ? `/progresso${sufixoPetalas}` : '/progresso');
 }

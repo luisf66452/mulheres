@@ -16,6 +16,7 @@ create or replace function petalas_limite_gratuito_atingido(
 ) returns boolean
 language sql
 stable
+security definer
 set search_path = public, pg_temp
 as $$
   select coalesce(p_saldo_atual, 0) >= 1000
@@ -51,7 +52,7 @@ begin
 
   -- Trava a linha da carteira antes de decidir: evita que duas concessões
   -- concorrentes leiam o mesmo saldo "abaixo do teto" e ambas creditem.
-  select saldo into v_saldo from carteiras_petalas where usuaria_id = p_usuaria_id for update;
+  select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id for update;
 
   if petalas_limite_gratuito_atingido(p_usuaria_id, v_saldo) then
     return query select false, v_saldo, true;
@@ -107,7 +108,7 @@ begin
   values (p_usuaria_id, 0)
   on conflict (usuaria_id) do nothing;
 
-  select saldo into v_saldo from carteiras_petalas where usuaria_id = p_usuaria_id for update;
+  select c.saldo into v_saldo from carteiras_petalas c where c.usuaria_id = p_usuaria_id for update;
 
   if petalas_limite_gratuito_atingido(p_usuaria_id, v_saldo) then
     return query select false, v_saldo, true;

@@ -3,10 +3,12 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
+import type { ResultadoConcessaoPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { concederDesafioSemanalSeElegivel } from '@/lib/clube-rose/progressoDesafioSemanal';
+import { agregarResultadosPetalas } from '@/lib/clube-rose/agregarResultadosPetalas';
 
 export async function registrarSessao(params: {
   checkinId: string;
@@ -48,7 +50,8 @@ export async function registrarSessao(params: {
     throw new Error('Não foi possível registrar a sessão. Tente novamente.');
   }
 
-  let totalPetalas = 0;
+  const resultados: ResultadoConcessaoPetalas[] = [];
+
   if (primeiraConclusao) {
     // referencia_id é o id da prática (estável), não o da sessão recém-criada:
     // duas requisições concorrentes para a mesma prática (ex.: duas abas, cada
@@ -56,18 +59,23 @@ export async function registrarSessao(params: {
     // usar sessao.id como chave de idempotência não bloquearia a corrida. Como
     // "primeira conclusão" é um evento por (usuária, prática), a chave de
     // idempotência precisa refletir isso.
-    const petalasPratica = await concederPetalas(
-      createSupabaseAdminClient(),
-      user.id,
-      'pratica_primeira_conclusao',
-      params.praticaId,
-      VALORES_PETALAS.praticaPrimeiraConclusao
+    resultados.push(
+      await concederPetalas(
+        createSupabaseAdminClient(),
+        user.id,
+        'pratica_primeira_conclusao',
+        params.praticaId,
+        VALORES_PETALAS.praticaPrimeiraConclusao
+      )
     );
-    totalPetalas += petalasPratica ?? 0;
   }
 
-  const petalasDesafio = await concederDesafioSemanalSeElegivel(supabase, user.id);
-  totalPetalas += petalasDesafio ?? 0;
+  resultados.push(await concederDesafioSemanalSeElegivel(supabase, user.id));
 
-  redirect(totalPetalas > 0 ? `/progresso?petalas=${totalPetalas}` : '/progresso');
+  const { total: totalPetalas, limiteGratuitoAtingido } = agregarResultadosPetalas(resultados);
+  const sufixoPetalas =
+    (totalPetalas > 0 ? `?petalas=${totalPetalas}` : '') +
+    (limiteGratuitoAtingido ? `${totalPetalas > 0 ? '&' : '?'}limitePetalas=1` : '');
+
+  redirect(sufixoPetalas ? `/progresso${sufixoPetalas}` : '/progresso');
 }

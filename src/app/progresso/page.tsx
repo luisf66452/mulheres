@@ -17,14 +17,16 @@ import MelhorSequencia from './MelhorSequencia';
 import GraficoEvolucao from './GraficoEvolucao';
 import Historico from './Historico';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
+import NotificacaoLimitePetalas from '@/app/components/clube-rose/NotificacaoLimitePetalas';
 
 export default async function ProgressoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ semana?: string; petalas?: string }>;
+  searchParams: Promise<{ semana?: string; petalas?: string; limitePetalas?: string }>;
 }) {
-  const { semana, petalas } = await searchParams;
+  const { semana, petalas, limitePetalas } = await searchParams;
   const petalasGanhas = petalas ? Number.parseInt(petalas, 10) : 0;
+  const mostrarLimiteAtingido = limitePetalas === '1';
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -39,7 +41,11 @@ export default async function ProgressoPage({
   if (erroCheckins) {
     return (
       <>
-        {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
+        {mostrarLimiteAtingido ? (
+          <NotificacaoLimitePetalas />
+        ) : (
+          petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />
+        )}
         <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
           <h1 className="font-display text-2xl text-texto">Seu progresso</h1>
           <p className="text-sm text-alerta">
@@ -112,7 +118,11 @@ export default async function ProgressoPage({
 
   return (
     <>
-      {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
+      {mostrarLimiteAtingido ? (
+        <NotificacaoLimitePetalas />
+      ) : (
+        petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />
+      )}
       <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
         <CabecalhoProgresso />
 

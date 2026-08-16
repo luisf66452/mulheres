@@ -7,6 +7,7 @@ import Botao from '@/app/components/Botao';
 import type { EstadoGeral, AlimentacaoPercebida } from '@/lib/supabase/types';
 import { estadoInicialParaHumor, type HumorInicial } from '@/lib/checkin/humorInicial';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
+import NotificacaoLimitePetalas from '@/app/components/clube-rose/NotificacaoLimitePetalas';
 
 type Etapa =
   | 'estado_geral'
@@ -102,6 +103,7 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [petalasGanhas, setPetalasGanhas] = useState<number>(0);
+  const [limiteGratuitoAtingido, setLimiteGratuitoAtingido] = useState(false);
 
   function alternarFator(fator: string) {
     setFatores((atual) =>
@@ -131,6 +133,7 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
       });
       if (resultado?.tipo === 'guardado') {
         setPetalasGanhas(resultado.petalasGanhas ?? 0);
+        setLimiteGratuitoAtingido(resultado.limiteGratuitoAtingido ?? false);
         setEtapa('guardado');
       }
     } catch {
@@ -394,7 +397,11 @@ export default function CheckinFormClient({ humorInicial }: { humorInicial: Humo
   // etapa === 'guardado'
   return (
     <>
-      {petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />}
+      {limiteGratuitoAtingido ? (
+        <NotificacaoLimitePetalas />
+      ) : (
+        petalasGanhas > 0 && <NotificacaoPetalas quantidade={petalasGanhas} />
+      )}
       <main className="mx-auto max-w-md space-y-4 p-6 text-center">
         <p className="text-3xl">🌿</p>
         <h1 className="font-display text-2xl text-texto">Seu momento foi guardado</h1>

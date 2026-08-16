@@ -4,6 +4,12 @@ import { formatDateISO } from '@/lib/date';
 import { obterSegundaFeira } from '@/lib/progress/semana';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { DESAFIO_SEMANAL } from './desafioSemanal';
+import type { ResultadoConcessaoPetalas } from './concederPetalas';
+
+const RESULTADO_NULO: ResultadoConcessaoPetalas = {
+  quantidade: null,
+  limiteGratuitoAtingido: false,
+};
 
 export function semanaInicioISO(agora: Date = new Date()): string {
   return formatDateISO(obterSegundaFeira(agora));
@@ -42,15 +48,15 @@ export async function contarEtapasDesafioSemanal(
 export async function concederDesafioSemanalSeElegivel(
   supabase: SupabaseClient<Database>,
   usuariaId: string
-): Promise<number | null> {
+): Promise<ResultadoConcessaoPetalas> {
   const etapas = await contarEtapasDesafioSemanal(supabase, usuariaId);
   if (etapas < DESAFIO_SEMANAL.meta) {
-    return null;
+    return RESULTADO_NULO;
   }
 
   const adminClient = createSupabaseAdminClient();
   if (!adminClient) {
-    return null;
+    return RESULTADO_NULO;
   }
 
   try {
@@ -62,18 +68,21 @@ export async function concederDesafioSemanalSeElegivel(
 
     if (error) {
       console.error('Falha ao conceder desafio semanal:', error);
-      return null;
+      return RESULTADO_NULO;
     }
 
     const resultado = Array.isArray(data) ? data[0] : data;
 
     if (!resultado?.concedido) {
-      return null;
+      return {
+        quantidade: null,
+        limiteGratuitoAtingido: resultado?.limite_gratuito_atingido ?? false,
+      };
     }
 
-    return DESAFIO_SEMANAL.recompensa;
+    return { quantidade: DESAFIO_SEMANAL.recompensa, limiteGratuitoAtingido: false };
   } catch (erro) {
     console.error('Falha inesperada ao conceder desafio semanal:', erro);
-    return null;
+    return RESULTADO_NULO;
   }
 }

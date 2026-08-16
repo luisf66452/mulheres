@@ -7,6 +7,7 @@ import { decidirRecomendacaoComProtecao } from '@/lib/checkin/recommend';
 import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
 import { formatDateISO } from '@/lib/date';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
+import { agregarResultadosPetalas } from '@/lib/clube-rose/agregarResultadosPetalas';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type { EstadoGeral, AlimentacaoPercebida, ProximaAcaoEscolhida } from '@/lib/supabase/types';
@@ -65,7 +66,7 @@ export interface CheckinCompletoAnswers {
 
 export async function submeterCheckin(
   answers: CheckinCompletoAnswers
-): Promise<{ tipo: 'guardado'; petalasGanhas?: number } | void> {
+): Promise<{ tipo: 'guardado'; petalasGanhas?: number; limiteGratuitoAtingido?: boolean } | void> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -131,14 +132,16 @@ export async function submeterCheckin(
     throw new Error('Não foi possível salvar o check-in. Tente novamente.');
   }
 
-  const petalasCheckin = await concederPetalas(
+  const resultadoCheckin = await concederPetalas(
     createSupabaseAdminClient(),
     user.id,
     'checkin_diario',
     checkin.id,
     VALORES_PETALAS.checkinDiario
   );
-  const sufixoPetalas = petalasCheckin ? `&petalas=${petalasCheckin}` : '';
+  const { total: petalasCheckin, limiteGratuitoAtingido } = agregarResultadosPetalas([resultadoCheckin]);
+  const sufixoPetalas =
+    (petalasCheckin > 0 ? `&petalas=${petalasCheckin}` : '') + (limiteGratuitoAtingido ? '&limitePetalas=1' : '');
 
   // A partir daqui, o check-in já está salvo no Supabase, independente da
   // saída escolhida (segurança, guardar, ou prática/jornada).
@@ -148,7 +151,11 @@ export async function submeterCheckin(
   }
 
   if (answers.proximaAcao === 'guardar') {
-    return { tipo: 'guardado', petalasGanhas: petalasCheckin ?? undefined };
+    return {
+      tipo: 'guardado',
+      petalasGanhas: petalasCheckin > 0 ? petalasCheckin : undefined,
+      limiteGratuitoAtingido: limiteGratuitoAtingido || undefined,
+    };
   }
 
   const { data: jornadaAtivaRow } = await supabase

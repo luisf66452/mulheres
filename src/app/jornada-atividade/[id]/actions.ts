@@ -4,10 +4,12 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgressoJornada } from '@/lib/jornadas/progresso';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
+import type { ResultadoConcessaoPetalas } from '@/lib/clube-rose/concederPetalas';
 import { ehPrimeiraConclusao } from '@/lib/clube-rose/primeiraConclusao';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { concederDesafioSemanalSeElegivel } from '@/lib/clube-rose/progressoDesafioSemanal';
+import { agregarResultadosPetalas } from '@/lib/clube-rose/agregarResultadosPetalas';
 
 export async function registrarSessaoJornada(params: {
   checkinId: string;
@@ -81,7 +83,7 @@ export async function registrarSessaoJornada(params: {
     .eq('status', 'em_andamento')
     .maybeSingle();
 
-  let totalPetalas = 0;
+  const resultados: ResultadoConcessaoPetalas[] = [];
 
   if (sessao && primeiraConclusaoAtividade) {
     // referencia_id é o id da atividade da jornada (estável), não o da sessão
@@ -90,14 +92,15 @@ export async function registrarSessaoJornada(params: {
     // diferentes, então usar sessao.id como chave de idempotência não
     // bloquearia a corrida. Como "primeira conclusão" é um evento por
     // (usuária, atividade), a chave de idempotência precisa refletir isso.
-    const petalasAtividade = await concederPetalas(
-      createSupabaseAdminClient(),
-      user.id,
-      'sessao_jornada_primeira_conclusao',
-      params.jornadaAtividadeId,
-      VALORES_PETALAS.sessaoJornadaPrimeiraConclusao
+    resultados.push(
+      await concederPetalas(
+        createSupabaseAdminClient(),
+        user.id,
+        'sessao_jornada_primeira_conclusao',
+        params.jornadaAtividadeId,
+        VALORES_PETALAS.sessaoJornadaPrimeiraConclusao
+      )
     );
-    totalPetalas += petalasAtividade ?? 0;
   }
 
   if (jornada && progresso) {
@@ -116,19 +119,24 @@ export async function registrarSessaoJornada(params: {
       .eq('id', progresso.id);
 
     if (jornadaConcluida) {
-      const petalasJornada = await concederPetalas(
-        createSupabaseAdminClient(),
-        user.id,
-        'jornada_completa',
-        progresso.id,
-        VALORES_PETALAS.jornadaCompleta
+      resultados.push(
+        await concederPetalas(
+          createSupabaseAdminClient(),
+          user.id,
+          'jornada_completa',
+          progresso.id,
+          VALORES_PETALAS.jornadaCompleta
+        )
       );
-      totalPetalas += petalasJornada ?? 0;
     }
   }
 
-  const petalasDesafio = await concederDesafioSemanalSeElegivel(supabase, user.id);
-  totalPetalas += petalasDesafio ?? 0;
+  resultados.push(await concederDesafioSemanalSeElegivel(supabase, user.id));
 
-  redirect(totalPetalas > 0 ? `/progresso?petalas=${totalPetalas}` : '/progresso');
+  const { total: totalPetalas, limiteGratuitoAtingido } = agregarResultadosPetalas(resultados);
+  const sufixoPetalas =
+    (totalPetalas > 0 ? `?petalas=${totalPetalas}` : '') +
+    (limiteGratuitoAtingido ? `${totalPetalas > 0 ? '&' : '?'}limitePetalas=1` : '');
+
+  redirect(sufixoPetalas ? `/progresso${sufixoPetalas}` : '/progresso');
 }

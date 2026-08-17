@@ -5,8 +5,11 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 // Único lugar do app que promove/rebaixa perfis.plano — nunca o frontend,
 // nunca a rota de checkout. Só processa eventos com assinatura verificada
-// (garante que vieram do Stripe de verdade) e só uma vez por evento
-// (stripe_eventos_processados, migração 0019), mesmo se o Stripe reentregar.
+// (garante que vieram do Stripe de verdade) e registra cada evento em
+// stripe_eventos_processados (migração 0019) para fins de auditoria — mas
+// uma reentrega duplicada AINDA é reprocessada abaixo, porque os handlers
+// fazem updates idempotentes e reprocessar corrige falhas de uma entrega
+// anterior (ex.: um update de perfil que tinha falhado sem ser detectado).
 export async function POST(request: Request) {
   const stripe = obterStripe();
   const segredoWebhook = process.env.STRIPE_WEBHOOK_SECRET;
@@ -38,14 +41,16 @@ export async function POST(request: Request) {
     .from('stripe_eventos_processados')
     .insert({ id: evento.id, tipo: evento.type });
 
+  let duplicado = false;
   if (erroIdempotencia) {
     if (erroIdempotencia.code === '23505') {
-      // Evento já processado antes (reentrega do Stripe) — não reprocessa,
-      // mas confirma recebimento para o Stripe parar de reenviar.
-      return NextResponse.json({ recebido: true, duplicado: true });
+      // Evento já registrado antes (reentrega do Stripe). Não interrompe o
+      // processamento — os handlers abaixo fazem updates idempotentes.
+      duplicado = true;
+    } else {
+      console.error('[stripe/webhook] falha ao registrar idempotência:', erroIdempotencia);
+      return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
     }
-    console.error('[stripe/webhook] falha ao registrar idempotência:', erroIdempotencia);
-    return NextResponse.json({ erro: 'Erro interno.' }, { status: 500 });
   }
 
   try {
@@ -57,16 +62,32 @@ export async function POST(request: Request) {
         const subscriptionId =
           typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
 
-        if (usuariaId && customerId) {
-          await adminClient
-            .from('perfis')
-            .update({
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId ?? null,
-              plano: 'premium',
-              assinatura_status: 'active',
-            })
-            .eq('id', usuariaId);
+        if (!usuariaId || !customerId) {
+          throw new Error(
+            '[stripe/webhook] checkout.session.completed sem usuariaId ou customerId no evento.'
+          );
+        }
+
+        const { data: atualizado, error: erroUpdate } = await adminClient
+          .from('perfis')
+          .update({
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId ?? null,
+            plano: 'premium',
+            assinatura_status: 'active',
+          })
+          .eq('id', usuariaId)
+          .select('id');
+
+        if (erroUpdate) {
+          throw new Error(
+            `[stripe/webhook] falha ao atualizar perfil em checkout.session.completed: ${erroUpdate.message}`
+          );
+        }
+        if (!atualizado || atualizado.length === 0) {
+          throw new Error(
+            '[stripe/webhook] checkout.session.completed: nenhum perfil encontrado para a usuária.'
+          );
         }
         break;
       }
@@ -78,7 +99,7 @@ export async function POST(request: Request) {
         const statusAtivo = subscription.status === 'active' || subscription.status === 'trialing';
         const periodoFimUnix = subscription.items.data[0]?.current_period_end;
 
-        await adminClient
+        const { data: atualizado, error: erroUpdate } = await adminClient
           .from('perfis')
           .update({
             stripe_subscription_id: subscription.id,
@@ -86,7 +107,15 @@ export async function POST(request: Request) {
             assinatura_periodo_fim: periodoFimUnix ? new Date(periodoFimUnix * 1000).toISOString() : null,
             plano: statusAtivo ? 'premium' : 'free',
           })
-          .eq('stripe_customer_id', customerId);
+          .eq('stripe_customer_id', customerId)
+          .select('id');
+
+        if (erroUpdate) {
+          throw new Error(`[stripe/webhook] falha ao atualizar perfil em ${evento.type}: ${erroUpdate.message}`);
+        }
+        if (!atualizado || atualizado.length === 0) {
+          throw new Error(`[stripe/webhook] ${evento.type}: nenhum perfil encontrado para o customer.`);
+        }
         break;
       }
 
@@ -94,13 +123,21 @@ export async function POST(request: Request) {
         const subscription = evento.data.object as Stripe.Subscription;
         const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
 
-        await adminClient
+        const { data: atualizado, error: erroUpdate } = await adminClient
           .from('perfis')
           .update({
             plano: 'free',
             assinatura_status: 'canceled',
           })
-          .eq('stripe_customer_id', customerId);
+          .eq('stripe_customer_id', customerId)
+          .select('id');
+
+        if (erroUpdate) {
+          throw new Error(`[stripe/webhook] falha ao atualizar perfil em ${evento.type}: ${erroUpdate.message}`);
+        }
+        if (!atualizado || atualizado.length === 0) {
+          throw new Error(`[stripe/webhook] ${evento.type}: nenhum perfil encontrado para o customer.`);
+        }
         break;
       }
 
@@ -116,5 +153,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ erro: 'Erro ao processar evento.' }, { status: 500 });
   }
 
-  return NextResponse.json({ recebido: true });
+  return NextResponse.json({ recebido: true, duplicado });
 }

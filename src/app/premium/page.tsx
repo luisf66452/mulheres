@@ -1,58 +1,87 @@
-'use client';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { stripeConfigurado } from '@/lib/stripe/planos';
+import BotaoAssinar from '@/app/perfil/assinatura/BotaoAssinar';
+import BotaoGerenciarAssinatura from '@/app/perfil/assinatura/BotaoGerenciarAssinatura';
 
-import { useState } from 'react';
-import { registrarIntencaoPagamento } from './actions';
-
-const OPCOES = [
-  { id: 'mensal', label: 'Mensal', preco: 19.9 },
-  { id: 'anual', label: 'Anual', preco: 149.9 },
-  { id: 'nenhum', label: 'Não pagaria por isso agora', preco: 0 },
+const BENEFICIOS = [
+  'Histórico completo de check-ins e progresso',
+  'Insights semanais sobre seus padrões',
+  'Biblioteca completa de práticas',
+  'Todas as jornadas guiadas',
+  'Recompensas exclusivas no Clube Rose',
 ];
 
-export default function PremiumPage() {
-  const [escolhido, setEscolhido] = useState<string | null>(null);
-  const [enviado, setEnviado] = useState(false);
+export default async function PremiumPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  async function handleEscolher(id: string, preco: number) {
-    setEscolhido(id);
-    await registrarIntencaoPagamento(id, preco);
-    setEnviado(true);
+  if (!user) {
+    redirect('/login');
   }
 
-  if (enviado) {
-    return (
-      <main className="mx-auto max-w-md space-y-4 p-6">
-        <p className="text-texto">Obrigada! Isso nos ajuda a construir a versão completa do app.</p>
-        <a
-          href="/checkin"
-          className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
-        >
-          Voltar
-        </a>
-      </main>
-    );
-  }
+  const { data: perfil, error } = await supabase
+    .from('perfis')
+    .select('plano')
+    .eq('id', user.id)
+    .single();
+
+  const ehPremium = perfil?.plano === 'premium';
+  const assinaturaConfigurada = stripeConfigurado();
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
       <h1 className="font-display text-2xl text-texto">Versão Premium</h1>
       <p className="text-texto">
         Histórico completo, insights semanais, biblioteca completa de práticas e jornadas guiadas.
-        Ainda não cobramos por isso — queremos entender se faria sentido para você.
       </p>
-      <div className="space-y-3">
-        {OPCOES.map((opcao) => (
-          <button
-            key={opcao.id}
-            onClick={() => handleEscolher(opcao.id, opcao.preco)}
-            className={`w-full rounded-2xl border p-3 text-left text-texto transition-colors ${
-              escolhido === opcao.id ? 'border-acao bg-superficie' : 'border-borda'
-            }`}
-          >
-            {opcao.label} {opcao.preco > 0 && `— R$ ${opcao.preco.toFixed(2)}`}
-          </button>
-        ))}
+
+      <div className="rounded-2xl border border-borda bg-superficie p-4">
+        <p className="font-display text-base text-texto">O que o Rose Pro inclui</p>
+        <ul className="mt-2 space-y-1.5 text-sm text-texto-suave">
+          {BENEFICIOS.map((beneficio) => (
+            <li key={beneficio}>• {beneficio}</li>
+          ))}
+        </ul>
       </div>
+
+      {error && (
+        <div className="rounded-2xl border border-borda bg-superficie p-4 text-sm text-texto-suave">
+          Não foi possível carregar sua assinatura agora. Tente novamente em instantes.
+        </div>
+      )}
+
+      {!error && ehPremium && <BotaoGerenciarAssinatura />}
+
+      {!error && !ehPremium && assinaturaConfigurada && (
+        <div className="space-y-3 rounded-2xl border border-borda bg-superficie p-4">
+          <div className="space-y-1 text-sm text-texto-suave">
+            <p>Mensal: R$ 39,99 (Brasil) · 9,99 € (Portugal)</p>
+            <p>Anual: R$ 359,99 (Brasil) · 89,99 € (Portugal)</p>
+          </div>
+          <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
+          <BotaoAssinar plano="anual" rotulo="Assinar anual" />
+          <p className="text-xs text-texto-suave">
+            Pagamento processado com segurança pelo Stripe. Você pode cancelar quando quiser.
+          </p>
+        </div>
+      )}
+
+      {!error && !ehPremium && !assinaturaConfigurada && (
+        <div className="rounded-2xl border border-borda bg-superficie p-4">
+          <p className="text-sm text-texto">Assinatura ainda não está disponível.</p>
+        </div>
+      )}
+
+      <Link
+        href="/perfil/assinatura"
+        className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
+      >
+        Ver detalhes da minha assinatura
+      </Link>
     </main>
   );
 }

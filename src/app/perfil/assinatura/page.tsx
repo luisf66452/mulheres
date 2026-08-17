@@ -44,6 +44,17 @@ export default async function AssinaturaPage({
     .eq('id', user.id)
     .single();
 
+  if (error) {
+    // Mensagem sanitizada: só código/detalhe do erro do PostgREST, nunca
+    // dado da usuária (sem id, email ou cookies), para permitir diagnosticar
+    // falhas futuras (ex.: coluna ausente por migração não aplicada) sem
+    // expor informação sensível no log.
+    console.error('[perfil/assinatura] Falha ao carregar perfil da usuária:', {
+      code: error.code,
+      message: error.message,
+    });
+  }
+
   const plano = perfil?.plano ?? 'free';
   const ehPremium = plano === 'premium';
   const assinaturaConfigurada = stripeConfigurado();

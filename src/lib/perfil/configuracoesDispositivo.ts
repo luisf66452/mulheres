@@ -19,7 +19,7 @@ export interface ConfiguracoesDispositivo {
 export const CONFIGURACOES_PADRAO: ConfiguracoesDispositivo = {
   reduzirAnimacoes: false,
   tamanhoTexto: 'padrao',
-  tema: 'sistema',
+  tema: 'clara',
 };
 
 const PREFIXO_CHAVE = 'perfil:configuracoes-dispositivo';

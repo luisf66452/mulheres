@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import AplicarPreferenciasDispositivo from "./components/AplicarPreferenciasDispositivo";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -20,7 +21,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FBF6F0",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBF6F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#221B1F" },
+  ],
   viewportFit: "cover",
 };
 
@@ -30,7 +34,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-fundo font-sans text-texto pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">{children}</body>
+      <body className="min-h-full flex flex-col bg-fundo font-sans text-texto pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+        <AplicarPreferenciasDispositivo />
+        {children}
+      </body>
     </html>
   );
 }

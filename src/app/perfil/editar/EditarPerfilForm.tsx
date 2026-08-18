@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Botao from '@/app/components/Botao';
 import { atualizarPerfilCompleto, solicitarTrocaEmail } from './actions';
 import type { ErrosEdicaoPerfil } from '@/lib/perfil/validacaoPerfil';
+import { FUSOS_HORARIOS } from '@/lib/perfil/fusosHorarios';
 import FotoPerfilUpload from './FotoPerfilUpload';
 
 const FAIXAS_ETARIAS = [
@@ -15,13 +16,6 @@ const FAIXAS_ETARIAS = [
   { valor: '45-54', rotulo: '45–54' },
   { valor: '55+', rotulo: '55+' },
 ] as const;
-
-const FUSOS_HORARIOS = [
-  { valor: 'America/Noronha', rotulo: 'Fernando de Noronha (UTC-2)' },
-  { valor: 'America/Sao_Paulo', rotulo: 'Brasília (UTC-3)' },
-  { valor: 'America/Manaus', rotulo: 'Manaus (UTC-4)' },
-  { valor: 'America/Rio_Branco', rotulo: 'Acre (UTC-5)' },
-];
 
 const CAMPO_CLASSE =
   'mt-1 block w-full rounded-2xl border border-borda bg-superficie p-3 text-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60';
@@ -169,10 +163,8 @@ export default function EditarPerfilForm({
 
         <label className="block text-texto">
           Idioma
-          <select value="pt-BR" disabled className={`${CAMPO_CLASSE} opacity-70`}>
-            <option value="pt-BR">Português (Brasil)</option>
-          </select>
-          <p className="mt-1 text-xs text-texto-suave">Mais idiomas em breve.</p>
+          <p className={`${CAMPO_CLASSE} text-texto-suave`}>Português</p>
+          <p className="mt-1 text-xs text-texto-suave">O Rose está disponível em português por enquanto.</p>
         </label>
       </div>
 

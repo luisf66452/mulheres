@@ -42,6 +42,78 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Tamanho do texto (Configurações › Aparência e acessibilidade): escala o
+   tamanho de fonte da raiz em vez de tocar componente por componente — como
+   as classes de tamanho do Tailwind usam rem, todo o app escala junto de
+   forma consistente. "Padrão" não define nada (usa o 100% do navegador). */
+html[data-tamanho-texto="grande"] {
+  font-size: 112.5%;
+}
+
+html[data-tamanho-texto="maior"] {
+  font-size: 125%;
+}
+
+/* Tema escuro: só os tokens que formam pares texto/fundo/borda/ação em toda
+   a interface são trocados. Ilustrações e os tons pastel de humor/jornadas
+   ficam iguais nos dois temas de propósito — são acentos ilustrativos
+   (não pares texto/fundo) e mantêm a identidade visual do Rose em vez de
+   virar uma coleção de cores improvisadas.
+   - `prefers-color-scheme: dark` cobre "Sistema" (padrão) automaticamente.
+   - `data-tema="clara"`/`"escura"` (Configurações) sobrepõe a escolha manual
+     da usuária, em qualquer direção, mesmo contra o sistema. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="clara"]) {
+    --color-fundo: #221B1F;
+    --color-superficie: #2C2327;
+    --color-texto: #F3E9E6;
+    --color-texto-suave: #C7B4BC;
+    --color-destaque: #C9B8E0;
+    --color-acao: #D8798C;
+    --color-borda: #46383D;
+    --color-alerta: #E5919F;
+    color-scheme: dark;
+  }
+}
+
+:root[data-tema="escura"] {
+  --color-fundo: #221B1F;
+  --color-superficie: #2C2327;
+  --color-texto: #F3E9E6;
+  --color-texto-suave: #C7B4BC;
+  --color-destaque: #C9B8E0;
+  --color-acao: #D8798C;
+  --color-borda: #46383D;
+  --color-alerta: #E5919F;
+  color-scheme: dark;
+}
+
+/* Redução de animações (Configurações › Aparência e acessibilidade): soma-se
+   ao prefers-reduced-motion do sistema, sem depender dele — a usuária pode
+   pedir menos movimento mesmo com o SO configurado no padrão. Reduz a
+   duração de toda animação/transição a quase zero (mantém o estado final
+   correto e o feedback funcional — só remove o movimento) em vez de
+   remover comportamento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-reduzir-animacoes="true"] *,
+html[data-reduzir-animacoes="true"] *::before,
+html[data-reduzir-animacoes="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Ilustração botânica animada (tela de login): a imagem original foi
    separada em duas camadas (caules/folhas e flores) por canto. As camadas
    ficam empilhadas na mesma posição/tamanho para reconstituir a arte
@@ -130,6 +202,15 @@ body {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+html[data-reduzir-animacoes="true"] .ilustracao-camada-caule,
+html[data-reduzir-animacoes="true"] .ilustracao-camada-flor,
+html[data-reduzir-animacoes="true"] .notificacao-petalas {
+  animation: none;
+  clip-path: none;
+  opacity: 1;
+  transform: scale(1);
 }
 
 @keyframes conquista-celebrar {

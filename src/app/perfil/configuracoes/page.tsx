@@ -17,7 +17,7 @@ export default async function ConfiguracoesPage() {
 
   const { data: perfil, error } = await supabase
     .from('perfis')
-    .select('nome, frase_pessoal, faixa_etaria, fuso_horario')
+    .select('fuso_horario')
     .eq('id', user.id)
     .single();
 
@@ -32,9 +32,6 @@ export default async function ConfiguracoesPage() {
       ) : (
         <ConfiguracoesForm
           usuariaId={user.id}
-          nomeAtual={perfil?.nome ?? null}
-          frasePessoalAtual={perfil?.frase_pessoal ?? null}
-          faixaEtariaAtual={perfil?.faixa_etaria ?? null}
           fusoHorarioAtual={perfil?.fuso_horario ?? 'America/Sao_Paulo'}
           versaoApp={version}
         />

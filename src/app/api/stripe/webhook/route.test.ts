@@ -76,6 +76,21 @@ const EVENTO_CHECKOUT_COMPLETO = {
       client_reference_id: null,
       customer: 'cus_1',
       subscription: 'sub_1',
+      payment_status: 'paid',
+    },
+  },
+};
+
+const EVENTO_CHECKOUT_COMPLETO_PAGAMENTO_PENDENTE = {
+  id: 'evt_checkout_2',
+  type: 'checkout.session.completed',
+  data: {
+    object: {
+      metadata: { usuaria_id: 'user-1' },
+      client_reference_id: null,
+      customer: 'cus_1',
+      subscription: 'sub_1',
+      payment_status: 'unpaid',
     },
   },
 };
@@ -134,6 +149,23 @@ describe('POST /api/stripe/webhook', () => {
         stripe_subscription_id: 'sub_1',
         plano: 'premium',
         assinatura_status: 'active',
+      },
+    ]);
+  });
+
+  it('não promove a premium em checkout.session.completed quando o pagamento ainda não foi confirmado (ex.: boleto pendente)', async () => {
+    const stripeFake = criarStripeFake(EVENTO_CHECKOUT_COMPLETO_PAGAMENTO_PENDENTE);
+    const adminFake = criarAdminClienteFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(adminFake as never);
+
+    const resposta = await POST(criarRequisicao());
+
+    expect(resposta.status).toBe(200);
+    expect(adminFake.__chamadasUpdate).toEqual([
+      {
+        stripe_customer_id: 'cus_1',
+        stripe_subscription_id: 'sub_1',
       },
     ]);
   });

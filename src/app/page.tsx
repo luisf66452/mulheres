@@ -1,5 +1,6 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { formatDateISO } from '@/lib/date';
+import { hojeISONoFuso, hojeNoFuso } from '@/lib/date';
 import { calcularProgresso7Dias } from '@/lib/progress/streak';
 import { buscarJornadaAtivaParaExibir } from '@/lib/jornadas/buscarJornadaAtivaParaExibir';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
@@ -19,22 +20,32 @@ export default async function InicioPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const hoje = formatDateISO(new Date());
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: perfilFuso } = await supabase
+    .from('perfis')
+    .select('fuso_horario')
+    .eq('id', user.id)
+    .single();
+  const fusoHorario = perfilFuso?.fuso_horario ?? 'America/Sao_Paulo';
+  const hoje = hojeISONoFuso(fusoHorario);
 
   const [{ data: perfil }, { data: checkinHoje }, { data: checkins }, { data: carteira }] = await Promise.all([
-    supabase.from('perfis').select('nome').eq('id', user!.id).single(),
-    supabase.from('checkins').select('*').eq('usuaria_id', user!.id).eq('data', hoje).maybeSingle(),
-    supabase.from('checkins').select('data').eq('usuaria_id', user!.id),
-    supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user!.id).maybeSingle(),
+    supabase.from('perfis').select('nome').eq('id', user.id).single(),
+    supabase.from('checkins').select('*').eq('usuaria_id', user.id).eq('data', hoje).maybeSingle(),
+    supabase.from('checkins').select('data').eq('usuaria_id', user.id),
+    supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user.id).maybeSingle(),
   ]);
 
   const saldoPetalas = carteira?.saldo ?? 0;
 
-  const progresso = calcularProgresso7Dias((checkins ?? []).map((c) => c.data), new Date());
+  const progresso = calcularProgresso7Dias((checkins ?? []).map((c) => c.data), hojeNoFuso(fusoHorario));
   const jaFezCheckinHoje = !!checkinHoje;
   const checkinHojeId: string | null = checkinHoje?.id ?? null;
 
-  const jornadaAtiva = await buscarJornadaAtivaParaExibir(supabase, user!.id, checkinHojeId);
+  const jornadaAtiva = await buscarJornadaAtivaParaExibir(supabase, user.id, checkinHojeId);
 
   let jornadaEmAndamento: JornadaEmAndamentoInfo | null = null;
   if (jornadaAtiva) {

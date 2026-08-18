@@ -16,6 +16,10 @@ export function obterStripe(): Stripe | null {
     return null;
   }
 
-  instancia = new Stripe(chaveSecreta);
+  // Fixa a versão da API explicitamente: sem isso, trocar de versão da lib
+  // stripe (ou de versão default configurada no dashboard) pode mudar o
+  // formato dos eventos/objetos silenciosamente, sem nenhum controle de
+  // versão no código.
+  instancia = new Stripe(chaveSecreta, { apiVersion: '2026-07-29.dahlia' });
   return instancia;
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
-import { estaNaJanelaDeEnvio } from '@/lib/push/timeWindow';
+import { estaNaJanelaDeEnvio, diaDaSemanaNoFuso } from '@/lib/push/timeWindow';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -22,14 +22,19 @@ export async function GET(request: NextRequest) {
   );
 
   const agora = new Date();
-  const diaDaSemana = agora.getDay();
 
   const { data: perfis } = await supabaseAdmin
     .from('perfis')
-    .select('id, horario_preferido_notificacao')
+    .select('id, horario_preferido_notificacao, fuso_horario')
     .not('horario_preferido_notificacao', 'is', null);
 
-  const candidatos = (perfis ?? []).filter((p) => estaNaJanelaDeEnvio(p.horario_preferido_notificacao, agora));
+  // Janela e dia da semana calculados no fuso de CADA usuária (não um único
+  // horário/dia global do servidor) — essenciais pra respeitar o horário que
+  // ela escolheu de verdade, e pra "dias da semana" bater com o calendário
+  // dela perto da virada da meia-noite local.
+  const candidatos = (perfis ?? []).filter((p) =>
+    estaNaJanelaDeEnvio(p.horario_preferido_notificacao, agora, p.fuso_horario)
+  );
 
   const { data: preferencias } = await supabaseAdmin
     .from('preferencias_notificacoes')
@@ -44,7 +49,10 @@ export async function GET(request: NextRequest) {
   const elegiveis = candidatos.filter((c) => {
     const preferencia = preferenciaPorUsuaria.get(c.id);
     if (!preferencia) return true;
-    return preferencia.lembrete_checkin && preferencia.dias_semana.includes(diaDaSemana);
+    return (
+      preferencia.lembrete_checkin &&
+      preferencia.dias_semana.includes(diaDaSemanaNoFuso(agora, c.fuso_horario))
+    );
   });
 
   let enviados = 0;

@@ -6,6 +6,15 @@ const ROTAS_PUBLICAS = [
   '/auth/callback',
   '/privacidade',
   '/api/stripe/webhook',
+  // Destino do magic link de confirmação de exclusão de conta (Tarefa 10):
+  // é acessado sem sessão válida sempre que a usuária abre o e-mail num
+  // dispositivo/navegador diferente do que está logada, ou depois que a
+  // sessão original expirou — exatamente o caso que este link existe para
+  // resolver. Bloquear aqui faria o middleware redirecionar para /login
+  // antes da rota trocar o código pela sessão, quebrando a exclusão em
+  // silêncio. A rota em si já valida o código com o Supabase; não abre
+  // nenhum acesso além do que um login normal já concede.
+  '/api/perfil/confirmar-exclusao',
 ];
 
 export async function proxy(request: NextRequest) {

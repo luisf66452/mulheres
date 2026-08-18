@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { calcularProgresso7Dias, calcularMelhorSequencia } from '@/lib/progress/streak';
 import {
@@ -6,7 +7,7 @@ import {
   semanaAnteriorISO,
   semanaSeguinteISO,
 } from '@/lib/progress/semana';
-import { formatDateISO } from '@/lib/date';
+import { formatDateISO, hojeNoFuso } from '@/lib/date';
 import { resolverItensHistorico } from '@/lib/historico/resolverItens';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoProgresso from './CabecalhoProgresso';
@@ -32,10 +33,21 @@ export default async function ProgressoPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: perfilFuso } = await supabase
+    .from('perfis')
+    .select('fuso_horario')
+    .eq('id', user.id)
+    .single();
+  const fusoHorario = perfilFuso?.fuso_horario ?? 'America/Sao_Paulo';
+
   const { data: checkins, error: erroCheckins } = await supabase
     .from('checkins')
     .select('id, data, humor, imagem_corporal, comida')
-    .eq('usuaria_id', user!.id)
+    .eq('usuaria_id', user.id)
     .order('data', { ascending: true });
 
   if (erroCheckins) {
@@ -58,7 +70,7 @@ export default async function ProgressoPage({
   }
 
   const todosOsCheckins = checkins ?? [];
-  const hoje = new Date();
+  const hoje = hojeNoFuso(fusoHorario);
   const progresso = calcularProgresso7Dias(todosOsCheckins.map((c) => c.data), hoje);
   const melhorSequencia = calcularMelhorSequencia(todosOsCheckins.map((c) => c.data));
 
@@ -72,12 +84,12 @@ export default async function ProgressoPage({
     supabase
       .from('sessoes')
       .select('id', { count: 'exact', head: true })
-      .eq('usuaria_id', user!.id)
+      .eq('usuaria_id', user.id)
       .not('pratica_id', 'is', null),
     supabase
       .from('conclusoes_praticas_conteudo')
       .select('id', { count: 'exact', head: true })
-      .eq('usuaria_id', user!.id),
+      .eq('usuaria_id', user.id),
   ]);
 
   const checkinsParaGrafico = todosOsCheckins.slice(-30);
@@ -86,7 +98,7 @@ export default async function ProgressoPage({
 
   const { data: sessoesDoHistorico, error: erroSessoes } =
     checkinIds.length > 0
-      ? await supabase.from('sessoes').select('*').eq('usuaria_id', user!.id).in('checkin_id', checkinIds)
+      ? await supabase.from('sessoes').select('*').eq('usuaria_id', user.id).in('checkin_id', checkinIds)
       : { data: [], error: null };
 
   const praticaIds = (sessoesDoHistorico ?? [])
@@ -140,7 +152,7 @@ export default async function ProgressoPage({
         />
 
         <CartaoConquistas
-          usuariaId={user!.id}
+          usuariaId={user.id}
           melhorSequencia={melhorSequencia}
           totalCheckins={todosOsCheckins.length}
           totalPraticasCuradas={totalPraticasCuradas ?? 0}

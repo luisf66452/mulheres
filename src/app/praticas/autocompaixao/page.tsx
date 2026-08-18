@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoPratica from '@/app/components/praticas/CabecalhoPratica';
@@ -14,10 +14,14 @@ export default async function AutocompaixaoPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect('/login');
+  }
+
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoPratica pratica={pratica} />
-      <AutocompaixaoClient pratica={pratica} usuariaId={user!.id} />
+      <AutocompaixaoClient pratica={pratica} usuariaId={user.id} />
       <NavegacaoInferior />
     </main>
   );

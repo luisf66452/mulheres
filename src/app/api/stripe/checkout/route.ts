@@ -55,34 +55,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ erro: 'Você já é assinante Pro.' }, { status: 400 });
   }
 
-  let customerId = perfil?.stripe_customer_id ?? null;
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email ?? undefined,
+  try {
+    let customerId = perfil?.stripe_customer_id ?? null;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email ?? undefined,
+        metadata: { usuaria_id: user.id },
+      });
+      customerId = customer.id;
+      // Só a service role grava stripe_customer_id (fora da lista de colunas
+      // liberadas por 0012 para UPDATE do client).
+      await adminClient.from('perfis').update({ stripe_customer_id: customerId }).eq('id', user.id);
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${siteUrl}/perfil/assinatura?checkout=sucesso`,
+      cancel_url: `${siteUrl}/perfil/assinatura?checkout=cancelado`,
+      client_reference_id: user.id,
+      subscription_data: { metadata: { usuaria_id: user.id } },
       metadata: { usuaria_id: user.id },
     });
-    customerId = customer.id;
-    // Só a service role grava stripe_customer_id (fora da lista de colunas
-    // liberadas por 0012 para UPDATE do client).
-    await adminClient.from('perfis').update({ stripe_customer_id: customerId }).eq('id', user.id);
+
+    if (!session.url) {
+      return NextResponse.json({ erro: 'Não foi possível iniciar a assinatura agora.' }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (erro) {
+    console.error('[stripe/checkout] falha ao criar sessão de checkout', {
+      message: erro instanceof Error ? erro.message : 'erro desconhecido',
+    });
+    return NextResponse.json({ erro: 'Não foi possível iniciar a assinatura agora. Tente novamente.' }, { status: 500 });
   }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${siteUrl}/perfil/assinatura?checkout=sucesso`,
-    cancel_url: `${siteUrl}/perfil/assinatura?checkout=cancelado`,
-    client_reference_id: user.id,
-    subscription_data: { metadata: { usuaria_id: user.id } },
-    metadata: { usuaria_id: user.id },
-  });
-
-  if (!session.url) {
-    return NextResponse.json({ erro: 'Não foi possível iniciar a assinatura agora.' }, { status: 500 });
-  }
-
-  return NextResponse.json({ url: session.url });
 }

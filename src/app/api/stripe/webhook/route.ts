@@ -68,13 +68,21 @@ export async function POST(request: Request) {
           );
         }
 
+        // Vincula customer/subscription sempre. Só promove a plano 'premium' aqui
+        // se o pagamento já está confirmado (payment_status === 'paid') — com
+        // meios de pagamento assíncronos (ex.: boleto) este evento chega com a
+        // assinatura ainda 'incomplete' e sem pagamento efetivado; nesse caso
+        // quem promove o plano é customer.subscription.updated, quando o Stripe
+        // confirma a cobrança. Sem essa checagem, a usuária ganharia acesso Pro
+        // antes do pagamento ser garantido.
+        const pagamentoConfirmado = session.payment_status === 'paid';
+
         const { data: atualizado, error: erroUpdate } = await adminClient
           .from('perfis')
           .update({
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId ?? null,
-            plano: 'premium',
-            assinatura_status: 'active',
+            ...(pagamentoConfirmado ? { plano: 'premium' as const, assinatura_status: 'active' } : {}),
           })
           .eq('id', usuariaId)
           .select('id');

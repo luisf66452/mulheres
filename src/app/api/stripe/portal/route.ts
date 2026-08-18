@@ -28,10 +28,20 @@ export async function POST() {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: perfil.stripe_customer_id,
-    return_url: `${siteUrl}/perfil/assinatura`,
-  });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: perfil.stripe_customer_id,
+      return_url: `${siteUrl}/perfil/assinatura`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (erro) {
+    console.error('[stripe/portal] falha ao criar sessão do portal de cobrança', {
+      message: erro instanceof Error ? erro.message : 'erro desconhecido',
+    });
+    return NextResponse.json(
+      { erro: 'Não foi possível abrir o gerenciamento de assinatura agora. Tente novamente.' },
+      { status: 500 }
+    );
+  }
 }

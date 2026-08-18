@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { derivarHumor, derivarImagemCorporal, derivarComida } from '@/lib/checkin/derivacoes';
 import { decidirRecomendacaoComProtecao } from '@/lib/checkin/recommend';
 import { decidirProximaEtapaCheckin } from '@/lib/checkin/roteamento';
-import { formatDateISO } from '@/lib/date';
+import { hojeISONoFuso } from '@/lib/date';
 import { concederPetalas } from '@/lib/clube-rose/concederPetalas';
 import { agregarResultadosPetalas } from '@/lib/clube-rose/agregarResultadosPetalas';
 import { VALORES_PETALAS } from '@/lib/clube-rose/config';
@@ -78,7 +78,13 @@ export async function submeterCheckin(
 
   validarRespostas(answers);
 
-  const hojeISO = formatDateISO(new Date());
+  const { data: perfil } = await supabase
+    .from('perfis')
+    .select('fuso_horario')
+    .eq('id', user.id)
+    .single();
+
+  const hojeISO = hojeISONoFuso(perfil?.fuso_horario ?? 'America/Sao_Paulo');
 
   const { data: checkinExistente } = await supabase
     .from('checkins')

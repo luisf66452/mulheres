@@ -47,6 +47,15 @@ export async function registrarSessao(params: {
     .select('id')
     .single();
 
+  // Se a inserção falhar por violação da constraint sessoes_checkin_unico (ex: uma
+  // segunda requisição concorrente pro mesmo check-in), não trata como falha —
+  // essa sessão já foi registrada antes (mesmo padrão de
+  // jornada-atividade/[id]/actions.ts). Qualquer outro erro (RLS, FK, rede) é um
+  // problema real e não deve ser tratado como sucesso.
+  if (error && error.code === '23505') {
+    redirect('/progresso');
+  }
+
   if (error || !sessao) {
     throw new Error('Não foi possível registrar a sessão. Tente novamente.');
   }

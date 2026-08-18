@@ -1,5 +1,6 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { formatDateISO } from '@/lib/date';
+import { hojeISONoFuso } from '@/lib/date';
 import LembreteBanner from '@/app/components/LembreteBanner';
 import CheckinFormClient from './CheckinFormClient';
 import { validarHumorParam } from '@/lib/checkin/humorInicial';
@@ -17,11 +18,21 @@ export default async function CheckinPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: perfil } = await supabase
+    .from('perfis')
+    .select('fuso_horario')
+    .eq('id', user.id)
+    .single();
+
   const { data: checkinExistente } = await supabase
     .from('checkins')
     .select('id')
-    .eq('usuaria_id', user!.id)
-    .eq('data', formatDateISO(new Date()))
+    .eq('usuaria_id', user.id)
+    .eq('data', hojeISONoFuso(perfil?.fuso_horario ?? 'America/Sao_Paulo'))
     .maybeSingle();
 
   const jaFezCheckinHoje = !!checkinExistente;

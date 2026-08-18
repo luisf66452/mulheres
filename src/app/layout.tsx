@@ -21,10 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBF6F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#221B1F" },
-  ],
+  themeColor: "#FBF6F0",
   viewportFit: "cover",
 };
 
@@ -32,6 +29,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
+      data-tema="clara"
+      suppressHydrationWarning
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-fundo font-sans text-texto pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">

@@ -10,6 +10,7 @@ import Cronometro from '@/app/components/praticas/Cronometro';
 import ControlesSessao from '@/app/components/praticas/ControlesSessao';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
 import Botao from '@/app/components/Botao';
+import FormaRespiracaoOrganica from '@/app/components/ilustracoes/praticas/FormaRespiracaoOrganica';
 
 const DURACAO_TOTAL_S = 180;
 
@@ -63,6 +64,9 @@ export default function RespiracaoClient({
   if (introducaoVisivel) {
     return (
       <div className="space-y-5 text-center">
+        <div className="flex justify-center">
+          <FormaRespiracaoOrganica emExpansao duracaoSegundos={0} className="h-28 w-28 opacity-80" />
+        </div>
         <p className="text-sm text-texto-suave">
           Uma pausa curta para respirar com atenção: inspire por 4 segundos, expire devagar por 6. Repita até
           completar 3 minutos.
@@ -80,11 +84,10 @@ export default function RespiracaoClient({
   return (
     <div className="space-y-6 text-center">
       <div className="flex justify-center">
-        <div
-          className={`h-40 w-40 rounded-full bg-salvia/40 transition-transform ease-in-out motion-reduce:transform-none ${
-            emExpansao ? 'scale-100' : 'scale-75'
-          }`}
-          style={{ transitionDuration: `${emExpansao ? DURACAO_INSPIRAR_S : DURACAO_EXPIRAR_S}s` }}
+        <FormaRespiracaoOrganica
+          emExpansao={emExpansao}
+          duracaoSegundos={emExpansao ? DURACAO_INSPIRAR_S : DURACAO_EXPIRAR_S}
+          className="h-40 w-40"
         />
       </div>
       <p aria-live="polite" className="font-display text-xl text-texto">

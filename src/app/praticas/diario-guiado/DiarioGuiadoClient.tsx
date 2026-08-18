@@ -9,6 +9,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import IndicadorEtapas from '@/app/components/praticas/IndicadorEtapas';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
 import Botao from '@/app/components/Botao';
+import RamoDiario from '@/app/components/ilustracoes/praticas/RamoDiario';
 
 function dataDeHoje(): string {
   return new Date().toISOString().slice(0, 10);
@@ -75,6 +76,7 @@ export default function DiarioGuiadoClient({
 
   return (
     <div className="space-y-5">
+      <RamoDiario className="mx-auto opacity-80" />
       <IndicadorEtapas etapaAtual={etapa + 1} totalEtapas={totalEtapas} />
       <div className="space-y-3">
         <p className="font-display text-lg text-texto">{PERGUNTAS_DIARIO_GUIADO[etapa]}</p>

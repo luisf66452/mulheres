@@ -11,6 +11,7 @@ import ControlesSessao from '@/app/components/praticas/ControlesSessao';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
 import PlayerAudio from '@/app/components/praticas/PlayerAudio';
 import Botao from '@/app/components/Botao';
+import HaloMeditacao from '@/app/components/ilustracoes/praticas/HaloMeditacao';
 
 const DURACAO_TOTAL_S = 8 * 60;
 
@@ -64,6 +65,9 @@ export default function MeditacaoClient({
   if (introducaoVisivel) {
     return (
       <div className="space-y-5 text-center">
+        <div className="flex justify-center">
+          <HaloMeditacao tamanho="pequena" className="opacity-80" />
+        </div>
         <p className="text-sm text-texto-suave">
           Encontre uma posição confortável. Nos próximos 8 minutos, você só precisa estar presente — sem se
           cobrar por &quot;fazer certo&quot;.
@@ -80,7 +84,7 @@ export default function MeditacaoClient({
   return (
     <div className="space-y-6 text-center">
       <div className="flex justify-center">
-        <div className="h-32 w-32 rounded-full bg-lilas-suave motion-safe:animate-pulse motion-reduce:animate-none" />
+        <HaloMeditacao tamanho="media" />
       </div>
       <p aria-live="polite" className="min-h-12 text-texto-suave">
         {FRASES_MEDITACAO[indiceFrase]}

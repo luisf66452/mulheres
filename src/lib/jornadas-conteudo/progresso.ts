@@ -1,5 +1,5 @@
 // Lógica de progresso real das 83 sessões (persistida em
-// sessoes_jornadas_conteudo_progresso, migração 0025). `calcularEstadosSessoes`
+// sessoes_jornadas_conteudo_progresso, migração 0028). `calcularEstadosSessoes`
 // é pura e testável isoladamente; as funções de I/O ficam separadas para
 // não misturar lógica de decisão com chamadas ao Supabase.
 import type { SupabaseClient } from '@supabase/supabase-js';

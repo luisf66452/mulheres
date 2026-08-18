@@ -8,7 +8,7 @@
 // mesmo padrão já usado em `src/lib/praticas-conteudo/dados.ts` para as
 // práticas rápidas. Só o PROGRESSO de cada usuária (o que ela começou/
 // concluiu) é persistido, em `sessoes_jornadas_conteudo_progresso`
-// (migração 0025) — ver `./progresso.ts`.
+// (migração 0028) — ver `./progresso.ts`.
 
 export type TipoConteudoSessao = 'reflexao' | 'escrita' | 'exercicio' | 'plano';
 

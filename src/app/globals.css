@@ -242,6 +242,22 @@ html[data-reduzir-animacoes="true"] .rosa-botanica-entrada {
   transform: scale(1);
 }
 
+@keyframes halo-respira {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+html[data-reduzir-animacoes="true"] .halo-respira-anim {
+  animation: none;
+}
+
 @keyframes conquista-celebrar {
   0% {
     transform: scale(1);

@@ -1,10 +1,11 @@
--- 0024_push_envios_idempotencia.sql
+-- 0027_push_envios_idempotencia.sql
+-- Renumerada de 0024 para 0027 — ver comentário em 0026_viagem_surpresa_rose.sql.
 -- Registro de envio de push por usuária + tipo de lembrete + dia local, para
 -- que o cron (api/push/send-due) e o endpoint de teste nunca enviem duas
 -- notificações do mesmo tipo no mesmo dia local da usuária — mesmo sob
 -- reexecução do cron, retry, ou dois processos concorrentes (garantido pela
 -- constraint unique, não só por lógica de aplicação).
-create table push_envios (
+create table if not exists push_envios (
   id uuid primary key default gen_random_uuid(),
   usuaria_id uuid not null references public.perfis(id) on delete cascade,
   tipo text not null check (tipo in ('checkin', 'jornada', 'praticas', 'resumo_semanal', 'teste')),

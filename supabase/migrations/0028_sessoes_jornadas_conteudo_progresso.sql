@@ -1,4 +1,5 @@
--- 0025_sessoes_jornadas_conteudo_progresso.sql
+-- 0028_sessoes_jornadas_conteudo_progresso.sql
+-- Renumerada de 0025 para 0028 — ver comentário em 0026_viagem_surpresa_rose.sql.
 -- Progresso real da usuária nas 83 sessões de src/lib/jornadas-conteudo/
 -- (biblioteca de programas temáticos: Módulo > Sessão > Conteúdo — modelo
 -- SEPARADO do mais antigo jornadas/jornada_atividades/jornadas_usuarias,
@@ -11,7 +12,7 @@
 -- em código (src/lib/jornadas-conteudo/dados.ts), não numa tabela — mesmo
 -- padrão já usado em conclusoes_praticas_conteudo (migração 0018) para as
 -- práticas rápidas definidas em código.
-create table sessoes_jornadas_conteudo_progresso (
+create table if not exists sessoes_jornadas_conteudo_progresso (
   id uuid primary key default gen_random_uuid(),
   usuaria_id uuid not null references auth.users(id) on delete cascade,
   jornada_slug text not null,
@@ -21,15 +22,21 @@ create table sessoes_jornadas_conteudo_progresso (
   unique (usuaria_id, sessao_id)
 );
 
-create index sessoes_jornadas_conteudo_progresso_usuaria_jornada_idx
+create index if not exists sessoes_jornadas_conteudo_progresso_usuaria_jornada_idx
   on sessoes_jornadas_conteudo_progresso (usuaria_id, jornada_slug);
 
 alter table sessoes_jornadas_conteudo_progresso enable row level security;
 
+-- CREATE POLICY não suporta IF NOT EXISTS no Postgres — usa
+-- DROP POLICY IF EXISTS antes de cada CREATE para a migração poder ser
+-- reexecutada com segurança, mesmo padrão de idempotência já usado nas
+-- tabelas desta rodada (ver comentário em 0026_viagem_surpresa_rose.sql).
+drop policy if exists "usuaria le proprio progresso de sessoes de jornadas" on sessoes_jornadas_conteudo_progresso;
 create policy "usuaria le proprio progresso de sessoes de jornadas"
   on sessoes_jornadas_conteudo_progresso for select
   using (auth.uid() = usuaria_id);
 
+drop policy if exists "usuaria inicia suas proprias sessoes de jornadas" on sessoes_jornadas_conteudo_progresso;
 create policy "usuaria inicia suas proprias sessoes de jornadas"
   on sessoes_jornadas_conteudo_progresso for insert
   with check (auth.uid() = usuaria_id);
@@ -38,6 +45,7 @@ create policy "usuaria inicia suas proprias sessoes de jornadas"
 -- depende de um UPDATE condicional (`where concluida_em is null`) feito pelo
 -- código da aplicação, não de uma RPC; por isso a policy de update também é
 -- necessária para o client autenticado, restrita à própria linha.
+drop policy if exists "usuaria atualiza seu proprio progresso de sessoes de jornadas" on sessoes_jornadas_conteudo_progresso;
 create policy "usuaria atualiza seu proprio progresso de sessoes de jornadas"
   on sessoes_jornadas_conteudo_progresso for update
   using (auth.uid() = usuaria_id)

@@ -49,7 +49,7 @@ export default function CartaoPraticaRapida({ pratica }: { pratica: PraticaRapid
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-display text-base text-texto">{pratica.titulo}</span>
-        <span className="block truncate text-sm text-texto-suave">{pratica.descricaoCurta}</span>
+        <span className="line-clamp-2 text-sm leading-snug text-texto-suave">{pratica.descricaoCurta}</span>
       </span>
       <span
         className={`shrink-0 rounded-full ${CAPSULAS[pratica.corCartao]} px-2.5 py-1 text-xs font-medium text-texto`}

@@ -10,12 +10,13 @@
 // levemente diferentes entre si de propósito (nunca um múltiplo exato de
 // 360/N), para que o conjunto leia como orgânico, não como um polígono
 // regular.
-const TONS = {
+export const TONS_BOTANICOS = {
   rosaQueimado: '#B8697A',
   blush: '#D98779',
   pessego: '#F3CFC1',
   salvia: '#8FA888',
 } as const;
+const TONS = TONS_BOTANICOS;
 
 interface EspecPetala {
   anguloGraus: number;
@@ -48,9 +49,12 @@ const PETALAS_INTERNAS: EspecPetala[] = [
 
 // Forma de uma pétala isolada (teardrop assimétrico) desenhada em torno da
 // origem, apontando para cima — cada instância é posicionada/rotacionada via
-// `transform` no <g> pai.
-const CAMINHO_PETALA =
+// `transform` no <g> pai. Exportada para reuso em outras ilustrações
+// botânicas do app (ex.: pétalas da prática de autocompaixão) em vez de
+// duplicar a mesma forma.
+export const CAMINHO_PETALA_BOTANICA =
   'M0,-9 C2.6,-6.4 3.4,-2.4 2.6,1.6 C2,4.6 0.6,6.6 0,7.4 C-0.6,6.6 -2.2,4.4 -2.8,1.4 C-3.6,-2.6 -2.6,-6.4 0,-9 Z';
+const CAMINHO_PETALA = CAMINHO_PETALA_BOTANICA;
 
 function Petala({ spec, cx, cy }: { spec: EspecPetala; cx: number; cy: number }) {
   const rad = (spec.anguloGraus * Math.PI) / 180;

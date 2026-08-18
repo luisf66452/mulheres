@@ -1,4 +1,9 @@
--- 0023_viagem_surpresa_rose.sql
+-- 0026_viagem_surpresa_rose.sql
+-- Renumerada de 0023 para 0026: a branch master já tinha ocupado 0023
+-- (resgates_recompensas_revisado_por_set_null) e 0024
+-- (handle_new_user_search_path), ambas já aplicadas em produção — para
+-- evitar colisão de numeração quando as branches convergirem, esta e as
+-- duas migrations seguintes desta rodada passam a usar 0026-0028.
 -- Atualiza o conteúdo editorial da recompensa 'presente_especial_rose' para a
 -- nova apresentação "Viagem surpresa Rose" — não cria nem apaga linha, só
 -- atualiza os campos de apresentação de um registro já existente (migração

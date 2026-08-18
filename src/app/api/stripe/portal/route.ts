@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { obterStripe } from '@/lib/stripe/client';
+import { obterUrlBaseDoRequest } from '@/lib/site-url';
 
 // Abre o Billing Portal do Stripe (gerenciado pelo próprio Stripe) para a
 // usuária cancelar ou trocar de plano — não reimplementamos gestão de
@@ -26,7 +27,7 @@ export async function POST() {
     return NextResponse.json({ erro: 'Você ainda não tem uma assinatura para gerenciar.' }, { status: 400 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  const siteUrl = await obterUrlBaseDoRequest();
 
   try {
     const session = await stripe.billingPortal.sessions.create({

@@ -21,6 +21,9 @@ export async function enviarLinkMagico(email: string): Promise<{ erro?: string }
       code: error.code,
       message: error.message,
     });
+    if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
+      return { erro: 'Aguarde alguns segundos antes de pedir outro link.' };
+    }
     return { erro: 'Não foi possível enviar o link. Tente novamente.' };
   }
 

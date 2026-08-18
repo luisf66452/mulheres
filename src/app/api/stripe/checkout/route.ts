@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { obterStripe } from '@/lib/stripe/client';
 import { ehPlanoValido, obterPriceId } from '@/lib/stripe/planos';
+import { obterUrlBaseDoRequest } from '@/lib/site-url';
 
 // Cria uma Checkout Session do Stripe para a usuária autenticada assinar o
 // Rose Pro. Nunca ativa o plano diretamente aqui — quem promove
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
       await adminClient.from('perfis').update({ stripe_customer_id: customerId }).eq('id', user.id);
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+    const siteUrl = await obterUrlBaseDoRequest();
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

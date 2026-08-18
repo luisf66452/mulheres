@@ -137,6 +137,9 @@ export async function enviarConfirmacaoExclusao(): Promise<{ erro?: string; emai
       code: error.code,
       message: error.message,
     });
+    if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
+      return { erro: 'Aguarde alguns segundos antes de pedir outro link.' };
+    }
     return { erro: 'Não foi possível enviar o link de confirmação. Tente novamente.' };
   }
 

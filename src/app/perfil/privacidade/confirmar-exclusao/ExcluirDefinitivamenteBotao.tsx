@@ -21,7 +21,7 @@ export default function ExcluirDefinitivamenteBotao() {
       }
 
       setConcluido(true);
-      setTimeout(() => router.replace('/login'), 2000);
+      setTimeout(() => router.replace('/login?conta_excluida=1'), 2000);
     });
   }
 

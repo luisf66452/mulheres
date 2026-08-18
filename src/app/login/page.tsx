@@ -12,6 +12,7 @@ function LoginForm() {
   const [confirmouMaioridade, setConfirmouMaioridade] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState<string | null>(searchParams.get('erro'));
+  const contaExcluida = searchParams.get('conta_excluida') === '1';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +41,11 @@ function LoginForm() {
       <IlustracaoBotanica />
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         <h1 className="font-display text-2xl text-texto">Entrar</h1>
+        {contaExcluida && (
+          <p role="status" className="text-sm text-texto-suave">
+            Sua conta foi excluída com sucesso. Esperamos te ver por aqui de novo algum dia.
+          </p>
+        )}
         <input
           type="email"
           required

@@ -21,7 +21,7 @@ export default function ExportarDadosBotao() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `meus-dados-rose-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `rose-meus-dados-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     });
@@ -30,7 +30,7 @@ export default function ExportarDadosBotao() {
   return (
     <div className="space-y-2">
       <Botao variante="secundaria" type="button" onClick={handleExportar} disabled={exportando}>
-        {exportando ? 'Preparando...' : 'Exportar meus dados'}
+        {exportando ? 'Preparando...' : 'Baixar meus dados'}
       </Botao>
       {erro && (
         <p role="alert" className="text-sm text-alerta">

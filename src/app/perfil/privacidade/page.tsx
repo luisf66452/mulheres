@@ -26,10 +26,14 @@ export default async function PrivacidadePage() {
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
-      <CabecalhoSubpagina titulo="Privacidade" subtitulo="O que guardamos e como você controla" />
+      <CabecalhoSubpagina titulo="Privacidade e dados" subtitulo="Você controla seus dados no Rose" />
 
       <div className="rounded-2xl bg-superficie p-4 shadow-[0_2px_8px_rgba(74,63,53,0.08)]">
-        <p className="font-display text-base text-texto">O que guardamos</p>
+        <p className="font-display text-base text-texto">Seus dados</p>
+        <p className="mt-1 text-sm text-texto-suave">
+          O Rose guarda apenas os dados necessários para o funcionamento do app e para personalizar a
+          sua experiência:
+        </p>
         <ul className="mt-2 space-y-1.5 text-sm text-texto-suave">
           {O_QUE_GUARDAMOS.map((item) => (
             <li key={item}>• {item}</li>
@@ -56,9 +60,9 @@ export default async function PrivacidadePage() {
       </Link>
 
       <div className="rounded-2xl border border-borda bg-superficie p-4">
-        <p className="font-display text-base text-texto">Seus dados</p>
+        <p className="font-display text-base text-texto">Exportar e excluir</p>
         <p className="mt-1 text-sm text-texto-suave">
-          Exporte uma cópia de tudo que guardamos sobre sua conta, ou peça a exclusão definitiva.
+          Baixe uma cópia de tudo que guardamos sobre sua conta, ou peça a exclusão definitiva.
         </p>
         <div className="mt-3 space-y-4">
           <ExportarDadosBotao />

@@ -43,10 +43,10 @@ export default function ExcluirContaFluxo() {
   if (etapa === 'explicacao') {
     return (
       <div className="space-y-3 rounded-2xl border border-alerta/40 bg-superficie p-4">
-        <p className="font-display text-base text-texto">O que será apagado</p>
+        <p className="font-display text-base text-texto">Excluir minha conta</p>
         <p className="text-sm text-texto-suave">
-          Ao excluir sua conta, apagamos permanentemente seu perfil, todos os seus check-ins, sessões
-          de prática e assinaturas de notificação. Essa ação não pode ser desfeita.
+          Esta ação é permanente. Seus dados pessoais e seu histórico no Rose — perfil, check-ins,
+          jornadas, práticas, Pétalas e recompensas — serão excluídos. Não é possível desfazer.
         </p>
         <div className="flex gap-3">
           <Botao variante="secundaria" type="button" onClick={() => setEtapa('confirmar-frase')}>

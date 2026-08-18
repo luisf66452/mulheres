@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Worktree de sessões anteriores (git worktree independente, com seu
+    // próprio checkout/branch/node_modules) — não faz parte deste worktree e
+    // não deve ser varrido por lint/typecheck daqui.
+    ".claude/worktrees/**",
   ]),
 ]);
 

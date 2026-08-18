@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from '@/lib/config/contato';
+
 export default function PrivacidadePage() {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
@@ -46,8 +48,8 @@ export default function PrivacidadePage() {
         <p className="text-texto">
           Você pode solicitar a exportação ou exclusão dos seus dados a qualquer momento, e pode
           tirar qualquer dúvida sobre como seus dados são tratados, escrevendo para{' '}
-          <a href="mailto:almeidaferreiraluisgustavo@gmail.com" className="underline">
-            almeidaferreiraluisgustavo@gmail.com
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
+            {SUPPORT_EMAIL}
           </a>
           . Respondemos pedidos em até alguns dias úteis.
         </p>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
+import { SUPPORT_EMAIL } from '@/lib/config/contato';
 
 const PERGUNTAS = [
   {
@@ -65,8 +66,8 @@ export default function AjudaPage() {
         <p className="font-display text-base text-texto">Fale com a gente</p>
         <p className="text-sm text-texto-suave">
           Dúvidas, problemas técnicos ou qualquer outro assunto: escreva para{' '}
-          <a href="mailto:almeidaferreiraluisgustavo@gmail.com" className="underline">
-            almeidaferreiraluisgustavo@gmail.com
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
+            {SUPPORT_EMAIL}
           </a>
           . Respondemos em até alguns dias úteis.
         </p>

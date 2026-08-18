@@ -161,11 +161,6 @@ export default async function ProgressoPage({
 
         <MelhorSequencia melhorSequencia={melhorSequencia} />
 
-        <p className="text-sm text-texto-suave">
-          Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo
-          dos seus dias serem como foram.
-        </p>
-
         <GraficoEvolucao checkins={checkinsParaGrafico} />
 
         {erroHistorico ? (

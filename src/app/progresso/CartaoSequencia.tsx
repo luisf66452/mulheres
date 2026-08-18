@@ -1,4 +1,5 @@
 import { descreverSequencia, type ProgressoDia } from '@/lib/progress/streak';
+import RosaBotanica from '@/app/components/ilustracoes/RosaBotanica';
 
 export default function CartaoSequencia({
   diasConsecutivosAtuais,
@@ -28,14 +29,7 @@ export default function CartaoSequencia({
         </div>
       </div>
 
-      <svg aria-hidden="true" width="56" height="56" viewBox="0 0 56 56" fill="none" className="shrink-0">
-        <path
-          d="M28 49c2.5-12 3.5-19 10.5-26-7-3.5-14 0-15.5 7-1.5-7-8.5-10.5-15.5-7 7 7 8 14 10.5 26z"
-          fill="#B9A6D4"
-          fillOpacity="0.3"
-        />
-        <circle cx="28" cy="16" r="5" fill="#B8697A" fillOpacity="0.55" />
-      </svg>
+      <RosaBotanica tamanho="media" comCaule={false} className="shrink-0" />
     </div>
   );
 }

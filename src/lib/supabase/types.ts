@@ -44,6 +44,16 @@ export type StripeEventoProcessado = {
   processado_em: string;
 };
 
+export type TipoPushEnvio = 'checkin' | 'jornada' | 'praticas' | 'resumo_semanal' | 'teste';
+
+export type PushEnvio = {
+  id: string;
+  usuaria_id: string;
+  tipo: TipoPushEnvio;
+  data_local: string; // YYYY-MM-DD
+  criado_em: string;
+};
+
 export type EstadoGeral =
   | 'alta_energia_desconforto'
   | 'alta_energia_conforto'
@@ -240,6 +250,15 @@ export type ResgateRecompensa = {
 export type TipoRecompensa = 'digital' | 'personalizacao' | 'conteudo' | 'experiencia' | 'futura';
 export type StatusRecompensaCatalogo = 'ativa' | 'pausada' | 'futura';
 
+export type SessaoJornadaConteudoProgresso = {
+  id: string;
+  usuaria_id: string;
+  jornada_slug: string;
+  sessao_id: string;
+  iniciada_em: string;
+  concluida_em: string | null;
+};
+
 export type ConclusaoPraticaConteudo = {
   id: string;
   usuaria_id: string;
@@ -329,6 +348,19 @@ export interface Database {
         Row: PreferenciasNotificacao;
         Insert: Pick<PreferenciasNotificacao, 'usuaria_id'> & Partial<Omit<PreferenciasNotificacao, 'usuaria_id'>>;
         Update: Partial<PreferenciasNotificacao>;
+        Relationships: [];
+      };
+      push_envios: {
+        Row: PushEnvio;
+        Insert: Omit<PushEnvio, 'id' | 'criado_em'>;
+        Update: Partial<PushEnvio>;
+        Relationships: [];
+      };
+      sessoes_jornadas_conteudo_progresso: {
+        Row: SessaoJornadaConteudoProgresso;
+        Insert: Pick<SessaoJornadaConteudoProgresso, 'usuaria_id' | 'jornada_slug' | 'sessao_id'> &
+          Partial<Omit<SessaoJornadaConteudoProgresso, 'usuaria_id' | 'jornada_slug' | 'sessao_id'>>;
+        Update: Partial<SessaoJornadaConteudoProgresso>;
         Relationships: [];
       };
     };

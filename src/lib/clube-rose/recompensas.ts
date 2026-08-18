@@ -58,9 +58,10 @@ export const RECOMPENSAS: Recompensa[] = [
   },
   {
     chave: 'presente_especial_rose',
-    nome: 'Presente Especial Rose',
-    descricao: 'Presente físico ou experiência especial, disponível em campanhas específicas.',
-    mensagem: 'Recompensa futura.',
-    tipo: 'futura',
+    nome: 'Viagem surpresa Rose',
+    descricao:
+      'Uma viagem para um destino surpresa escolhido pela equipe Rose. Datas, condições, elegibilidade e detalhes serão divulgados antes da campanha.',
+    mensagem: 'O destino é surpresa. A experiência será escolhida com carinho pela equipe Rose.',
+    tipo: 'experiencia',
   },
 ];

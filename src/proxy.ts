@@ -15,6 +15,11 @@ const ROTAS_PUBLICAS = [
   // silêncio. A rota em si já valida o código com o Supabase; não abre
   // nenhum acesso além do que um login normal já concede.
   '/api/perfil/confirmar-exclusao',
+  // Chamado pelo Vercel Cron, nunca por uma usuária logada — não tem cookie
+  // de sessão, então caía no redirect para /login antes mesmo de chegar ao
+  // handler, que é quem faz a autorização real (Bearer CRON_SECRET). Sem
+  // esta entrada, o cron de notificações nunca executava de verdade.
+  '/api/push/send-due',
 ];
 
 export async function proxy(request: NextRequest) {

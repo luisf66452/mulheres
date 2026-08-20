@@ -1,4 +1,9 @@
--- 0026_jornada_modulos_estruturados.sql
+-- 0029_jornada_modulos_estruturados.sql
+-- Renumerada de 0026 para 0029: a branch experiencia-completa já tinha
+-- ocupado 0026-0028 (viagem_surpresa_rose, push_envios_idempotencia,
+-- sessoes_jornadas_conteudo_progresso), aplicadas em produção antes desta
+-- migração ser escrita — ver histórico recuperado via
+-- `supabase migration fetch` em 0026_viagem_surpresa_rose.sql.
 -- Suporte a módulos psicoeducativos estruturados dentro de uma jornada (Sistema A:
 -- jornadas/jornada_atividades/jornadas_usuarias). Não altera o comportamento das
 -- jornadas existentes: conteudo_estruturado é opcional e coexiste com `conteudo`

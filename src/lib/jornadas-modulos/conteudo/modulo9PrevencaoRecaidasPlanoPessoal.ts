@@ -102,7 +102,7 @@ export const modulo9PrevencaoRecaidasPlanoPessoal: ModuloEstruturadoV1 = {
     },
   ],
   avisoSeguranca:
-    'Este plano é um recurso de autocuidado e organização pessoal — ele não substitui uma avaliação profissional, e o app não tem como prever ou identificar uma crise com certeza. Se em algum momento os sinais de alerta persistirem por várias semanas, afetarem seu dia a dia, ou vier qualquer pensamento de se machucar, considere buscar apoio: o CVV (Centro de Valorização da Vida) oferece apoio emocional gratuito e sigiloso 24 horas por dia, pelo telefone 188 ou pelo chat em cvv.org.br — não é um serviço de emergência, mas está disponível a qualquer hora para conversar. Em caso de risco imediato, procure o SAMU (192), uma UPA, um pronto-socorro ou o hospital mais próximo.',
+    'Este plano é um recurso de autocuidado e organização pessoal — ele não substitui uma avaliação profissional, e o app não tem como prever ou identificar uma crise com certeza. Se em algum momento os sinais de alerta persistirem por várias semanas, afetarem seu dia a dia, ou vier qualquer pensamento de se machucar, considere buscar apoio: os recursos de segurança do app (linha de apoio emocional, linha de prevenção do suicídio e contatos de emergência do seu país) estão sempre acessíveis pelo link abaixo.',
   camposParaTriagem: [
     'sinais_de_alerta',
     'estrategias_que_ajudaram',

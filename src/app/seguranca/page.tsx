@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
+import type { RecursoSeguranca } from '@/lib/supabase/types';
 
 export default async function SegurancaPage({
   searchParams,
@@ -9,11 +10,35 @@ export default async function SegurancaPage({
   const { petalas } = await searchParams;
   const petalasGanhas = petalas ? Number.parseInt(petalas, 10) : 0;
   const supabase = await createSupabaseServerClient();
-  const { data: recursos } = await supabase
-    .from('recursos_seguranca')
-    .select('*')
-    .eq('pais', 'BR')
-    .order('ordem');
+
+  // Recursos de segurança são específicos por país (números de telefone e
+  // serviços diferentes) — nunca misturar recursos de países diferentes numa
+  // mesma apresentação. Usa o país do perfil da usuária; se ela não estiver
+  // autenticada (ex.: link acessado fora de uma sessão) ou o país do perfil
+  // não tiver recursos cadastrados ainda, cai para 'PT' (mercado do teste
+  // inicial da Rose) e, por fim, para 'BR'.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let paisUsuaria: string | null = null;
+  if (user) {
+    const { data: perfil } = await supabase.from('perfis').select('pais').eq('id', user.id).maybeSingle();
+    paisUsuaria = perfil?.pais ?? null;
+  }
+
+  const paisesParaTentar = [paisUsuaria, 'PT', 'BR'].filter(
+    (pais, indice, lista): pais is string => pais !== null && lista.indexOf(pais) === indice
+  );
+
+  let recursos: RecursoSeguranca[] | null = null;
+  for (const pais of paisesParaTentar) {
+    const { data } = await supabase.from('recursos_seguranca').select('*').eq('pais', pais).order('ordem');
+    if (data && data.length > 0) {
+      recursos = data;
+      break;
+    }
+  }
 
   return (
     <>

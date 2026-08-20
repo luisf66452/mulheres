@@ -171,7 +171,26 @@ export type JornadaAtividade = {
   numero_dia: number;
   titulo: string;
   conteudo: string;
+  // Conteúdo estruturado de um módulo psicoeducativo (ver
+  // src/lib/jornadas-modulos/tipos.ts). Nulo nas atividades antigas, que
+  // continuam usando só `conteudo` texto — ver AntesDepoisAtividade.
+  conteudo_estruturado: unknown | null;
+  schema_version: number | null;
   criado_em: string;
+};
+
+export type JornadaRespostaModulo = {
+  id: string;
+  user_id: string;
+  jornada_usuario_id: string;
+  atividade_id: string;
+  sessao_id: string | null;
+  schema_version: number;
+  // RespostaModuloV1 (ver src/lib/jornadas-modulos/tipos.ts), armazenado como
+  // jsonb — pode conter dados psicológicos sensíveis, nunca logar o conteúdo.
+  respostas: unknown;
+  created_at: string;
+  updated_at: string;
 };
 
 export type JornadaUsuaria = {
@@ -277,6 +296,13 @@ export interface Database {
       acessos_administrativos: { Row: AcessoAdministrativo; Insert: Omit<AcessoAdministrativo, 'id' | 'criado_em'>; Update: Partial<AcessoAdministrativo>; Relationships: [] };
       jornadas: { Row: Jornada; Insert: Partial<Jornada>; Update: Partial<Jornada>; Relationships: [] };
       jornada_atividades: { Row: JornadaAtividade; Insert: Omit<JornadaAtividade, 'id' | 'criado_em'>; Update: Partial<JornadaAtividade>; Relationships: [] };
+      jornada_respostas_modulo: {
+        Row: JornadaRespostaModulo;
+        Insert: Omit<JornadaRespostaModulo, 'id' | 'created_at' | 'updated_at' | 'sessao_id'> &
+          Partial<Pick<JornadaRespostaModulo, 'sessao_id'>>;
+        Update: Partial<Omit<JornadaRespostaModulo, 'id' | 'user_id' | 'jornada_usuario_id' | 'atividade_id'>>;
+        Relationships: [];
+      };
       jornadas_usuarias: {
         Row: JornadaUsuaria;
         Insert: Pick<JornadaUsuaria, 'usuaria_id' | 'jornada_id'> & Partial<Omit<JornadaUsuaria, 'usuaria_id' | 'jornada_id'>>;

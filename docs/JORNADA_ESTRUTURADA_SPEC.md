@@ -12,7 +12,9 @@ Os 9 módulos formam **uma jornada de 9 dias** em `jornadas`/`jornada_atividades
 
 ## O que foi adicionado e por quê
 
-### 1. Conteúdo estruturado compatível (`supabase/migrations/0026_jornada_modulos_estruturados.sql`)
+### 1. Conteúdo estruturado compatível (`supabase/migrations/0029_jornada_modulos_estruturados.sql`)
+
+Renumerada de 0026 para 0029 durante a validação técnica: a branch `experiencia-completa` já havia ocupado 0026–0028 (recompensa "viagem surpresa", idempotência de push, progresso da biblioteca estática de jornadas) em produção antes desta migração ser escrita. Reconciliado via `supabase migration fetch` + comparação com o worktree dessa branch — ver relatório de validação técnica.
 
 - `jornada_atividades.conteudo_estruturado jsonb` + `schema_version smallint`, ambos nuláveis, com uma constraint garantindo que os dois andam juntos (`(nulo, nulo)` ou `(preenchido, preenchido)`).
 - `conteudo` (texto) **não foi alterado nem removido**. Jornadas antigas continuam com `conteudo_estruturado is null` e o app renderiza exatamente como antes (`AntesDepoisAtividade`).

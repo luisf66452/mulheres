@@ -1,3 +1,9 @@
+-- 0030_seed_jornada_estruturada.sql
+-- Aplica como migration (nao via supabase/config.toml, que este projeto nao
+-- usa) o conteudo gerado por scripts/gerarSeedJornadaEstruturada.ts a partir
+-- de src/lib/jornadas-modulos/conteudo/. Mantem a jornada como 'rascunho'
+-- (invisivel as usuarias reais) e idempotente via ON CONFLICT.
+
 -- supabase/seed_jornada_estruturada.sql
 -- GERADO por scripts/gerarSeedJornadaEstruturada.ts a partir do conteúdo em
 -- src/lib/jornadas-modulos/conteudo/ — não edite este arquivo à mão, edite o

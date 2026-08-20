@@ -32,8 +32,21 @@ Módulos com `avisoSeguranca` no conteúdo estruturado (texto completo em cada a
 
 - **Módulo 1** (emoções): nota breve pedindo atenção caso surjam pensamentos de se machucar, violência ou abuso ao descrever a situação.
 - **Módulo 4** (ansiedade): orientação de que ansiedade constante/incapacitante vale conversa com profissional; o módulo é apoio, não terapia.
-- **Módulo 7** (limites): aviso substancial e obrigatório — deixa explícito que abuso/coerção/controle NÃO é problema de comunicação e que as técnicas do módulo não devem ser usadas para negociar a própria segurança; nomeia CVV (188/cvv.org.br) e SAMU (192)/UPA/hospital.
-- **Módulo 9** (prevenção de recaídas): reforça os mesmos recursos reais do app (CVV, SAMU) e deixa claro que o plano é um recurso de autocuidado, não substitui avaliação profissional, e que o app não prevê crises com certeza.
+- **Módulo 7** (limites): aviso substancial e obrigatório — deixa explícito que abuso/coerção/controle NÃO é problema de comunicação e que as técnicas do módulo não devem ser usadas para negociar a própria segurança; aponta para os recursos de `/seguranca` (país-específicos, ver abaixo) em vez de citar números fixos dentro do conteúdo do módulo.
+- **Módulo 9** (prevenção de recaídas): reforça o mesmo acesso aos recursos reais do app e deixa claro que o plano é um recurso de autocuidado, não substitui avaliação profissional, e que o app não prevê crises com certeza.
+
+### Recursos por país (`recursos_seguranca`)
+
+Os módulos **não hardcodeiam** números de telefone — eles apontam para `/seguranca`, que resolve os recursos pelo `pais` do perfil da usuária (com fallback para `'PT'` e depois `'BR'` se o país do perfil não tiver recursos cadastrados). Isso evita misturar contatos de países diferentes numa mesma tela.
+
+- **Brasil (`pais = 'BR'`)**: CVV — 188 / cvv.org.br (apoio emocional, não é emergência); SAMU 192 / UPA / pronto-socorro para risco imediato. Já existia em `supabase/seed.sql` antes desta branch.
+- **Portugal (`pais = 'PT'`)**, adicionado em `supabase/seed_recursos_seguranca_pt.sql`, números conferidos em fontes oficiais antes de usar:
+  - Linha Nacional de Prevenção do Suicídio — **1411** (24h, SNS 24) — fonte: https://www.sns24.gov.pt/servico/linha-nacional-de-prevencao-do-suicidio/
+  - SNS 24 (aconselhamento de saúde/psicológico) — **808 24 24 24** — fonte: https://www.gov.pt/guias/contactos-de-emergencia-em-portugal
+  - Linha de Apoio à Criança — **116 111** — mesma fonte acima
+  - Emergência/risco imediato — **112** — mesma fonte acima
+
+**Pendência de produto (fora do escopo que posso decidir sozinho):** `perfis.pais` tem default `'BR'` no banco e não existe seletor de país no onboarding — nenhuma usuária real tem `pais = 'PT'` hoje, mesmo testando a partir de Portugal. Corrigi o bug de `/seguranca` estar hardcoded em `'BR'` (agora lê o perfil e cai para `'PT'`/`'BR'` como fallback), mas decidir se o padrão de novas contas muda para `'PT'` ou se é adicionado um seletor de país no onboarding é uma decisão de produto que fica pendente de confirmação.
 
 Todos os 9 módulos com campos de texto livre (todos exceto módulo 8, que não tem nenhum campo de texto livre sensível) mantêm o `CardAtencaoSeguranca` sempre visível durante o exercício, com link permanente para `/seguranca`, independentemente de a varredura por palavras-chave (`src/lib/jornadas-modulos/deteccaoAtencao.ts`) encontrar algo ou não — essa varredura é uma heurística complementar, não uma ferramenta clínica, e nunca bloqueia o módulo.
 

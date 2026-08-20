@@ -51,13 +51,21 @@ linhas.push(
   '-- Conteúdo psicoeducativo baseado em literatura científica revisada (ver',
   '-- docs/EVIDENCE.md), mas AGUARDANDO VALIDAÇÃO DA PSICÓLOGA responsável pelo',
   '-- Rose antes de ir para produção — por isso a jornada é inserida como',
-  "-- status = 'rascunho'. A UPDATE final que publica é só para uso em",
-  '-- desenvolvimento/E2E local, no mesmo padrão de supabase/seed_jornadas.sql.',
+  "-- status = 'rascunho' e PERMANECE assim: nada neste arquivo publica a",
+  '-- jornada. Publicar é uma ação separada e deliberada, só depois da revisão.',
+  '--',
+  '-- Idempotente: `on conflict do update`/`do nothing` fazem rodar de novo não',
+  '-- duplicar nem a jornada nem as atividades — sempre convergem para o mesmo',
+  '-- estado final a partir do conteúdo TypeScript atual.',
   '',
   `insert into public.jornadas (id, titulo, descricao, duracao_dias, status) values`,
   `  (${sqlString(JORNADA_ID)}, ${sqlString('Fundamentos emocionais: 9 dias de psicoeducação')}, ${sqlString(
     'Nove módulos práticos sobre emoções, pensamentos, autocompaixão, ansiedade, perfeccionismo, imagem corporal, limites, hábitos e prevenção de recaídas — com base em psicologia científica.'
-  )}, 9, 'rascunho');`,
+  )}, 9, 'rascunho')`,
+  'on conflict (id) do update set',
+  '  titulo = excluded.titulo,',
+  '  descricao = excluded.descricao,',
+  '  duracao_dias = excluded.duracao_dias;',
   ''
 );
 
@@ -69,13 +77,13 @@ const valoresAtividades = MODULOS.map((m, i) => {
     validado
   )}, ${SCHEMA_VERSION_MODULO_ATUAL})`;
 });
-linhas.push(valoresAtividades.join(',\n') + ';', '');
-
 linhas.push(
-  '-- Publica para uso em desenvolvimento/E2E local. EM PRODUÇÃO, não rode este',
-  '-- UPDATE até o conteúdo passar pela revisão da psicóloga (mesmo padrão do',
-  '-- restante do conteúdo do app — ver seed.sql e seed_jornadas.sql).',
-  `update public.jornadas set status = 'publicada' where id = ${sqlString(JORNADA_ID)};`,
+  valoresAtividades.join(',\n') + '',
+  'on conflict (jornada_id, numero_dia) do update set',
+  '  titulo = excluded.titulo,',
+  '  conteudo = excluded.conteudo,',
+  '  conteudo_estruturado = excluded.conteudo_estruturado,',
+  '  schema_version = excluded.schema_version;',
   ''
 );
 

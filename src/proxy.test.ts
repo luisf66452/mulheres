@@ -10,7 +10,7 @@ vi.mock('@supabase/ssr', () => ({
 
 function criarSupabaseFake(
   usuario: { id: string } | null,
-  perfil?: { consentimento_dados_sensiveis_em: string | null } | null
+  perfil?: { consentimento_dados_sensiveis_em: string | null; pais_confirmado_em?: string | null } | null
 ) {
   return {
     auth: { getUser: vi.fn(async () => ({ data: { user: usuario } })) },
@@ -60,7 +60,21 @@ describe('proxy (middleware)', () => {
 
   it('redireciona para /onboarding quando autenticada mas sem consentimento registrado', async () => {
     vi.mocked(createServerClient).mockReturnValue(
-      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: null }) as never
+      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: null, pais_confirmado_em: null }) as never
+    );
+    const request = new NextRequest('https://rose.exemplo.com/perfil');
+
+    const resposta = await proxy(request);
+
+    expect(resposta.headers.get('location')).toContain('/onboarding');
+  });
+
+  it('redireciona para /onboarding quando tem consentimento mas ainda não confirmou o país', async () => {
+    vi.mocked(createServerClient).mockReturnValue(
+      criarSupabaseFake(
+        { id: 'u1' },
+        { consentimento_dados_sensiveis_em: '2026-01-01T00:00:00Z', pais_confirmado_em: null }
+      ) as never
     );
     const request = new NextRequest('https://rose.exemplo.com/perfil');
 
@@ -71,7 +85,7 @@ describe('proxy (middleware)', () => {
 
   it('não redireciona para /onboarding quem já está indo para /onboarding', async () => {
     vi.mocked(createServerClient).mockReturnValue(
-      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: null }) as never
+      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: null, pais_confirmado_em: null }) as never
     );
     const request = new NextRequest('https://rose.exemplo.com/onboarding');
 
@@ -80,9 +94,12 @@ describe('proxy (middleware)', () => {
     expect(resposta.headers.get('location')).toBeNull();
   });
 
-  it('deixa passar quando autenticada e com consentimento já registrado', async () => {
+  it('deixa passar quando autenticada, com consentimento e país já confirmados', async () => {
     vi.mocked(createServerClient).mockReturnValue(
-      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: '2026-01-01T00:00:00Z' }) as never
+      criarSupabaseFake(
+        { id: 'u1' },
+        { consentimento_dados_sensiveis_em: '2026-01-01T00:00:00Z', pais_confirmado_em: '2026-01-01T00:00:00Z' }
+      ) as never
     );
     const request = new NextRequest('https://rose.exemplo.com/perfil');
 

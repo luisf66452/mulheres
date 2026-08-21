@@ -14,6 +14,9 @@ export type Perfil = {
   pais: string;
   horario_preferido_notificacao: string | null;
   consentimento_dados_sensiveis_em: string | null;
+  // Nulo até a usuária confirmar explicitamente o próprio país (ver
+  // onboarding e proxy.ts) — nunca inferido nem alterado silenciosamente.
+  pais_confirmado_em: string | null;
   criado_em: string;
   frase_pessoal: string | null;
   faixa_etaria: FaixaEtaria | null;

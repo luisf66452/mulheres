@@ -270,6 +270,15 @@ export type ConclusaoPraticaConteudo = {
   duracao_minutos: number;
 };
 
+export type SessaoJornadaConteudoProgresso = {
+  id: string;
+  usuaria_id: string;
+  jornada_slug: string;
+  sessao_id: string;
+  iniciada_em: string;
+  concluida_em: string | null;
+};
+
 export type RecompensaCatalogo = {
   chave: string;
   nome: string;
@@ -358,6 +367,13 @@ export interface Database {
         Row: PreferenciasNotificacao;
         Insert: Pick<PreferenciasNotificacao, 'usuaria_id'> & Partial<Omit<PreferenciasNotificacao, 'usuaria_id'>>;
         Update: Partial<PreferenciasNotificacao>;
+        Relationships: [];
+      };
+      sessoes_jornadas_conteudo_progresso: {
+        Row: SessaoJornadaConteudoProgresso;
+        Insert: Omit<SessaoJornadaConteudoProgresso, 'id' | 'iniciada_em' | 'concluida_em'> &
+          Partial<Pick<SessaoJornadaConteudoProgresso, 'id' | 'iniciada_em' | 'concluida_em'>>;
+        Update: Partial<SessaoJornadaConteudoProgresso>;
         Relationships: [];
       };
     };

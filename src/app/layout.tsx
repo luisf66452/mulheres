@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import AplicarPreferenciasDispositivo from "./components/AplicarPreferenciasDispositivo";
+import TikTokPixel from "./components/TikTokPixel";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-fundo font-sans text-texto pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <AplicarPreferenciasDispositivo />
+        <TikTokPixel />
         {children}
       </body>
     </html>

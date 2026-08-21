@@ -71,11 +71,15 @@ export async function POST(request: Request) {
 
     const siteUrl = await obterUrlBaseDoRequest();
 
+    // {CHECKOUT_SESSION_ID} é substituído pelo Stripe no redirect real — é o
+    // id que a página de sucesso usa para confirmar com o Stripe (fonte de
+    // verdade) que o pagamento foi mesmo efetivado, antes de reportar
+    // Purchase ao TikTok Pixel (ver /api/stripe/confirmar-pagamento).
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}/perfil/assinatura?checkout=sucesso`,
+      success_url: `${siteUrl}/perfil/assinatura?checkout=sucesso&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/perfil/assinatura?checkout=cancelado`,
       client_reference_id: user.id,
       subscription_data: { metadata: { usuaria_id: user.id } },
@@ -86,7 +90,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ erro: 'Não foi possível iniciar a assinatura agora.' }, { status: 500 });
     }
 
-    return NextResponse.json({ url: session.url });
+    // Valor/moeda reais do price do Stripe (não um valor fixo no app) — só
+    // para o front-end reportar o evento InitiateCheckout do TikTok Pixel
+    // com o valor correto da assinatura que está realmente sendo iniciada.
+    const price = await stripe.prices.retrieve(priceId);
+    const valor = typeof price.unit_amount === 'number' ? price.unit_amount / 100 : null;
+    const moeda = price.currency ? price.currency.toUpperCase() : null;
+
+    return NextResponse.json({ url: session.url, valor, moeda });
   } catch (erro) {
     console.error('[stripe/checkout] falha ao criar sessão de checkout', {
       message: erro instanceof Error ? erro.message : 'erro desconhecido',

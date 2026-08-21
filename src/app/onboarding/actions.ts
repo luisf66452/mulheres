@@ -93,5 +93,10 @@ export async function confirmarPais(paisEscolhido: string): Promise<{ erro?: str
     return { erro: 'Não foi possível confirmar o país agora. Tente novamente.' };
   }
 
-  redirect('/');
+  // País é sempre a última etapa do onboarding (proxy.ts só libera o app
+  // depois de pais_confirmado_em existir) — então este é o único ponto do
+  // fluxo em que "cadastro concluído" é verdade pela primeira vez. O
+  // parâmetro é só um sinal para a Home disparar o evento CompleteRegistration
+  // do TikTok Pixel uma única vez; ela mesma remove o parâmetro da URL depois.
+  redirect('/?cadastro=concluido');
 }

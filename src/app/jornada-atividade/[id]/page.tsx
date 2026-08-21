@@ -1,10 +1,13 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { estaEmPreviewVercel } from '@/lib/supabase/previewOnly';
 import { notFound } from 'next/navigation';
 import JornadaAtividadeClient from './JornadaAtividadeClient';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 import NotificacaoLimitePetalas from '@/app/components/clube-rose/NotificacaoLimitePetalas';
 import { validarModuloEstruturado } from '@/lib/jornadas-modulos/validarModulo';
 import type { ModuloEstruturadoV1, RespostaModuloV1 } from '@/lib/jornadas-modulos/tipos';
+import type { JornadaAtividade } from '@/lib/supabase/types';
 
 export default async function JornadaAtividadePage({
   params,
@@ -19,11 +22,40 @@ export default async function JornadaAtividadePage({
   const mostrarLimiteAtingido = limitePetalas === '1';
   const supabase = await createSupabaseServerClient();
 
-  const { data: atividade } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    notFound();
+  }
+
+  let atividade: JornadaAtividade | null = null;
+  const { data: atividadePublicada } = await supabase
     .from('jornada_atividades')
     .select('*')
     .eq('id', id)
     .single();
+  atividade = atividadePublicada;
+
+  // Só em deployments de Preview da Vercel (VERCEL_ENV, nunca controlável por
+  // uma requisição), se a atividade não apareceu pela leitura normal (RLS só
+  // libera jornadas com status='publicada'), tenta de novo com a service
+  // role — permite testar conteúdo em rascunho antes da validação da
+  // psicóloga, sem nunca abrir esse caminho em Production. A usuária
+  // continua precisando de sessão válida (checado acima); isto só amplia
+  // QUAIS LINHAS são lidas, nunca quem pode ler.
+  if (!atividade && estaEmPreviewVercel()) {
+    const admin = createSupabaseAdminClient();
+    if (admin) {
+      const { data: atividadeRascunho } = await admin
+        .from('jornada_atividades')
+        .select('*')
+        .eq('id', id)
+        .single();
+      atividade = atividadeRascunho;
+    }
+  }
 
   if (!atividade || !checkin) {
     notFound();

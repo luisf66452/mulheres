@@ -22,14 +22,27 @@ export default async function JornadasPage() {
 
   const jornadas = listarJornadas();
 
-  const jornadasComPercentual = await Promise.all(
-    jornadas.map(async (jornada) => {
-      const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
-      const estados = calcularEstadosSessoes(jornada, progresso);
-      const percentualConcluido = calcularPercentualConcluido(jornada, estados);
-      return { jornada, percentualConcluido };
-    })
-  );
+  let jornadasComPercentual: { jornada: (typeof jornadas)[number]; percentualConcluido: number }[];
+  try {
+    jornadasComPercentual = await Promise.all(
+      jornadas.map(async (jornada) => {
+        const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
+        const estados = calcularEstadosSessoes(jornada, progresso);
+        const percentualConcluido = calcularPercentualConcluido(jornada, estados);
+        return { jornada, percentualConcluido };
+      })
+    );
+  } catch {
+    return (
+      <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
+        <CabecalhoJornadas />
+        <p className="text-sm text-alerta">
+          Não foi possível carregar seu progresso agora. Tente novamente em instantes.
+        </p>
+        <NavegacaoInferior />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">

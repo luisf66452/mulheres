@@ -9,6 +9,7 @@ declare global {
   interface Window {
     ttq?: {
       track: (evento: string, params?: Record<string, unknown>) => void;
+      page: () => void;
     };
   }
 }
@@ -16,6 +17,15 @@ declare global {
 export function rastrearEvento(evento: string, params?: Record<string, unknown>): void {
   if (typeof window === 'undefined' || !window.ttq) return;
   window.ttq.track(evento, params);
+}
+
+// PageView em navegação client-side (App Router não recarrega a página, então
+// o ttq.page() do script base — que só roda no carregamento inicial — nunca
+// dispara de novo sozinho nas trocas de rota seguintes). Ver
+// TikTokPageView.tsx, que chama isso a cada mudança de pathname.
+export function rastrearPageView(): void {
+  if (typeof window === 'undefined' || !window.ttq) return;
+  window.ttq.page();
 }
 
 const PREFIXO_CHAVE_DEDUP = 'rose_ttq_evento:';

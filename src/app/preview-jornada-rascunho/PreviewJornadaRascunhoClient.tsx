@@ -23,15 +23,20 @@ export default function PreviewJornadaRascunhoClient({
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [processando, startTransition] = useTransition();
 
-  function rodar(acao: () => Promise<{ erro?: string }>) {
+  function rodar(acao: () => Promise<{ erro?: string; pausouOutraJornada?: boolean }>) {
     setErro(null);
+    setAviso(null);
     startTransition(async () => {
       const resultado = await acao();
       if (resultado?.erro) {
         setErro(resultado.erro);
         return;
+      }
+      if (resultado?.pausouOutraJornada) {
+        setAviso('Outra jornada que estava ativa na sua conta foi pausada (não apagada) para liberar a de teste.');
       }
       router.refresh();
     });
@@ -104,7 +109,8 @@ export default function PreviewJornadaRascunhoClient({
         </div>
       )}
 
-      {erro && <p className="text-alerta">{erro}</p>}
+      {aviso && <p className="text-texto-suave">{aviso}</p>}
+      {erro && <p role="alert" className="text-alerta">{erro}</p>}
     </main>
   );
 }

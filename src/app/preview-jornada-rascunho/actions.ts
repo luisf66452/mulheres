@@ -46,8 +46,66 @@ async function buscarInscricaoPropria(
   return data;
 }
 
-export async function ativarJornadaRascunhoPreview(): Promise<ResultadoQA> {
+// BUG real encontrado em Preview e corrigido aqui: `jornadas_usuarias` tem um
+// índice único garantindo só uma jornada 'em_andamento' por usuária (ver
+// jornadas_usuarias_uma_ativa_por_usuaria em 0003_jornadas.sql) — produto
+// real, não algo desta branch. Uma conta de teste que já tinha uma jornada
+// diferente ativa (ex.: a jornada seed "Reconstruindo minha autoestima")
+// fazia este INSERT falhar com 23505, e o código antigo tratava QUALQUER
+// 23505 como "já ativada, sucesso" sem checar se o conflito era realmente
+// com a jornada de QA — nenhuma linha era criada, nenhum erro aparecia, e a
+// tela ficava exatamente igual depois do refresh. Corrigido verificando a
+// causa real do conflito e, se for outra jornada, pausando-a (nunca
+// apagando) antes de ativar a de teste.
+export async function ativarJornadaRascunhoPreview(): Promise<ResultadoQA & { pausouOutraJornada?: boolean }> {
   const { supabase, userId } = await contextoQA();
+
+  const jaInscrita = await buscarInscricaoPropria(supabase, userId);
+  if (jaInscrita) {
+    if (jaInscrita.status === 'em_andamento') {
+      return {};
+    }
+    // Existia mas estava pausada/concluída (ex.: depois de reiniciar o QA
+    // ou de uma ativação anterior) — reativa em vez de tentar inserir de
+    // novo (o que geraria outro 23505).
+    const { error: erroReativar } = await supabase
+      .from('jornadas_usuarias')
+      .update({ status: 'em_andamento' })
+      .eq('id', jaInscrita.id)
+      .eq('usuaria_id', userId);
+    if (erroReativar) {
+      console.error('[ativarJornadaRascunhoPreview] erro ao reativar:', { userId, code: erroReativar.code });
+      return { erro: 'Não foi possível ativar a jornada de teste agora. Tente novamente.' };
+    }
+    return {};
+  }
+
+  // Só uma jornada 'em_andamento' por vez é uma regra real do produto — para
+  // conseguir testar a jornada de rascunho sem apagar o progresso de outra
+  // jornada da mesma conta, pausamos a outra (status='pausada', nunca
+  // excluída) antes de ativar a de teste. Filtrado por usuaria_id = auth.uid()
+  // (RLS + filtro explícito), nunca toca jornada de outra pessoa.
+  const { data: outraAtiva } = await supabase
+    .from('jornadas_usuarias')
+    .select('id')
+    .eq('usuaria_id', userId)
+    .eq('status', 'em_andamento')
+    .neq('jornada_id', JORNADA_RASCUNHO_ID)
+    .maybeSingle();
+
+  let pausouOutraJornada = false;
+  if (outraAtiva) {
+    const { error: erroPausa } = await supabase
+      .from('jornadas_usuarias')
+      .update({ status: 'pausada' })
+      .eq('id', outraAtiva.id)
+      .eq('usuaria_id', userId);
+    if (erroPausa) {
+      console.error('[ativarJornadaRascunhoPreview] erro ao pausar outra jornada:', { userId, code: erroPausa.code });
+      return { erro: 'Não foi possível ativar a jornada de teste agora (havia outra jornada ativa). Tente novamente.' };
+    }
+    pausouOutraJornada = true;
+  }
 
   // INSERT em jornadas_usuarias não é bloqueado por RLS com base no status
   // da jornada (só por posse: usuaria_id = auth.uid()) — a usuária real,
@@ -59,9 +117,13 @@ export async function ativarJornadaRascunhoPreview(): Promise<ResultadoQA> {
 
   if (error) {
     if (error.code === '23505') {
-      // Já existe uma inscrição (unique de jornadas_usuarias) — segue em
-      // frente em vez de travar; pode já ter sido ativada antes.
-      return {};
+      // Corrida concorrente (ex.: duplo clique) — outra requisição já criou
+      // a linha da jornada de QA nesse meio-tempo. Confirma antes de tratar
+      // como sucesso, em vez de assumir.
+      const existente = await buscarInscricaoPropria(supabase, userId);
+      if (existente) {
+        return { pausouOutraJornada };
+      }
     }
     console.error('[ativarJornadaRascunhoPreview] erro ao inscrever:', {
       userId,
@@ -71,7 +133,7 @@ export async function ativarJornadaRascunhoPreview(): Promise<ResultadoQA> {
     return { erro: 'Não foi possível ativar a jornada de teste agora. Tente novamente.' };
   }
 
-  return {};
+  return { pausouOutraJornada };
 }
 
 // Liberar o próximo dia e voltar a um dia anterior são a mesma operação com

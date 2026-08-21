@@ -52,11 +52,15 @@ export async function proxy(request: NextRequest) {
   if (user && !isRotaPublica && !request.nextUrl.pathname.startsWith('/onboarding')) {
     const { data: perfil } = await supabase
       .from('perfis')
-      .select('consentimento_dados_sensiveis_em')
+      .select('consentimento_dados_sensiveis_em, pais_confirmado_em')
       .eq('id', user.id)
       .single();
 
-    if (!perfil?.consentimento_dados_sensiveis_em) {
+    // Mesmo gate para as duas condições: sem consentimento OU sem país
+    // confirmado, a usuária vai para /onboarding — que decide sozinho qual
+    // etapa mostrar. Isso cobre tanto contas novas quanto contas que já
+    // completaram o onboarding antes de pais_confirmado_em existir.
+    if (!perfil?.consentimento_dados_sensiveis_em || !perfil?.pais_confirmado_em) {
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }
   }

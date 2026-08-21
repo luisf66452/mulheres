@@ -4,25 +4,25 @@
 // sequencial (dia a dia) usado pelo widget "Continue sua jornada" da tela
 // de início e pelo fluxo de check-in — os dois modelos não se sobrepõem.
 
-export type TipoConteudoSessao = 'video' | 'audio' | 'texto' | 'exercicio' | 'reflexao';
+import { IdReferenciaCientifica } from './referencias';
 
-export interface ConteudoSessao {
-  tipo: TipoConteudoSessao;
-  url: string | null;
-  textoMarkdown: string | null;
-}
+export type TipoConteudoSessao = 'reflexao' | 'escrita' | 'exercicio' | 'plano';
 
 export interface Sessao {
   id: string;
   titulo: string;
-  descricao: string;
-  duracaoMinutos: number | null;
-  miniaturaUrl: string | null;
-  conteudo: ConteudoSessao | null;
-  concluida: boolean;
-  bloqueada: boolean;
-  progresso: number;
-  ultimaAtividadeEm: string | null;
+  descricaoCurta: string;
+  duracaoMinutos: number; // 5-8
+  tipo: TipoConteudoSessao;
+  entendaEm1Minuto: string;
+  praticaGuiada: string[]; // 3-5 steps
+  reflexao?: string;
+  leveComVoce: string;
+  fontesCientificas: IdReferenciaCientifica[]; // length >= 1
+  avisoSeguranca?: string;
+  revisaoStatus: 'pendente' | 'revisado';
+  revisadoPor?: string;
+  revisadoEm?: string;
 }
 
 export interface Modulo {
@@ -39,7 +39,8 @@ export interface Jornada {
   titulo: string;
   descricaoCurta: string;
   corCartao: JornadaCorCartao;
-  progressoPercentual: number;
-  temasFuturos: string[];
   modulos: Modulo[];
+  // progressoPercentual removed — always computed per-user, never stored here
 }
+
+export type EstadoSessao = 'disponivel' | 'em_andamento' | 'concluida' | 'bloqueada';

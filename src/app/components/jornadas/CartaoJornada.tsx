@@ -11,20 +11,21 @@ const FUNDOS: Record<JornadaCorCartao, string> = {
   salvia: 'bg-salvia-suave',
 };
 
-export default function CartaoJornada({ jornada }: { jornada: Jornada }) {
+export default function CartaoJornada({
+  jornada,
+  percentualConcluido,
+}: {
+  jornada: Jornada;
+  percentualConcluido: number;
+}) {
   const Ilustracao = MAPA_ILUSTRACOES_POR_SLUG[jornada.slug];
   const modulos = contarModulos(jornada);
   const sessoes = contarSessoes(jornada);
-  // Progresso por usuária ainda não está persistido/lido nesta área do app
-  // (ver nota em src/lib/jornadas-conteudo/dados.ts: o conteúdo estático
-  // nunca guarda progresso) — até essa integração existir, 0% é o valor
-  // correto, não um placeholder inventado.
-  const progressoPercentual = 0;
 
   return (
     <Link
       href={`/jornadas/${jornada.slug}`}
-      aria-label={`${jornada.titulo}, ${modulos} módulos, ${sessoes} sessões, ${progressoPercentual}% concluído`}
+      aria-label={`${jornada.titulo}, ${modulos} módulos, ${sessoes} sessões, ${percentualConcluido}% concluído`}
       className={`relative block min-h-[180px] overflow-hidden rounded-3xl border border-borda/60 ${FUNDOS[jornada.corCartao]} p-5 shadow-[0_2px_8px_rgba(74,63,53,0.08)] transition-transform duration-200 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60 focus-visible:ring-offset-2 focus-visible:ring-offset-fundo`}
     >
       <div className="relative z-10 flex h-full flex-col justify-between gap-6 pr-[38%]">
@@ -35,9 +36,9 @@ export default function CartaoJornada({ jornada }: { jornada: Jornada }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <BarraProgressoPercentual percentual={progressoPercentual} className="flex-1" />
+          <BarraProgressoPercentual percentual={percentualConcluido} className="flex-1" />
           <span className="text-xs font-medium text-texto" aria-hidden="true">
-            {progressoPercentual}%
+            {percentualConcluido}%
           </span>
         </div>
       </div>

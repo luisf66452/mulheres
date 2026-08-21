@@ -30,13 +30,25 @@ export default async function SessaoJornadaPage({
 
   const { sessao, modulo } = resultado;
 
-  const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
-  const estados = calcularEstadosSessoes(jornada, progresso);
+  let estados: ReturnType<typeof calcularEstadosSessoes>;
+  try {
+    const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
+    estados = calcularEstadosSessoes(jornada, progresso);
+  } catch {
+    // Sem progresso confiável não dá para saber se esta sessão está
+    // liberada — falha fechada e manda para a página da jornada em vez de
+    // arriscar mostrar uma sessão que deveria estar bloqueada.
+    redirect(`/jornadas/${jornada.slug}`);
+  }
 
   // Uma sessão bloqueada não pode ser aberta diretamente por URL, mesmo que
   // a usuária tente pular etapas — a mesma regra de "só a próxima sessão
-  // disponível" vale independentemente de como se chega até aqui.
-  if (estados[sessaoId] === 'bloqueada') {
+  // disponível" vale independentemente de como se chega até aqui. Falha
+  // fechada: um estado ausente/inesperado é tratado como bloqueado, não
+  // como liberado (mesma postura de `jornadas/[slug]/page.tsx`, que usa
+  // `estados[sessao.id] ?? 'bloqueada'`).
+  const estadoSessaoAtual = estados[sessaoId] ?? 'bloqueada';
+  if (estadoSessaoAtual === 'bloqueada') {
     redirect(`/jornadas/${jornada.slug}`);
   }
 

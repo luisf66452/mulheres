@@ -430,7 +430,7 @@ const IC_M6 = modulo('imagem-corporal-m6', 'Influência das redes sociais', [
     duracaoMinutos: 5,
     tipo: 'plano',
     entendaEm1Minuto:
-      'Curar o próprio feed — silenciar, deixar de seguir, adicionar contas diferentes — é uma escolha legítima de autocuidado, e não uma fuga. Há evidência inicial de que conteúdo que trata corpos de forma neutra ou acolhedora está associado a menos afeto negativo do que conteúdo que estigmatiza peso. Você não deve explicação a ninguém por essas escolhas.',
+      'Cuidar do próprio feed — silenciar, deixar de seguir, adicionar contas diferentes — é uma escolha legítima de autocuidado, e não uma fuga. Há evidência inicial de que conteúdo que trata corpos de forma neutra ou acolhedora está associado a menos afeto negativo do que conteúdo que estigmatiza peso. Você não deve explicação a ninguém por essas escolhas.',
     praticaGuiada: [
       'Com base na auditoria da sessão anterior, escolha ao menos uma conta ou tipo de conteúdo que gera comparação para silenciar ou deixar de seguir.',
       'Pense num tipo de conteúdo diferente para acrescentar — algo ligado a um interesse seu que não tenha relação com aparência.',
@@ -626,6 +626,8 @@ const AC_M3 = modulo('autocompaixao-m3', 'Vergonha', [
     reflexao: 'O que ficou diferente ao escrever para si mesma nesse tom?',
     leveComVoce: 'Você pode ser a primeira pessoa a falar com gentileza sobre aquilo que te envergonha.',
     fontesCientificas: ['AC7', 'AC1'],
+    avisoSeguranca:
+      'O Rose é conteúdo educativo e não substitui tratamento. Se a vergonha vier acompanhada de autopunição, isolamento prolongado ou pensamentos de que você não merece coisas boas, vale conversar com um profissional de saúde mental.',
   }),
 ]);
 
@@ -976,6 +978,8 @@ const CP_M3 = modulo('comparacao-m3', 'Sensação de não ser suficiente', [
     ],
     leveComVoce: 'Uma frase específica é examinável. Uma sentença vaga só pesa.',
     fontesCientificas: ['CO2'],
+    avisoSeguranca:
+      'O Rose é conteúdo educativo e não substitui tratamento. Se a sensação de não ser suficiente vier acompanhada de tristeza persistente, perda de interesse nas coisas ou desesperança, vale conversar com um profissional de saúde mental.',
   }),
   sessao({
     id: 'comparacao-m3-s2',

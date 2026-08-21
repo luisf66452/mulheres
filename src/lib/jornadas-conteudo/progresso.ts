@@ -17,17 +17,31 @@ export interface ProgressoSessao {
  * Carrega, de uma vez, o progresso de todas as sessões de uma jornada que a
  * usuária já tocou (iniciou e/ou concluiu). Sessões sem linha na tabela
  * simplesmente não aparecem no resultado.
+ *
+ * Lança em caso de falha de leitura (token expirado, instabilidade de rede,
+ * mudança de RLS) em vez de devolver silenciosamente `{}` — um `{}` seria
+ * indistinguível de "zero progresso de verdade" para quem chama, fazendo uma
+ * usuária com sessões concluídas parecer resetada. As páginas que chamam
+ * esta função devem capturar o erro e mostrar um estado de erro real.
  */
 export async function carregarProgressoJornada(
   supabase: SupabaseClient<Database>,
   usuariaId: string,
   jornadaSlug: string
 ): Promise<Record<string, ProgressoSessao>> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('sessoes_jornadas_conteudo_progresso')
     .select('sessao_id, iniciada_em, concluida_em')
     .eq('usuaria_id', usuariaId)
     .eq('jornada_slug', jornadaSlug);
+
+  if (error) {
+    // Nunca logar conteúdo psicoeducativo/reflexão nem dados que
+    // identifiquem a usuária — só o fato de que a leitura falhou e o código
+    // do erro do Postgres.
+    console.error('Falha ao carregar progresso de jornada:', error.code, error.message);
+    throw new Error('Não foi possível carregar o progresso da jornada.');
+  }
 
   const progresso: Record<string, ProgressoSessao> = {};
   for (const linha of data ?? []) {

@@ -1,9 +1,75 @@
 import { describe, expect, it } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase/types';
 import {
   calcularEstadosSessoes,
   calcularPercentualConcluido,
+  carregarProgressoJornada,
+  registrarConclusaoSessao,
 } from './progresso';
 import type { Jornada, Sessao } from './tipos';
+
+type LinhaProgresso = Database['public']['Tables']['sessoes_jornadas_conteudo_progresso']['Row'];
+
+// Fake mínimo do client Supabase, cobrindo só a cadeia de chamadas que
+// progresso.ts realmente usa: select/eq (leitura), upsert (início) e
+// update/eq/is/select (conclusão). Segue o mesmo estilo de fake usado em
+// src/lib/praticas-progresso/armazenamento.test.ts.
+function criarSupabaseFake(opcoes: {
+  selectResult?: { data: Pick<LinhaProgresso, 'sessao_id' | 'iniciada_em' | 'concluida_em'>[] | null; error: { code: string; message: string } | null };
+  updateResult?: { data: { id: string }[] | null; error: { code: string; message: string } | null };
+} = {}) {
+  const chamadasIs: [string, unknown][] = [];
+  const chamadasEq: [string, unknown][] = [];
+
+  const client = {
+    from() {
+      let atualizando = false;
+
+      const builder: {
+        select: (colunas?: string) => typeof builder;
+        eq: (coluna: string, valor: unknown) => typeof builder;
+        is: (coluna: string, valor: unknown) => typeof builder;
+        upsert: (valores: unknown, opts?: unknown) => Promise<{ data: null; error: null }>;
+        update: (valores: unknown) => typeof builder;
+        then: (resolve: (v: unknown) => void) => void;
+      } = {
+        select() {
+          return builder;
+        },
+        eq(coluna, valor) {
+          chamadasEq.push([coluna, valor]);
+          return builder;
+        },
+        is(coluna, valor) {
+          chamadasIs.push([coluna, valor]);
+          return builder;
+        },
+        upsert() {
+          return Promise.resolve({ data: null, error: null });
+        },
+        update() {
+          atualizando = true;
+          return builder;
+        },
+        then(resolve) {
+          if (atualizando) {
+            resolve(opcoes.updateResult ?? { data: [{ id: '1' }], error: null });
+          } else {
+            resolve(opcoes.selectResult ?? { data: [], error: null });
+          }
+        },
+      };
+      return builder;
+    },
+  };
+
+  return {
+    client: client as unknown as SupabaseClient<Database>,
+    chamadasIs,
+    chamadasEq,
+  };
+}
 
 function criarSessao(id: string): Sessao {
   return {
@@ -13,10 +79,10 @@ function criarSessao(id: string): Sessao {
     duracaoMinutos: 5,
     tipo: 'reflexao',
     entendaEm1Minuto: 'texto',
-    praticaGuiada: ['passo 1'],
+    praticaGuiada: ['passo 1', 'passo 2', 'passo 3'],
     leveComVoce: 'texto',
     fontesCientificas: ['IC1'],
-    revisaoStatus: 'revisado',
+    revisaoStatus: 'pendente',
   };
 }
 
@@ -125,5 +191,71 @@ describe('calcularPercentualConcluido', () => {
     );
     const estados = calcularEstadosSessoes(JORNADA_FIXTURE, progresso);
     expect(calcularPercentualConcluido(JORNADA_FIXTURE, estados)).toBe(100);
+  });
+});
+
+describe('registrarConclusaoSessao', () => {
+  it('usa um UPDATE condicional a `concluida_em is null` — o mecanismo real que impede conceder Pétalas duas vezes', async () => {
+    const { client, chamadasIs } = criarSupabaseFake({
+      updateResult: { data: [{ id: '1' }], error: null },
+    });
+
+    await registrarConclusaoSessao(client, 'u1', 'jornada-teste', 'm1-s1');
+
+    expect(chamadasIs).toContainEqual(['concluida_em', null]);
+  });
+
+  it('retorna concluidaAgora: false quando o UPDATE não afeta nenhuma linha (sessão já concluída antes, ex.: segunda chamada concorrente)', async () => {
+    const { client } = criarSupabaseFake({
+      updateResult: { data: [], error: null },
+    });
+
+    const resultado = await registrarConclusaoSessao(client, 'u1', 'jornada-teste', 'm1-s1');
+
+    expect(resultado).toEqual({ concluidaAgora: false });
+  });
+
+  it('retorna concluidaAgora: true quando o UPDATE afeta exatamente uma linha (primeira conclusão)', async () => {
+    const { client } = criarSupabaseFake({
+      updateResult: { data: [{ id: '1' }], error: null },
+    });
+
+    const resultado = await registrarConclusaoSessao(client, 'u1', 'jornada-teste', 'm1-s1');
+
+    expect(resultado).toEqual({ concluidaAgora: true });
+  });
+
+  it('lança quando o UPDATE de conclusão falha', async () => {
+    const { client } = criarSupabaseFake({
+      updateResult: { data: null, error: { code: '500', message: 'erro simulado' } },
+    });
+
+    await expect(registrarConclusaoSessao(client, 'u1', 'jornada-teste', 'm1-s1')).rejects.toThrow();
+  });
+});
+
+describe('carregarProgressoJornada', () => {
+  it('retorna o progresso indexado por sessao_id quando a leitura tem sucesso', async () => {
+    const { client } = criarSupabaseFake({
+      selectResult: {
+        data: [{ sessao_id: 'm1-s1', iniciada_em: '2026-08-20T00:00:00.000Z', concluida_em: null }],
+        error: null,
+      },
+    });
+
+    const progresso = await carregarProgressoJornada(client, 'u1', 'jornada-teste');
+
+    expect(progresso['m1-s1']).toEqual({
+      iniciadaEm: '2026-08-20T00:00:00.000Z',
+      concluidaEm: null,
+    });
+  });
+
+  it('lança em vez de devolver {} silenciosamente quando a leitura falha (evita mostrar zero progresso falso)', async () => {
+    const { client } = criarSupabaseFake({
+      selectResult: { data: null, error: { code: '500', message: 'erro simulado' } },
+    });
+
+    await expect(carregarProgressoJornada(client, 'u1', 'jornada-teste')).rejects.toThrow();
   });
 });

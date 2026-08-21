@@ -13,8 +13,14 @@ import SequenciaDias from '@/app/components/inicio/SequenciaDias';
 import MensagemAcolhedora from '@/app/components/inicio/MensagemAcolhedora';
 import JornadaEmAndamento, { type JornadaEmAndamentoInfo } from '@/app/components/inicio/JornadaEmAndamento';
 import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
+import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRegistration';
 
-export default async function InicioPage() {
+export default async function InicioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cadastro?: string }>;
+}) {
+  const { cadastro } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -65,6 +71,7 @@ export default async function InicioPage() {
 
   return (
     <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
+      {cadastro === 'concluido' && <TikTokCompleteRegistration />}
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

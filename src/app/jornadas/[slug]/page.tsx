@@ -2,24 +2,23 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import BarraProgressoPercentual from '@/app/components/jornadas/BarraProgressoPercentual';
-import EstadoSessaoIcone from '@/app/components/jornadas/EstadoSessaoIcone';
+import EstadoSessaoIcone, { type EstadoSessao } from '@/app/components/jornadas/EstadoSessaoIcone';
 import {
   buscarJornadaPorSlug,
   contarModulos,
   contarSessoes,
   listarJornadas,
 } from '@/lib/jornadas-conteudo/dados';
-import type { Sessao } from '@/lib/jornadas-conteudo/tipos';
 
 export function generateStaticParams() {
   return listarJornadas().map((jornada) => ({ slug: jornada.slug }));
 }
 
-function estadoDaSessao(sessao: Sessao) {
-  if (sessao.concluida) return 'concluida' as const;
-  if (sessao.bloqueada) return 'bloqueada' as const;
-  return 'disponivel' as const;
-}
+// Progresso por usuária ainda não está persistido/lido nesta área do app
+// (ver nota em src/lib/jornadas-conteudo/dados.ts) — até essa integração
+// existir, toda sessão é 'disponivel', que é o estado correto hoje, não um
+// placeholder inventado.
+const ESTADO_SESSAO_ATUAL: EstadoSessao = 'disponivel';
 
 export default async function JornadaDetalhePage({
   params,
@@ -48,8 +47,8 @@ export default async function JornadaDetalhePage({
           {contarModulos(jornada)} módulos • {contarSessoes(jornada)} sessões
         </p>
         <div className="flex items-center gap-2">
-          <BarraProgressoPercentual percentual={jornada.progressoPercentual} className="flex-1" />
-          <span className="text-xs font-medium text-texto">{jornada.progressoPercentual}%</span>
+          <BarraProgressoPercentual percentual={0} className="flex-1" />
+          <span className="text-xs font-medium text-texto">0%</span>
         </div>
       </div>
 
@@ -61,7 +60,7 @@ export default async function JornadaDetalhePage({
             </h2>
             <ul className="space-y-2">
               {modulo.sessoes.map((sessao) => {
-                const estado = estadoDaSessao(sessao);
+                const estado = ESTADO_SESSAO_ATUAL;
                 return (
                   <li key={sessao.id}>
                     <div
@@ -71,7 +70,7 @@ export default async function JornadaDetalhePage({
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-texto">{sessao.titulo}</p>
-                        <p className="truncate text-xs text-texto-suave">{sessao.descricao}</p>
+                        <p className="truncate text-xs text-texto-suave">{sessao.descricaoCurta}</p>
                       </div>
                       <span
                         className="shrink-0"

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
 import { stripeConfigurado } from '@/lib/stripe/planos';
+import TikTokPurchase from '@/app/components/tiktok/TikTokPurchase';
 import BotaoAssinar from './BotaoAssinar';
 import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
 
@@ -26,9 +27,9 @@ const ROTULOS_STATUS: Record<string, string> = {
 export default async function AssinaturaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{ checkout?: string; session_id?: string }>;
 }) {
-  const { checkout } = await searchParams;
+  const { checkout, session_id: sessionId } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -62,6 +63,8 @@ export default async function AssinaturaPage({
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
       <CabecalhoSubpagina titulo="Minha assinatura" subtitulo="O estado real do seu plano" />
+
+      {checkout === 'sucesso' && sessionId && <TikTokPurchase sessionId={sessionId} />}
 
       {checkout === 'sucesso' && (
         <div className="rounded-2xl border border-acao/40 bg-lilas-claro p-4 text-sm text-texto">

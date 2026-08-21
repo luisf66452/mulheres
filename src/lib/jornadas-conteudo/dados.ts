@@ -272,14 +272,15 @@ const IC_M4 = modulo('imagem-corporal-m4', 'Autocrítica e aceitação corporal'
     duracaoMinutos: 5,
     tipo: 'exercicio',
     entendaEm1Minuto:
-      'Quando um pensamento crítico chega no formato "eu sou assim", ele é sentido como um fato definitivo sobre quem você é. Reformulá-lo como algo que está passando pela mente cria distância: o pensamento continua ali, mas deixa de ter a última palavra. Isso não faz o pensamento sumir, e não deveria mesmo.',
+      'Quando um pensamento crítico chega no formato "eu sou assim", ele é sentido como um fato definitivo sobre quem você é. Reformulá-lo como algo que está passando pela mente cria distância: o pensamento continua ali, mas deixa de ter a última palavra. Essa é a lógica de abordagens baseadas em aceitação e valores, que em uma meta-análise de dezenas de ensaios tiveram resultados melhores que lista de espera e comparáveis aos da terapia cognitivo-comportamental. A ideia não é fazer o pensamento sumir — é conseguir seguir com o seu dia mesmo com ele por perto.',
     praticaGuiada: [
       'Pegue a frase de autocrítica que você identificou na sessão anterior, ou outra que apareça agora.',
       'Reescreva começando com "Estou percebendo o pensamento de que...".',
       'Leia as duas versões, em voz alta ou mentalmente, e note se muda alguma coisa na sensação — mesmo que mude pouco.',
+      'Escolha uma coisa que você ia fazer de qualquer jeito e faça, com o pensamento ainda presente.',
     ],
     leveComVoce: 'Um pensamento pode atravessar a sua mente sem ser a última palavra sobre você.',
-    fontesCientificas: ['IC7'],
+    fontesCientificas: ['CO7'],
   }),
   sessao({
     id: 'imagem-corporal-m4-s3',
@@ -1249,10 +1250,11 @@ const AE_M2 = modulo('alimentacao-emocional-m2', 'Emoções relacionadas à alim
     praticaGuiada: [
       'Lembre de uma vez em que você comeu por causa de uma emoção, e não por fome do corpo.',
       'Reconheça sem julgamento: "isso é uma experiência humana comum".',
-      'Se isso acontece com frequência e traz sofrimento, anote como algo a observar com mais cuidado ao longo da jornada.',
+      'Se isso acontece com frequência e traz sofrimento, anote isso e trate como um sinal de procurar um profissional de saúde — não como algo a resolver sozinha ao longo da jornada.',
     ],
     leveComVoce: 'Comer por emoção às vezes acontece — isso não diz nada sobre quem você é.',
     fontesCientificas: ['AL4'],
+    avisoSeguranca: AVISO_ALIMENTACAO,
   }),
   sessao({
     id: 'alimentacao-emocional-m2-s2',
@@ -1375,6 +1377,7 @@ const AE_M4 = modulo('alimentacao-emocional-m4', 'Restrições alimentares', [
     ],
     leveComVoce: 'Uma regra que você nem sabia que seguia já perde força ao ser nomeada.',
     fontesCientificas: ['AL1', 'AL2'],
+    avisoSeguranca: AVISO_ALIMENTACAO,
   }),
   sessao({
     id: 'alimentacao-emocional-m4-s3',

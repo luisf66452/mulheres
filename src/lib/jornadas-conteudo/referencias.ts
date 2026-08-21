@@ -137,6 +137,7 @@ export const REFERENCIAS: Record<IdReferenciaCientifica, ReferenciaCientifica> =
       'base para explicar o que é alfabetização/leitura crítica de mídia e por que ela pode ajudar a lidar com imagens idealizadas',
     limitacoes:
       'Heterogeneidade importante entre os estudos incluídos (populações, programas e formas de medir os resultados diferentes); efeito médio, não garantido para cada pessoa ou programa individualmente.',
+    // Classificada como meta-análise (não apenas revisão sistemática) porque a publicação calcula um efeito agregado entre os 17 estudos incluídos.
     tipoEstudo: 'meta-análise',
   },
   IC6: {
@@ -208,7 +209,7 @@ export const REFERENCIAS: Record<IdReferenciaCientifica, ReferenciaCientifica> =
     sustenta:
       'definição central de autocompaixão em três elementos (gentileza, humanidade compartilhada, atenção plena) usada como base conceitual da jornada',
     limitacoes:
-      'É uma revisão narrativa de um campo amplo, não um estudo controlado isolado; sintetiza pesquisas com metodologias e populações variadas, sem quantificar um efeito único.',
+      'Revisão ampla do campo, publicada em periódico de revisões convidadas (Annual Review of Psychology), que sintetiza estudos de metodologias e populações variadas (validação de escala, estudos correlacionais, ensaios de intervenção) sem apresentar um efeito agregado único, diferente do que faz uma meta-análise.',
     tipoEstudo: 'revisão sistemática',
   },
   AC2: {
@@ -223,6 +224,7 @@ export const REFERENCIAS: Record<IdReferenciaCientifica, ReferenciaCientifica> =
       'base para a afirmação de que práticas de autocompaixão estão associadas, em conjunto de estudos, a redução da autocrítica — não a eliminação dela',
     limitacoes:
       'Qualidade metodológica dos estudos incluídos foi, em média, apenas moderada; efeitos variaram bastante entre estudos, e muitos usaram grupo controle passivo (sem intervenção alternativa), o que tende a inflar o efeito aparente.',
+    // Classificada como meta-análise (não apenas revisão sistemática) porque a publicação calcula um efeito agregado entre os 19 estudos analisados quantitativamente.
     tipoEstudo: 'meta-análise',
   },
   AC3: {
@@ -321,6 +323,7 @@ export const REFERENCIAS: Record<IdReferenciaCientifica, ReferenciaCientifica> =
       'base para explicar, de forma associativa (não causal), por que comparação de aparência nas redes está ligada a mais insatisfação corporal',
     limitacoes:
       'A maioria dos estudos incluídos é observacional/correlacional, então a revisão não comprova que a comparação causa os sintomas — pode haver influência nos dois sentidos.',
+    // Classificada como meta-análise (não apenas revisão sistemática) porque a publicação calcula correlações agregadas (r) entre os 83 estudos incluídos.
     tipoEstudo: 'meta-análise',
   },
   CO3: {
@@ -412,7 +415,7 @@ export const REFERENCIAS: Record<IdReferenciaCientifica, ReferenciaCientifica> =
     id: 'AL2',
     titulo:
       'Development and efficacy of a cognitive dissonance-based intervention program for intuitive eating: A randomized controlled clinical trial',
-    autoresOuInstituicao: 'Resende TRO, Alvarenga MS, de Carvalho PHB — Body Image (2026)',
+    autoresOuInstituicao: 'Resende TRO, Dos Santos Alvarenga M, de Carvalho PHB — Body Image (2026)',
     link: 'https://pubmed.ncbi.nlm.nih.gov/42259168/',
     resumoSimples:
       'Cento e dez mulheres brasileiras de 18 a 35 anos foram divididas aleatoriamente entre um programa de dissonância cognitiva, um programa educativo ou um grupo controle, com avaliações até 48 semanas depois. O grupo de dissonância cognitiva apresentou aumento em apreciação corporal, orientação para sinais internos de fome/saciedade e motivação para atividade física por saúde, além de redução em alimentação restritiva, com diferenças que se mantiveram nas avaliações de acompanhamento mais longas.',

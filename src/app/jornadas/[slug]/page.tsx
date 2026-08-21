@@ -1,24 +1,23 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import BarraProgressoPercentual from '@/app/components/jornadas/BarraProgressoPercentual';
-import EstadoSessaoIcone, { type EstadoSessao } from '@/app/components/jornadas/EstadoSessaoIcone';
+import EstadoSessaoIcone from '@/app/components/jornadas/EstadoSessaoIcone';
+import { buscarJornadaPorSlug, contarModulos, contarSessoes } from '@/lib/jornadas-conteudo/dados';
 import {
-  buscarJornadaPorSlug,
-  contarModulos,
-  contarSessoes,
-  listarJornadas,
-} from '@/lib/jornadas-conteudo/dados';
+  calcularEstadosSessoes,
+  calcularPercentualConcluido,
+  carregarProgressoJornada,
+} from '@/lib/jornadas-conteudo/progresso';
+import type { EstadoSessao } from '@/lib/jornadas-conteudo/tipos';
 
-export function generateStaticParams() {
-  return listarJornadas().map((jornada) => ({ slug: jornada.slug }));
-}
-
-// Progresso por usuária ainda não está persistido/lido nesta área do app
-// (ver nota em src/lib/jornadas-conteudo/dados.ts) — até essa integração
-// existir, toda sessão é 'disponivel', que é o estado correto hoje, não um
-// placeholder inventado.
-const ESTADO_SESSAO_ATUAL: EstadoSessao = 'disponivel';
+const ROTULO_ESTADO: Record<EstadoSessao, string> = {
+  concluida: 'Sessão concluída',
+  em_andamento: 'Sessão em andamento',
+  disponivel: 'Sessão disponível',
+  bloqueada: 'Sessão bloqueada',
+};
 
 export default async function JornadaDetalhePage({
   params,
@@ -31,6 +30,19 @@ export default async function JornadaDetalhePage({
   if (!jornada) {
     notFound();
   }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
+  const estados = calcularEstadosSessoes(jornada, progresso);
+  const percentualConcluido = calcularPercentualConcluido(jornada, estados);
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
@@ -47,8 +59,8 @@ export default async function JornadaDetalhePage({
           {contarModulos(jornada)} módulos • {contarSessoes(jornada)} sessões
         </p>
         <div className="flex items-center gap-2">
-          <BarraProgressoPercentual percentual={0} className="flex-1" />
-          <span className="text-xs font-medium text-texto">0%</span>
+          <BarraProgressoPercentual percentual={percentualConcluido} className="flex-1" />
+          <span className="text-xs font-medium text-texto">{percentualConcluido}%</span>
         </div>
       </div>
 
@@ -60,32 +72,42 @@ export default async function JornadaDetalhePage({
             </h2>
             <ul className="space-y-2">
               {modulo.sessoes.map((sessao) => {
-                const estado = ESTADO_SESSAO_ATUAL;
+                const estado = estados[sessao.id] ?? 'bloqueada';
+                const bloqueada = estado === 'bloqueada';
+
+                const conteudo = (
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-texto">{sessao.titulo}</p>
+                      <p className="truncate text-xs text-texto-suave">{sessao.descricaoCurta}</p>
+                    </div>
+                    <span className="shrink-0" role="img" aria-label={ROTULO_ESTADO[estado]}>
+                      <EstadoSessaoIcone estado={estado} />
+                    </span>
+                  </div>
+                );
+
+                if (bloqueada) {
+                  return (
+                    <li key={sessao.id}>
+                      <div
+                        aria-disabled="true"
+                        className="flex items-center gap-3 rounded-2xl border border-borda bg-superficie p-3 opacity-60"
+                      >
+                        {conteudo}
+                      </div>
+                    </li>
+                  );
+                }
+
                 return (
                   <li key={sessao.id}>
-                    <div
-                      className={`flex items-center justify-between gap-3 rounded-2xl border border-borda bg-superficie p-3 ${
-                        estado === 'bloqueada' ? 'opacity-60' : ''
-                      }`}
+                    <Link
+                      href={`/jornadas/${jornada.slug}/${sessao.id}`}
+                      className="flex items-center gap-3 rounded-2xl border border-borda bg-superficie p-3 transition-colors duration-150 hover:bg-borda/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60 focus-visible:ring-offset-2 focus-visible:ring-offset-fundo"
                     >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-texto">{sessao.titulo}</p>
-                        <p className="truncate text-xs text-texto-suave">{sessao.descricaoCurta}</p>
-                      </div>
-                      <span
-                        className="shrink-0"
-                        role="img"
-                        aria-label={
-                          estado === 'concluida'
-                            ? 'Sessão concluída'
-                            : estado === 'bloqueada'
-                              ? 'Sessão bloqueada'
-                              : 'Sessão disponível'
-                        }
-                      >
-                        <EstadoSessaoIcone estado={estado} />
-                      </span>
-                    </div>
+                      {conteudo}
+                    </Link>
                   </li>
                 );
               })}

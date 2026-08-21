@@ -1,4 +1,6 @@
-export type EstadoSessao = 'concluida' | 'disponivel' | 'bloqueada';
+import type { EstadoSessao } from '@/lib/jornadas-conteudo/tipos';
+
+export type { EstadoSessao };
 
 export default function EstadoSessaoIcone({ estado }: { estado: EstadoSessao }) {
   if (estado === 'concluida') {
@@ -16,6 +18,26 @@ export default function EstadoSessaoIcone({ estado }: { estado: EstadoSessao }) 
         className="text-acao"
       >
         <path d="M5 12.5 9.5 17 19 7" />
+      </svg>
+    );
+  }
+
+  if (estado === 'em_andamento') {
+    return (
+      <svg
+        aria-hidden="true"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-acao"
+      >
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4l3 2" />
       </svg>
     );
   }

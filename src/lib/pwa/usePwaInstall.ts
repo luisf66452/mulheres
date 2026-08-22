@@ -34,6 +34,7 @@ export function usePwaInstall() {
   const [ehIOS, setEhIOS] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFoiDispensado(window.localStorage.getItem(CHAVE_DISPENSADO) === '1');
     setEhStandalone(detectarStandalone());
     setEhIOS(detectarIOS());

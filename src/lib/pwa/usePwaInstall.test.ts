@@ -71,10 +71,9 @@ describe('usePwaInstall', () => {
 
   it('evento appinstalled limpa o prompt e ativa standalone', () => {
     const { result } = renderHook(() => usePwaInstall());
-    let evento: ReturnType<typeof dispararBeforeInstallPrompt>;
 
     act(() => {
-      evento = dispararBeforeInstallPrompt();
+      dispararBeforeInstallPrompt();
     });
 
     expect(result.current.podeInstalar).toBe(true);

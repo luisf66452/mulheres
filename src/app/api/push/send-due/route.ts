@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { Database, PreferenciasNotificacao } from '@/lib/supabase/types';
 import { estaNaJanelaDeEnvio, diaDaSemanaNoFuso, dataLocalISO } from '@/lib/push/timeWindow';
@@ -27,9 +28,22 @@ import { deepLinkSeguro } from '@/lib/push/deepLink';
 const TENTATIVAS_MAXIMAS = 3;
 const REAGENDAR_APOS_LIMITE_HORAS = 1;
 
+// Comparação em tempo constante: `!==` em string vaza, por timing, quantos
+// caracteres do início batem, o que em teoria ajuda um atacante a adivinhar
+// o CRON_SECRET byte a byte. timingSafeEqual exige buffers do mesmo
+// tamanho — por isso o `length` check antes, que não vaza informação útil
+// (o comprimento de um secret gerado aleatoriamente não é sensível).
+function segredoDoCronValido(authHeader: string | null): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || !authHeader) return false;
+  const esperado = Buffer.from(`Bearer ${secret}`);
+  const recebido = Buffer.from(authHeader);
+  if (esperado.length !== recebido.length) return false;
+  return timingSafeEqual(esperado, recebido);
+}
+
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!segredoDoCronValido(request.headers.get('authorization'))) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

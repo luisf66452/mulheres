@@ -98,4 +98,80 @@ grant select on public.conclusoes_praticas_conteudo to service_role;
 grant select on public.checkins to service_role;
 grant select on public.perfis to service_role;
 
+-- ---------------------------------------------------------------------------
+-- Agendamento via Supabase Cron (pg_cron + pg_net), substituindo o cron da
+-- Vercel como mecanismo principal — o plano Hobby da Vercel só permite cron
+-- diário, o que não dá pra respeitar horário silencioso/fuso por usuária com
+-- a granularidade que estas notificações exigem. pg_cron roda dentro do
+-- próprio Postgres (sem custo de plano) a cada 15 minutos e usa pg_net para
+-- chamar /api/push/send-due como uma requisição HTTP comum — a rota em si
+-- não muda: continua exigindo `Authorization: Bearer <CRON_SECRET>` e
+-- continua idempotente, então nada impede também deixá-la acessível a outro
+-- disparador (ex.: um cron de infra futuro) sem duplicar notificações.
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;
+
+grant usage on schema cron to postgres;
+grant usage on schema net to postgres;
+
+-- A URL da própria Rose e o segredo do cron NUNCA entram nesta migração (ela
+-- é versionada em git) — são inseridos separadamente no Supabase Vault via
+-- `vault.create_secret`, fora do controle de versão, com os nomes fixos que
+-- esta função espera: 'rose_app_url' e 'rose_cron_secret'. Trocar de domínio
+-- no futuro é só atualizar o valor do secret 'rose_app_url' no Vault — esta
+-- função e o job do cron não precisam mudar.
+--
+-- SECURITY DEFINER é necessário pra função conseguir ler
+-- vault.decrypted_secrets (só acessível a quem tem privilégio elevado) mesmo
+-- quando chamada por um role sem esse privilégio — mas ela não aceita
+-- nenhum parâmetro do chamador, não expõe o segredo em nenhum retorno/log, e
+-- seu EXECUTE é revogado de public/anon/authenticated logo abaixo: só o
+-- schedule do pg_cron (que roda como o owner da função) pode de fato
+-- invocá-la, então não existe um cliente da Data API capaz de chamar isto.
+create or replace function public.rose_push_cron_tick()
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions, net, vault
+as $$
+declare
+  v_url text;
+  v_secret text;
+begin
+  select decrypted_secret into v_url
+    from vault.decrypted_secrets where name = 'rose_app_url';
+  select decrypted_secret into v_secret
+    from vault.decrypted_secrets where name = 'rose_cron_secret';
+
+  -- Segredos ainda não configurados no Vault (ex.: ambiente recém-criado):
+  -- não falha a migração nem o job do cron, só não faz a chamada HTTP.
+  if v_url is null or v_secret is null then
+    raise warning 'rose_push_cron_tick: rose_app_url ou rose_cron_secret ausente no Vault, pulando execucao';
+    return;
+  end if;
+
+  perform net.http_get(
+    url := v_url || '/api/push/send-due',
+    headers := jsonb_build_object('Authorization', 'Bearer ' || v_secret),
+    timeout_milliseconds := 20000
+  );
+end;
+$$;
+
+revoke all on function public.rose_push_cron_tick() from public, anon, authenticated;
+
+-- Idempotente: remove um agendamento anterior com o mesmo nome antes de
+-- recriar, então reaplicar esta migração (ex.: `db push` repetido) nunca
+-- duplica o job — cron.schedule() com um jobname já existente criaria um
+-- segundo job em vez de substituir o primeiro.
+do $$
+begin
+  if exists (select 1 from cron.job where jobname = 'rose-push-send-due') then
+    perform cron.unschedule('rose-push-send-due');
+  end if;
+end
+$$;
+
+select cron.schedule('rose-push-send-due', '*/15 * * * *', 'select public.rose_push_cron_tick();');
+
 notify pgrst, 'reload schema';

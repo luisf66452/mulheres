@@ -57,4 +57,12 @@ describe('GET /api/push/send-due — autenticação do cron', () => {
     expect(resposta.status).toBe(401);
     expect(createClientMock).not.toHaveBeenCalled();
   });
+
+  it('rejeita um header de tamanho diferente do esperado sem lancar (timingSafeEqual exige buffers do mesmo tamanho)', async () => {
+    const { GET } = await import('./route');
+    const resposta = await GET(requisicao({ authorization: 'Bearer curto' }));
+
+    expect(resposta.status).toBe(401);
+    expect(createClientMock).not.toHaveBeenCalled();
+  });
 });

@@ -37,6 +37,14 @@ export type PreferenciasNotificacao = {
   lembrete_praticas: boolean;
   avisos_novidades: boolean;
   resumo_semanal: boolean;
+  lembrete_inatividade: boolean;
+  // 'HH:MM:SS', sempre hora local da usuária — mesma convenção de
+  // perfis.horario_preferido_notificacao.
+  horario_silencio_inicio: string;
+  horario_silencio_fim: string;
+  // Data (YYYY-MM-DD, fuso da usuária) até a qual nenhum lembrete deve sair.
+  // Null = não pausada.
+  pausada_ate: string | null;
   dias_semana: number[];
   atualizada_em: string;
 };
@@ -145,6 +153,41 @@ export type PushSubscriptionRow = {
   endpoint: string;
   p256dh: string;
   auth: string;
+  user_agent: string | null;
+  criado_em: string;
+  atualizado_em: string;
+};
+
+export type CategoriaPushNotificacao =
+  | 'sessao_abandonada'
+  | 'sessao_disponivel'
+  | 'praticas_pendente'
+  | 'inatividade'
+  | 'continuidade';
+
+export type StatusPushNotificacao = 'pendente' | 'processando' | 'enviada' | 'cancelada' | 'falha';
+
+export type PushNotificacao = {
+  id: string;
+  usuaria_id: string;
+  categoria: CategoriaPushNotificacao;
+  dedup_key: string;
+  titulo: string | null;
+  corpo: string | null;
+  url: string | null;
+  tag: string | null;
+  status: StatusPushNotificacao;
+  tentativas: number;
+  agendado_para: string;
+  enviado_em: string | null;
+  criado_em: string;
+};
+
+export type PushEnvio = {
+  id: string;
+  usuaria_id: string;
+  tipo: 'checkin' | 'jornada' | 'praticas' | 'resumo_semanal' | 'teste';
+  data_local: string;
   criado_em: string;
 };
 
@@ -374,6 +417,19 @@ export interface Database {
         Insert: Omit<SessaoJornadaConteudoProgresso, 'id' | 'iniciada_em' | 'concluida_em'> &
           Partial<Pick<SessaoJornadaConteudoProgresso, 'id' | 'iniciada_em' | 'concluida_em'>>;
         Update: Partial<SessaoJornadaConteudoProgresso>;
+        Relationships: [];
+      };
+      push_notificacoes: {
+        Row: PushNotificacao;
+        Insert: Omit<PushNotificacao, 'id' | 'criado_em' | 'status' | 'tentativas' | 'enviado_em'> &
+          Partial<Pick<PushNotificacao, 'status' | 'tentativas' | 'enviado_em'>>;
+        Update: Partial<PushNotificacao>;
+        Relationships: [];
+      };
+      push_envios: {
+        Row: PushEnvio;
+        Insert: Omit<PushEnvio, 'id' | 'criado_em'> & { id?: string };
+        Update: Partial<PushEnvio>;
         Relationships: [];
       };
     };

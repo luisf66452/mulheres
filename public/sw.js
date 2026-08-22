@@ -110,18 +110,80 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Só aceita um deep link relativo e do mesmo domínio: precisa começar com uma
+// única barra ("/…") e nunca com "//" (que o navegador trata como protocolo-
+// relativo, ou seja, um domínio externo). Isso é o que impede o payload do
+// push — que passa pela rede e pode em tese ser adulterado antes de chegar
+// aqui — de redirecionar a usuária pra fora do app.
+function deepLinkSeguro(url, fallback) {
+  if (typeof url !== 'string') return fallback;
+  if (!url.startsWith('/') || url.startsWith('//')) return fallback;
+  return url;
+}
+
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
+  // event.data.json() lança se o payload não for JSON válido — nunca confia
+  // cegamente no conteúdo de uma mensagem de push (ela passa pela rede e por
+  // um provedor externo antes de chegar aqui).
+  let dados = {};
+  try {
+    dados = event.data ? event.data.json() : {};
+  } catch {
+    dados = {};
+  }
+
+  const titulo = typeof dados.title === 'string' && dados.title.trim() ? dados.title : 'Rose';
+  const corpo =
+    typeof dados.body === 'string' && dados.body.trim()
+      ? dados.body
+      : 'Seu momento de cuidado de hoje está te esperando.';
+  const url = deepLinkSeguro(dados.url, '/inicio');
+  // `tag` faz o navegador substituir uma notificação pendente com a mesma
+  // chave em vez de empilhar — essencial pra não gerar burst quando o
+  // aparelho reconecta e recebe várias mensagens de push atrasadas de uma
+  // vez, e pra dedup visual (ex.: dois lembretes da mesma sessão).
+  const tag = typeof dados.tag === 'string' && dados.tag ? dados.tag : 'rose-generico';
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Rose', {
-      body: data.body || 'Seu momento de cuidado de hoje está te esperando.',
+    self.registration.showNotification(titulo, {
+      body: corpo,
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
+      tag,
+      renotify: false,
+      data: { url },
+      actions: [
+        { action: 'continuar', title: 'Continuar' },
+        { action: 'agora_nao', title: 'Agora não' },
+      ],
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('/checkin'));
+
+  // "Agora não" só fecha a notificação, sem abrir nada — nunca insiste.
+  if (event.action === 'agora_nao') {
+    return;
+  }
+
+  const url = deepLinkSeguro(event.notification.data && event.notification.data.url, '/inicio');
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((listaDeClientes) => {
+      // Reaproveita uma janela da Rose já aberta em vez de abrir uma nova aba
+      // por cima — navega ela pro deep link e foca. Só abre janela nova se
+      // não houver nenhuma.
+      for (const cliente of listaDeClientes) {
+        if ('focus' in cliente) {
+          if ('navigate' in cliente) {
+            return cliente.navigate(url).then((clienteNavegado) => clienteNavegado && clienteNavegado.focus());
+          }
+          return cliente.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });

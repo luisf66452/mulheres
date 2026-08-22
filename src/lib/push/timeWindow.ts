@@ -21,6 +21,20 @@ function horaLocalNoFuso(agora: Date, fusoHorario: string): number {
   }
 }
 
+/** Data local (YYYY-MM-DD) da usuária no fuso dela, não a data UTC do servidor. */
+export function dataLocalISO(agora: Date, fusoHorario: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: fusoHorario,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(agora);
+  } catch {
+    return agora.toISOString().slice(0, 10);
+  }
+}
+
 // Dia da semana (0 = domingo … 6 = sábado, mesmo formato de getDay() no JS,
 // documentado em preferencias_notificacoes.dias_semana) no fuso da usuária,
 // não no fuso do servidor — relevante perto da virada da meia-noite local.

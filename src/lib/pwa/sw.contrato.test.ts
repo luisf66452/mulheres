@@ -93,6 +93,37 @@ describe('contrato de seguranca do service worker', () => {
   it('mantem os handlers de push e notificationclick', () => {
     expect(codigoSw).toMatch(/addEventListener\(['"]push['"]/);
     expect(codigoSw).toMatch(/addEventListener\(['"]notificationclick['"]/);
-    expect(codigoSw).toContain("clients.openWindow('/checkin')");
+  });
+
+  it('valida o payload de push de forma defensiva (nunca confia cegamente no JSON recebido)', () => {
+    const inicioPush = codigoSw.indexOf("addEventListener('push'");
+    expect(inicioPush).toBeGreaterThan(-1);
+    const blocoPush = codigoSw.slice(inicioPush, codigoSw.indexOf('});', inicioPush));
+
+    // event.data.json() pode lançar se o payload não for JSON válido — o
+    // handler precisa capturar isso, não deixar o erro se propagar.
+    expect(blocoPush).toMatch(/try\s*{/);
+    expect(blocoPush).toContain('showNotification');
+    // tag para o navegador substituir uma notificação pendente em vez de
+    // empilhar (evita burst quando o aparelho reconecta).
+    expect(blocoPush).toContain('tag');
+    // Ações mínimas exigidas: Continuar / Agora não.
+    expect(blocoPush).toContain("action: 'continuar'");
+    expect(blocoPush).toContain("action: 'agora_nao'");
+  });
+
+  it('nunca abre um deep link vindo do payload sem validar que e relativo e do mesmo dominio', () => {
+    expect(codigoSw).toMatch(/function\s+deepLinkSeguro/);
+    // "//" no começo de uma URL é interpretado pelo navegador como
+    // protocolo-relativo (ou seja, um domínio externo) — precisa ser
+    // rejeitado, não só strings com "http".
+    expect(codigoSw).toContain("url.startsWith('//')");
+  });
+
+  it('notificationclick fecha sem abrir nada quando a acao e "Agora nao"', () => {
+    const inicioClick = codigoSw.indexOf("addEventListener('notificationclick'");
+    expect(inicioClick).toBeGreaterThan(-1);
+    expect(codigoSw).toContain("event.action === 'agora_nao'");
+    expect(inicioClick).toBeLessThan(codigoSw.indexOf("event.action === 'agora_nao'"));
   });
 });

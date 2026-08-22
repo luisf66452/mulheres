@@ -3,6 +3,14 @@ export async function inscreverPush(): Promise<'inscrita' | 'nao_suportado' | 'n
     return 'nao_suportado';
   }
 
+  // Fora de producao, /sw.js ativamente cacheia assets estaticos, o que
+  // briga com o Fast Refresh do `next dev` (mesma guarda de
+  // RegistrarServiceWorker.tsx). Notificacoes push nao sao suportadas em
+  // dev por essa razao.
+  if (process.env.NODE_ENV !== 'production') {
+    return 'nao_suportado';
+  }
+
   const permissao = await Notification.requestPermission();
   if (permissao !== 'granted') {
     return 'negado';

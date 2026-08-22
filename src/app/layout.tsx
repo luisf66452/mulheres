@@ -40,6 +40,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        {/* Guarda o evento beforeinstallprompt caso ele dispare antes do
+            useEffect de usePwaInstall montar (o evento nao espera a
+            hidratacao — se perdido, nao ha como recupera-lo depois). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__rosePwaInstallEvent = null;
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  window.__rosePwaInstallEvent = e;
+});`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-fundo font-sans text-texto pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <AplicarPreferenciasDispositivo />
         <RegistrarServiceWorker />

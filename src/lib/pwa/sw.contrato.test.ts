@@ -33,7 +33,7 @@ describe('contrato de seguranca do service worker', () => {
 
   it('nunca intercepta rotas sensiveis', () => {
     const arrayRotas = extrairArrayLiteral(codigoSw, 'ROTAS_NUNCA_CACHEADAS');
-    for (const rota of ['/api/', '/auth/', '/checkout', '/sucesso', '/cancelado', '/login', '/onboarding']) {
+    for (const rota of ['/api/', '/auth/', '/checkout', '/sucesso', '/cancelado', '/perfil/assinatura', '/login', '/onboarding']) {
       // A rota precisa estar declarada dentro do array ROTAS_NUNCA_CACHEADAS,
       // nao apenas em qualquer lugar do arquivo (ex.: um comentario ou string
       // nao relacionada).

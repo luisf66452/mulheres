@@ -132,6 +132,10 @@ describe('config.matcher (regex de rotas em que o middleware roda)', () => {
     expect(matcherRegex.test('/perfil')).toBe(true);
   });
 
+  it('continua executando o middleware em uma rota de API sensivel (garante que as exclusoes de asset estatico nao ampliaram demais e engoliram uma rota protegida)', () => {
+    expect(matcherRegex.test('/api/perfil/excluir-conta')).toBe(true);
+  });
+
   it('continua excluindo favicon.ico, icons e assets estáticos do _next', () => {
     expect(matcherRegex.test('/favicon.ico')).toBe(false);
     expect(matcherRegex.test('/icon.png')).toBe(false);

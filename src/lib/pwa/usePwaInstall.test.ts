@@ -24,6 +24,21 @@ describe('usePwaInstall', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    window.__rosePwaInstallEvent = null;
+  });
+
+  it('usa o evento guardado em window.__rosePwaInstallEvent quando beforeinstallprompt disparou antes da montagem', () => {
+    const evento = new Event('beforeinstallprompt') as Event & {
+      prompt: () => Promise<void>;
+      userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    };
+    evento.prompt = vi.fn().mockResolvedValue(undefined);
+    evento.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.__rosePwaInstallEvent = evento;
+
+    const { result } = renderHook(() => usePwaInstall());
+
+    expect(result.current.podeInstalar).toBe(true);
   });
 
   it('comeca sem prompt de instalacao disponivel', () => {

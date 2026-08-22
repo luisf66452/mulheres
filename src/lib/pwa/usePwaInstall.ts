@@ -9,6 +9,12 @@ type EventoBeforeInstallPrompt = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
+declare global {
+  interface Window {
+    __rosePwaInstallEvent?: EventoBeforeInstallPrompt | null;
+  }
+}
+
 function detectarIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
@@ -47,6 +53,15 @@ export function usePwaInstall() {
     function aoInstalar() {
       setEventoInstalacao(null);
       setEhStandalone(true);
+    }
+
+    // Hedge contra o evento beforeinstallprompt ter disparado antes deste
+    // effect montar (o script inline no <head> do layout raiz o guarda em
+    // window.__rosePwaInstallEvent nesse caso). Consome e limpa a stash pra
+    // uma montagem futura nao reusar uma referencia obsoleta.
+    if (window.__rosePwaInstallEvent) {
+      setEventoInstalacao(window.__rosePwaInstallEvent);
+      window.__rosePwaInstallEvent = null;
     }
 
     window.addEventListener('beforeinstallprompt', aoCapturarPrompt);

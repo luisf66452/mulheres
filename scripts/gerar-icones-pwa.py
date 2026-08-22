@@ -2,6 +2,10 @@
 
 Uso: python3 scripts/gerar-icones-pwa.py
 Fonte: src/assets/logo-rose-fonte.png (RGBA, fundo transparente)
+
+IMPORTANTE: se os icones mudarem de forma perceptivel, tambem bump o
+CACHE_NAME em public/sw.js — o service worker cacheia /icons/* e so
+busca conteudo novo quando a versao do cache muda.
 """
 from pathlib import Path
 from PIL import Image

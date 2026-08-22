@@ -9,6 +9,7 @@ const ROTAS_NUNCA_CACHEADAS = [
   '/checkout',
   '/sucesso',
   '/cancelado',
+  '/perfil/assinatura',
   '/login',
   '/onboarding',
 ];
@@ -81,6 +82,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const respostaCacheada = await cache.match(request);
+
       const buscaNaRede = fetch(request)
         .then((resposta) => {
           if (resposta.ok) {
@@ -88,9 +90,22 @@ self.addEventListener('fetch', (event) => {
           }
           return resposta;
         })
-        .catch(() => respostaCacheada);
+        // Sem cache E rede falhando: nao ha resposta valida a devolver.
+        // Response.error() produz uma network error propriamente dita, em
+        // vez de resolver `undefined` (o que faria event.respondWith
+        // lancar).
+        .catch(() => respostaCacheada || Response.error());
 
-      return respostaCacheada || buscaNaRede;
+      if (respostaCacheada) {
+        // Responde do cache imediatamente, mas mantem a revalidacao em
+        // segundo plano viva com waitUntil — sem isso o navegador pode
+        // encerrar o service worker assim que a resposta e devolvida,
+        // antes do fetch de revalidacao terminar.
+        event.waitUntil(buscaNaRede);
+        return respostaCacheada;
+      }
+
+      return buscaNaRede;
     })
   );
 });

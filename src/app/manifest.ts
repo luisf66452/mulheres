@@ -6,6 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Rose',
     description:
       'Um ritual diário de 5 minutos para autoestima, imagem corporal e relação com a comida.',
+    id: '/',
     start_url: '/',
     scope: '/',
     display: 'standalone',

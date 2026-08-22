@@ -8,16 +8,23 @@ describe('manifest da Rose', () => {
     expect(resultado.name).toBe('Rose');
     expect(resultado.short_name).toBe('Rose');
     expect(resultado.display).toBe('standalone');
+    expect(resultado.id).toBe('/');
     expect(resultado.start_url).toBe('/');
     expect(resultado.scope).toBe('/');
     expect(resultado.background_color).toBe('#FBF6F0');
     expect(resultado.theme_color).toBe('#FBF6F0');
 
-    const tamanhos = (resultado.icons ?? []).map((icone) => icone.sizes);
+    const icones = resultado.icons ?? [];
+    expect(icones.length).toBe(3);
+
+    const tamanhos = icones.map((icone) => icone.sizes);
     expect(tamanhos).toContain('192x192');
     expect(tamanhos).toContain('512x512');
 
-    const maskable = (resultado.icons ?? []).find((icone) => icone.purpose === 'maskable');
+    const iconesAny = icones.filter((icone) => icone.purpose === 'any');
+    expect(iconesAny.map((icone) => icone.sizes).sort()).toEqual(['192x192', '512x512']);
+
+    const maskable = icones.find((icone) => icone.purpose === 'maskable');
     expect(maskable?.sizes).toBe('512x512');
     expect(maskable?.src).toBe('/icons/icon-512-maskable.png');
   });

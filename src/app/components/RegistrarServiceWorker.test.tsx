@@ -14,8 +14,14 @@ describe('RegistrarServiceWorker', () => {
     });
   });
 
+  const originalReadyState = document.readyState;
+
   afterEach(() => {
     vi.unstubAllEnvs();
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      value: originalReadyState,
+    });
   });
 
   it('registra /sw.js em producao, apos o load da pagina', async () => {
@@ -23,6 +29,18 @@ describe('RegistrarServiceWorker', () => {
     render(<RegistrarServiceWorker />);
 
     window.dispatchEvent(new Event('load'));
+
+    await waitFor(() => expect(registerMock).toHaveBeenCalledWith('/sw.js'));
+  });
+
+  it('registra /sw.js imediatamente quando o load ja disparou antes do effect (document.readyState === "complete")', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    Object.defineProperty(document, 'readyState', {
+      configurable: true,
+      value: 'complete',
+    });
+
+    render(<RegistrarServiceWorker />);
 
     await waitFor(() => expect(registerMock).toHaveBeenCalledWith('/sw.js'));
   });

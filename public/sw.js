@@ -17,7 +17,21 @@ const ROTAS_NUNCA_CACHEADAS = [
 // stale-while-revalidate porque uma mudanca de conteudo sempre vem com uma
 // URL nova (o navegador nunca reusa hash antigo para conteudo novo).
 const PREFIXOS_ESTATICOS_CACHEAVEIS = ['/_next/static/', '/icons/'];
-const ARQUIVOS_ESTATICOS_CACHEAVEIS = ['/icon', '/apple-icon', '/favicon.ico'];
+// Arquivos unicos gerados pelo Next.js (nao diretorios): exigem match exato
+// para nao colidir por prefixo com rotas futuras (ex.: /icon-guide).
+const ARQUIVOS_ESTATICOS_CACHEAVEIS = ['/icon.png', '/apple-icon.png', '/favicon.ico'];
+
+// Verifica se `pathname` casa com `rota` respeitando fronteira de segmento.
+// Rotas ja terminadas em "/" (ex.: "/api/") sao prefixos de diretorio
+// legitimos. Rotas sem barra final (ex.: "/login") so casam por igualdade
+// exata ou seguidas de "/", evitando colisao com uma rota futura nao
+// relacionada (ex.: "/loginhelp" nao deve casar com "/login").
+function casaComFronteiraDeSegmento(pathname, rota) {
+  if (rota.endsWith('/')) {
+    return pathname.startsWith(rota);
+  }
+  return pathname === rota || pathname.startsWith(`${rota}/`);
+}
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -38,7 +52,7 @@ self.addEventListener('activate', (event) => {
 function ehAssetEstaticoCacheavel(url) {
   return (
     PREFIXOS_ESTATICOS_CACHEAVEIS.some((prefixo) => url.pathname.startsWith(prefixo)) ||
-    ARQUIVOS_ESTATICOS_CACHEAVEIS.some((arquivo) => url.pathname.startsWith(arquivo))
+    ARQUIVOS_ESTATICOS_CACHEAVEIS.some((arquivo) => url.pathname === arquivo)
   );
 }
 
@@ -55,7 +69,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (ROTAS_NUNCA_CACHEADAS.some((rota) => url.pathname.startsWith(rota))) {
+  if (ROTAS_NUNCA_CACHEADAS.some((rota) => casaComFronteiraDeSegmento(url.pathname, rota))) {
     return;
   }
 

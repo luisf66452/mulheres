@@ -15,9 +15,14 @@ export default async function NotificacoesPage() {
     redirect('/login');
   }
 
-  const [{ data: perfil }, { data: preferenciasLinha }] = await Promise.all([
+  const [{ data: perfil }, { data: preferenciasLinha }, { data: dispositivos }] = await Promise.all([
     supabase.from('perfis').select('horario_preferido_notificacao').eq('id', user.id).single(),
     supabase.from('preferencias_notificacoes').select('*').eq('usuaria_id', user.id).maybeSingle(),
+    supabase
+      .from('push_subscriptions')
+      .select('id, user_agent, criado_em')
+      .eq('usuaria_id', user.id)
+      .order('criado_em', { ascending: false }),
   ]);
 
   return (
@@ -27,6 +32,11 @@ export default async function NotificacoesPage() {
         usuariaId={user.id}
         horarioAtual={perfil?.horario_preferido_notificacao ?? null}
         preferenciasIniciais={linhaParaPreferencias(preferenciasLinha ?? null)}
+        dispositivosIniciais={(dispositivos ?? []).map((d) => ({
+          id: d.id,
+          userAgent: d.user_agent,
+          criadoEm: d.criado_em,
+        }))}
       />
       <NavegacaoInferior />
     </main>

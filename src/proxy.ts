@@ -15,6 +15,13 @@ const ROTAS_PUBLICAS = [
   // silêncio. A rota em si já valida o código com o Supabase; não abre
   // nenhum acesso além do que um login normal já concede.
   '/api/perfil/confirmar-exclusao',
+  // Chamado pelo Vercel Cron (ver vercel.json), nunca por uma usuária
+  // logada no navegador — não existe sessão Supabase nessa requisição, então
+  // bloquear aqui redirecionaria toda execução do cron para /login antes de
+  // a rota conseguir sequer checar o header `Authorization: Bearer
+  // CRON_SECRET` (a autenticação de verdade, feita dentro da própria rota).
+  // Mesma justificativa do webhook do Stripe acima.
+  '/api/push/send-due',
 ];
 
 export async function proxy(request: NextRequest) {

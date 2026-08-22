@@ -52,7 +52,7 @@ describe('proxy (middleware)', () => {
   it('permite acesso sem sessão às rotas públicas conhecidas', async () => {
     vi.mocked(createServerClient).mockReturnValue(criarSupabaseFake(null) as never);
 
-    for (const rota of ['/login', '/auth/callback', '/privacidade', '/api/stripe/webhook']) {
+    for (const rota of ['/login', '/auth/callback', '/privacidade', '/api/stripe/webhook', '/api/push/send-due']) {
       const resposta = await proxy(new NextRequest(`https://rose.exemplo.com${rota}`));
       expect(resposta.headers.get('location')).toBeNull();
     }

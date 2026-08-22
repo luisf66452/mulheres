@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ModuloEstruturadoAtividade from './ModuloEstruturadoAtividade';
 import { modulo1EntendendoEmocoes } from '@/lib/jornadas-modulos/conteudo/modulo1EntendendoEmocoes';
@@ -19,6 +19,18 @@ function setup() {
 }
 
 describe('ModuloEstruturadoAtividade', () => {
+  // afterEach (não um vi.useRealTimers() no fim do próprio teste) garante que
+  // os timers reais voltam mesmo se o teste falhar/lançar no meio — do
+  // contrário, um assert que falha antes da chamada final deixaria o fake
+  // timer vazando para os demais arquivos de teste executados no mesmo
+  // worker thread do Vitest, causando timeouts intermitentes e
+  // dependentes de ordem em `waitFor` de OUTROS arquivos (ex.: o de
+  // PreviewJornadaRascunhoClient, que não tem nenhuma relação funcional com
+  // este módulo, mas compartilha o mesmo processo de teste).
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('fluxo completo: antes -> aprender -> exercicio -> revisao -> depois -> finalizar', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const { aoFinalizar, salvarRascunho } = setup();
@@ -71,8 +83,6 @@ describe('ModuloEstruturadoAtividade', () => {
     const ultimaChamada = salvarRascunho.mock.calls.at(-1)![0];
     expect(ultimaChamada.valores.situacao).toBe('Tive uma discussão com uma amiga.');
     expect(ultimaChamada.finalizadoEm).not.toBeNull();
-
-    vi.useRealTimers();
   });
 
   it('mostra o card de segurança quando um campo de texto livre bate um termo de atenção', async () => {

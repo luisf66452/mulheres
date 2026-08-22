@@ -65,8 +65,8 @@ export default function AjudaPage() {
         <p className="font-display text-base text-texto">Fale com a gente</p>
         <p className="text-sm text-texto-suave">
           Dúvidas, problemas técnicos ou qualquer outro assunto: escreva para{' '}
-          <a href="mailto:almeidaferreiraluisgustavo@gmail.com" className="underline">
-            almeidaferreiraluisgustavo@gmail.com
+          <a href="mailto:rosewomand123@gmail.com" className="underline">
+            rosewomand123@gmail.com
           </a>
           . Respondemos em até alguns dias úteis.
         </p>

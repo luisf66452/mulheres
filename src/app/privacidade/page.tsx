@@ -46,8 +46,8 @@ export default function PrivacidadePage() {
         <p className="text-texto">
           Você pode solicitar a exportação ou exclusão dos seus dados a qualquer momento, e pode
           tirar qualquer dúvida sobre como seus dados são tratados, escrevendo para{' '}
-          <a href="mailto:almeidaferreiraluisgustavo@gmail.com" className="underline">
-            almeidaferreiraluisgustavo@gmail.com
+          <a href="mailto:rosewomand123@gmail.com" className="underline">
+            rosewomand123@gmail.com
           </a>
           . Respondemos pedidos em até alguns dias úteis.
         </p>

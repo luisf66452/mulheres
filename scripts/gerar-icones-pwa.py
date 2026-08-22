@@ -11,15 +11,20 @@ FONTE = RAIZ / "src" / "assets" / "logo-rose-fonte.png"
 COR_FUNDO = (251, 246, 240, 255)  # --color-fundo (#FBF6F0)
 
 
-def compor_sobre_fundo(logo: Image.Image, tamanho: int, escala_logo: float) -> Image.Image:
+def compor_sobre_fundo(logo: Image.Image, tamanho: int, escala_logo: float, manter_rgba: bool = False) -> Image.Image:
     """Centraliza o logo (redimensionado por escala_logo) sobre um quadrado
     opaco de fundo #FBF6F0. escala_logo=1.0 preenche o quadrado inteiro;
-    valores menores deixam margem."""
+    valores menores deixam margem.
+
+    Se manter_rgba=True, retorna RGBA; senao retorna RGB (default para
+    compatibilidade com formatos que nao suportam transparencia)."""
     tela = Image.new("RGBA", (tamanho, tamanho), COR_FUNDO)
     lado_logo = int(tamanho * escala_logo)
     logo_redimensionado = logo.resize((lado_logo, lado_logo), Image.LANCZOS)
     offset = ((tamanho - lado_logo) // 2, (tamanho - lado_logo) // 2)
     tela.paste(logo_redimensionado, offset, logo_redimensionado)
+    if manter_rgba:
+        return tela
     return tela.convert("RGB")
 
 
@@ -47,8 +52,8 @@ def main() -> None:
     apple_icon = compor_sobre_fundo(logo, 180, 0.78)
     apple_icon.save(RAIZ / "src" / "app" / "apple-icon.png")
 
-    # Favicon multi-resolucao.
-    favicon_base = compor_sobre_fundo(logo, 256, 0.8)
+    # Favicon multi-resolucao (RGBA obrigatorio para Turbopack no Next.js 16).
+    favicon_base = compor_sobre_fundo(logo, 256, 0.8, manter_rgba=True)
     favicon_base.save(
         RAIZ / "src" / "app" / "favicon.ico",
         sizes=[(16, 16), (32, 32), (48, 48), (256, 256)],

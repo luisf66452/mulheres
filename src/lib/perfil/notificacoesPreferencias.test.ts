@@ -15,6 +15,10 @@ describe('linhaParaPreferencias', () => {
       lembrete_praticas: false,
       avisos_novidades: true,
       resumo_semanal: false,
+      lembrete_inatividade: false,
+      horario_silencio_inicio: '21:30:00',
+      horario_silencio_fim: '09:00:00',
+      pausada_ate: '2026-08-20',
       dias_semana: [1, 2, 3],
       atualizada_em: '2026-08-15T00:00:00.000Z',
     };
@@ -24,6 +28,10 @@ describe('linhaParaPreferencias', () => {
       lembretePraticas: false,
       avisosNovidades: true,
       resumoSemanal: false,
+      lembreteInatividade: false,
+      horarioSilencioInicio: '21:30',
+      horarioSilencioFim: '09:00',
+      pausadaAte: '2026-08-20',
       diasSemana: [1, 2, 3],
     });
   });

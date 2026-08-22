@@ -10,6 +10,10 @@ export interface NotificacoesPreferencias {
   lembretePraticas: boolean;
   avisosNovidades: boolean;
   resumoSemanal: boolean;
+  lembreteInatividade: boolean;
+  horarioSilencioInicio: string;
+  horarioSilencioFim: string;
+  pausadaAte: string | null;
   diasSemana: number[];
 }
 
@@ -19,6 +23,10 @@ export const NOTIFICACOES_PADRAO: NotificacoesPreferencias = {
   lembretePraticas: true,
   avisosNovidades: false,
   resumoSemanal: true,
+  lembreteInatividade: true,
+  horarioSilencioInicio: '21:30',
+  horarioSilencioFim: '09:00',
+  pausadaAte: null,
   diasSemana: [0, 1, 2, 3, 4, 5, 6],
 };
 
@@ -30,6 +38,10 @@ export function linhaParaPreferencias(linha: PreferenciasNotificacao | null): No
     lembretePraticas: linha.lembrete_praticas,
     avisosNovidades: linha.avisos_novidades,
     resumoSemanal: linha.resumo_semanal,
+    lembreteInatividade: linha.lembrete_inatividade,
+    horarioSilencioInicio: linha.horario_silencio_inicio?.slice(0, 5) ?? NOTIFICACOES_PADRAO.horarioSilencioInicio,
+    horarioSilencioFim: linha.horario_silencio_fim?.slice(0, 5) ?? NOTIFICACOES_PADRAO.horarioSilencioFim,
+    pausadaAte: linha.pausada_ate,
     diasSemana: linha.dias_semana,
   };
 }
@@ -43,6 +55,10 @@ export function preferenciasParaColunas(
   if (preferencias.lembretePraticas !== undefined) colunas.lembrete_praticas = preferencias.lembretePraticas;
   if (preferencias.avisosNovidades !== undefined) colunas.avisos_novidades = preferencias.avisosNovidades;
   if (preferencias.resumoSemanal !== undefined) colunas.resumo_semanal = preferencias.resumoSemanal;
+  if (preferencias.lembreteInatividade !== undefined) colunas.lembrete_inatividade = preferencias.lembreteInatividade;
+  if (preferencias.horarioSilencioInicio !== undefined) colunas.horario_silencio_inicio = preferencias.horarioSilencioInicio;
+  if (preferencias.horarioSilencioFim !== undefined) colunas.horario_silencio_fim = preferencias.horarioSilencioFim;
+  if (preferencias.pausadaAte !== undefined) colunas.pausada_ate = preferencias.pausadaAte;
   if (preferencias.diasSemana !== undefined) colunas.dias_semana = preferencias.diasSemana;
   return colunas;
 }

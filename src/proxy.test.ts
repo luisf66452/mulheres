@@ -124,6 +124,10 @@ describe('config.matcher (regex de rotas em que o middleware roda)', () => {
     expect(matcherRegex.test('/manifest.webmanifest')).toBe(false);
   });
 
+  it('exclui /sw.js (service worker registrado em toda página, inclusive /login, antes de existir sessão) da execução do middleware', () => {
+    expect(matcherRegex.test('/sw.js')).toBe(false);
+  });
+
   it('continua executando o middleware em rotas protegidas normais', () => {
     expect(matcherRegex.test('/perfil')).toBe(true);
   });

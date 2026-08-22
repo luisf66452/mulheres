@@ -45,3 +45,6 @@ supabase/.temp
 
 # claude code artifacts
 .claude/
+
+# git worktrees for isolated feature work
+.worktrees/

@@ -7,6 +7,7 @@ import { stripeConfigurado } from '@/lib/stripe/planos';
 import TikTokPurchase from '@/app/components/tiktok/TikTokPurchase';
 import BotaoAssinar from './BotaoAssinar';
 import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
+import ModalAgradecimento from './ModalAgradecimento';
 
 const BENEFICIOS = [
   'Histórico completo de check-ins e progresso',
@@ -66,12 +67,7 @@ export default async function AssinaturaPage({
 
       {checkout === 'sucesso' && sessionId && <TikTokPurchase sessionId={sessionId} />}
 
-      {checkout === 'sucesso' && (
-        <div className="rounded-2xl border border-acao/40 bg-lilas-claro p-4 text-sm text-texto">
-          Assinatura confirmada! Pode levar alguns segundos para aparecer aqui — atualize a página se
-          ainda estiver como gratuito.
-        </div>
-      )}
+      {checkout === 'sucesso' && <ModalAgradecimento />}
       {checkout === 'cancelado' && (
         <div className="rounded-2xl border border-borda bg-superficie p-4 text-sm text-texto-suave">
           Checkout cancelado — nenhuma cobrança foi feita.

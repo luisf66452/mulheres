@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { proxy } from './proxy';
+import { proxy, config } from './proxy';
 
 vi.mock('@supabase/ssr', () => ({
   createServerClient: vi.fn(),
@@ -106,5 +106,31 @@ describe('proxy (middleware)', () => {
     const resposta = await proxy(request);
 
     expect(resposta.headers.get('location')).toBeNull();
+  });
+});
+
+describe('config.matcher (regex de rotas em que o middleware roda)', () => {
+  // O matcher é lido pelo Next.js em tempo de build/roteamento, antes mesmo
+  // do proxy() ser invocado — por isso testamos a regex exportada
+  // diretamente, sem duplicar o padrão à mão, para que o teste não fique
+  // dessincronizado do config real. Ancoramos com ^...$ porque é assim que
+  // o Next.js compila matchers de rota (path-to-regexp casa o pathname
+  // inteiro) — sem ancorar, RegExp#test faria correspondência parcial em
+  // qualquer posição da string e produziria falsos positivos (ex.:
+  // "/_next/static/x.js" bateria a partir do "/" antes de "static").
+  const matcherRegex = new RegExp(`^${config.matcher[0]}$`);
+
+  it('exclui /manifest.webmanifest (rota gerada por src/app/manifest.ts) da execução do middleware', () => {
+    expect(matcherRegex.test('/manifest.webmanifest')).toBe(false);
+  });
+
+  it('continua executando o middleware em rotas protegidas normais', () => {
+    expect(matcherRegex.test('/perfil')).toBe(true);
+  });
+
+  it('continua excluindo favicon.ico, icons e assets estáticos do _next', () => {
+    expect(matcherRegex.test('/favicon.ico')).toBe(false);
+    expect(matcherRegex.test('/icon.png')).toBe(false);
+    expect(matcherRegex.test('/_next/static/x.js')).toBe(false);
   });
 });

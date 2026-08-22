@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   title: "Rose",
   description:
     "Um ritual diário de 5 minutos para autoestima, imagem corporal e relação com a comida.",
-  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Rose",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {

@@ -41,7 +41,7 @@ Este documento é o checklist objetivo de prontidão do Rose para **beta fechado
 - **Revisão clínica do conteúdo**: qualquer novo texto relacionado a bem-estar emocional, ou mudança de critério de risco, precisa passar pela psicóloga responsável. Nada de conteúdo clínico foi alterado nesta tarefa — apenas auditado.
 - **Stripe Live**: as chaves em produção continuam de **teste**. Trocar para live é uma decisão de negócio + operacional que não foi e não deve ser feita automaticamente.
 - **Domínio próprio**: não existe domínio customizado configurado — não bloqueia beta técnico, mas provavelmente é desejável antes de lançamento público amplo.
-- **Canal de suporte dedicado**: hoje o único canal é o e-mail pessoal do fundador (`almeidaferreiraluisgustavo@gmail.com`), o que é aceitável para beta mas talvez não escale para lançamento público — decisão operacional, não técnica.
+- **Canal de suporte dedicado**: hoje o único canal é o e-mail pessoal do fundador (`rosewomand123@gmail.com`), o que é aceitável para beta mas talvez não escale para lançamento público — decisão operacional, não técnica.
 
 ---
 

@@ -11,6 +11,7 @@ import {
   type TamanhoTexto,
 } from '@/lib/perfil/configuracoesDispositivo';
 import { FUSOS_HORARIOS, detectarFusoHorarioNavegador } from '@/lib/perfil/fusosHorarios';
+import InstalarRose from '@/app/components/InstalarRose';
 import { atualizarFusoHorario } from './actions';
 
 const TAMANHOS: { id: TamanhoTexto; rotulo: string }[] = [
@@ -298,6 +299,7 @@ export default function ConfiguracoesForm({
       </Secao>
 
       <Secao titulo="Sobre o Rose">
+        <InstalarRose variante="compacto" />
         <p className="text-center text-xs text-texto-suave">Rose · versão {versaoApp}</p>
       </Secao>
     </div>

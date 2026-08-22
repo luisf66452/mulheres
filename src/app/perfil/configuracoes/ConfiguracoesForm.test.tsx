@@ -2,10 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import ConfiguracoesForm from './ConfiguracoesForm';
+import { usePwaInstall } from '@/lib/pwa/usePwaInstall';
 
 vi.mock('./actions', () => ({
   atualizarFusoHorario: vi.fn(async () => ({ sucesso: true })),
 }));
+
+vi.mock('@/lib/pwa/usePwaInstall', () => ({
+  usePwaInstall: vi.fn(),
+}));
+
+const usePwaInstallMock = vi.mocked(usePwaInstall);
 
 const USUARIA_A = 'usuaria-config-a';
 const USUARIA_B = 'usuaria-config-b';
@@ -15,6 +22,14 @@ beforeEach(() => {
   document.documentElement.removeAttribute('data-tema');
   document.documentElement.removeAttribute('data-tamanho-texto');
   document.documentElement.removeAttribute('data-reduzir-animacoes');
+  usePwaInstallMock.mockReturnValue({
+    podeInstalar: false,
+    ehIOS: false,
+    ehStandalone: false,
+    foiDispensado: false,
+    instalar: vi.fn(),
+    dispensar: vi.fn(),
+  });
 });
 
 describe('ConfiguracoesForm', () => {
@@ -95,6 +110,19 @@ describe('ConfiguracoesForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirmar limpeza/i }));
 
     expect(window.localStorage.getItem(`conquistas:vistas:${USUARIA_B}`)).not.toBeNull();
+  });
+
+  it('renderiza o ponto de entrada de instalacao do PWA', () => {
+    usePwaInstallMock.mockReturnValue({
+      podeInstalar: true,
+      ehIOS: false,
+      ehStandalone: false,
+      foiDispensado: false,
+      instalar: vi.fn(),
+      dispensar: vi.fn(),
+    });
+    render(<ConfiguracoesForm usuariaId={USUARIA_A} fusoHorarioAtual="America/Sao_Paulo" versaoApp="1.0.0" />);
+    expect(screen.getByLabelText('Instalar a Rose')).toBeInTheDocument();
   });
 
   it('o botão de salvar fuso fica desabilitado até o valor mudar', () => {

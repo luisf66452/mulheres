@@ -9,6 +9,7 @@ const MENSAGENS: Record<CategoriaPushNotificacao, string[]> = {
   sessao_abandonada: [
     'Sua sessão ficou pela metade. Você pode continuar de onde parou.',
     'Quando quiser, sua sessão está te esperando exatamente onde você deixou.',
+    'Sua próxima etapa está esperando por você 🌹 Continue quando se sentir pronta.',
   ],
   sessao_disponivel: [
     'Uma etapa da Rose está esperando por você 🌹',

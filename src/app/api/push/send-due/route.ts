@@ -154,7 +154,7 @@ async function processarLembreteCheckin(supabaseAdmin: ReturnType<typeof createC
 // 2. Geração de candidatos (sessão abandonada/disponível/pendente/
 //    inatividade/continuidade)
 // ---------------------------------------------------------------------------
-async function gerarEEnfileirar(
+export async function gerarEEnfileirar(
   supabaseAdmin: ReturnType<typeof createClient<Database>>,
   usuariaIds: string[],
   fusoPorUsuaria: Map<string, string>,
@@ -182,23 +182,48 @@ async function gerarEEnfileirar(
       const fimSilencio = (pref?.horario_silencio_fim ?? '09:00:00').slice(0, 5);
       const agendadoPara = proximoHorarioPermitido(agora, fuso, inicioSilencio, fimSilencio);
 
-      const { data: inserida } = await supabaseAdmin
+      const linhaBase = {
+        titulo: mensagem.titulo,
+        corpo: mensagem.corpo,
+        url: deepLinkSeguro(candidato.url),
+        tag: candidato.dedupKey,
+        agendado_para: agendadoPara.toISOString(),
+      };
+
+      // A pendência ainda existe (é isso que `candidatos` significa: veio da
+      // MESMA leitura ao vivo do progresso que decide se enviar de verdade
+      // mais tarde). Se já existe uma linha para esta dedup_key mas ela
+      // terminou em 'falha' (ex.: um problema de entrega temporário, como
+      // uma rotação de chave VAPID) ou 'cancelada' (ex.: a usuária estava
+      // pausada na hora do processamento anterior), a pendência não foi
+      // resolvida — revive a MESMA linha para 'pendente' em vez de deixá-la
+      // morta para sempre. Só 'enviada' é dedup permanente de verdade: já
+      // chegou no dispositivo, nunca reenvia a mesma pendência.
+      const { data: existente } = await supabaseAdmin
         .from('push_notificacoes')
-        .upsert(
-          {
-            usuaria_id: usuariaId,
-            categoria: candidato.categoria,
-            dedup_key: candidato.dedupKey,
-            titulo: mensagem.titulo,
-            corpo: mensagem.corpo,
-            url: deepLinkSeguro(candidato.url),
-            tag: candidato.dedupKey,
-            agendado_para: agendadoPara.toISOString(),
-          },
-          { onConflict: 'usuaria_id,dedup_key', ignoreDuplicates: true }
-        )
-        .select('id');
-      geradas += inserida?.length ?? 0;
+        .select('id, status')
+        .eq('usuaria_id', usuariaId)
+        .eq('dedup_key', candidato.dedupKey)
+        .maybeSingle();
+
+      if (!existente) {
+        const { data: inserida } = await supabaseAdmin
+          .from('push_notificacoes')
+          .insert({ usuaria_id: usuariaId, categoria: candidato.categoria, dedup_key: candidato.dedupKey, ...linhaBase })
+          .select('id');
+        geradas += inserida?.length ?? 0;
+        continue;
+      }
+
+      if (existente.status === 'falha' || existente.status === 'cancelada') {
+        const { data: revivida } = await supabaseAdmin
+          .from('push_notificacoes')
+          .update({ ...linhaBase, status: 'pendente', tentativas: 0, enviado_em: null })
+          .eq('id', existente.id)
+          .select('id');
+        geradas += revivida?.length ?? 0;
+      }
+      // 'pendente'/'processando'/'enviada': já ativa ou já entregue, não faz nada.
     }
   }
 
@@ -208,7 +233,7 @@ async function gerarEEnfileirar(
 // ---------------------------------------------------------------------------
 // 3. Envio das notificações vencidas
 // ---------------------------------------------------------------------------
-async function processarVencidas(
+export async function processarVencidas(
   supabaseAdmin: ReturnType<typeof createClient<Database>>,
   fusoPorUsuaria: Map<string, string>,
   prefPorUsuaria: Map<string, PreferenciasNotificacao>,

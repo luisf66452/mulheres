@@ -62,6 +62,11 @@ export async function enviarParaSubscricoes(
     } catch (erro) {
       falhas++;
       const statusCode = (erro as { statusCode?: number } | null)?.statusCode;
+      // Nunca loga endpoint, chaves ou corpo do payload — só o status HTTP,
+      // suficiente para diagnosticar (ex.: 401/403 = credenciais VAPID não
+      // batem mais com a subscription, geralmente depois de trocar as
+      // chaves; 404/410 tratado abaixo, removido de propósito).
+      console.error(`[push] falha ao entregar (statusCode=${statusCode ?? 'desconhecido'})`);
       if (statusCode === 404 || statusCode === 410) {
         await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id);
       }

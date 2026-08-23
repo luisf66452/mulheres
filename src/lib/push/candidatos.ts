@@ -134,7 +134,9 @@ export async function gerarCandidatosParaUsuaria(
   const candidatos: CandidatoNotificacao[] = [];
 
   if (preferencias.lembreteJornada) {
-    candidatos.push(...avaliarSessaoAbandonada(contexto, agora));
+    // 24h sem progresso (não "algumas horas") — pedido explícito para não
+    // insistir cedo demais numa sessão que a usuária só começou a explorar.
+    candidatos.push(...avaliarSessaoAbandonada(contexto, agora, 24));
     candidatos.push(...avaliarSessaoDisponivel(contexto, dataLocalHoje));
     candidatos.push(...avaliarContinuidade(contexto, agora));
   }

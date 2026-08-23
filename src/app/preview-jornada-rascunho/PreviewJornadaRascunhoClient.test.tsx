@@ -85,7 +85,15 @@ describe('PreviewJornadaRascunhoClient — bug real reproduzido e corrigido', ()
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/não foi possível ativar/i);
     });
-    expect(screen.getByRole('button', { name: /ativar jornada de rascunho/i })).toBeEnabled();
+    // `erro` e o fim da transição (`processando` -> false) são dois setState
+    // separados dentro do mesmo callback assíncrono de startTransition — o
+    // React pode confirmá-los em commits distintos (o erro aparece um tick
+    // antes do isPending virar false). Um `expect` síncrono logo após o
+    // primeiro waitFor corria o risco de pegar exatamente esse instante
+    // intermediário; precisa do seu próprio waitFor.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /ativar jornada de rascunho/i })).toBeEnabled();
+    });
     expect(refresh).not.toHaveBeenCalled();
   });
 

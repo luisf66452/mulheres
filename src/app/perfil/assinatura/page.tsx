@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
-import { stripeConfigurado } from '@/lib/stripe/planos';
+import { obterStripe } from '@/lib/stripe/client';
+import { buscarPrecoExibicao, obterMoedaELocaleDoPais, obterPriceId, stripeConfigurado } from '@/lib/stripe/planos';
 import TikTokPurchase from '@/app/components/tiktok/TikTokPurchase';
 import BotaoAssinar from './BotaoAssinar';
 import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
@@ -42,7 +43,7 @@ export default async function AssinaturaPage({
 
   const { data: perfil, error } = await supabase
     .from('perfis')
-    .select('plano, assinatura_status, assinatura_periodo_fim')
+    .select('plano, assinatura_status, assinatura_periodo_fim, pais')
     .eq('id', user.id)
     .single();
 
@@ -60,6 +61,22 @@ export default async function AssinaturaPage({
   const plano = perfil?.plano ?? 'free';
   const ehPremium = plano === 'premium';
   const assinaturaConfigurada = stripeConfigurado();
+
+  // Mesma moeda que a rota de checkout vai realmente usar (deriva do país
+  // salvo no perfil) — mostra o preço real antes do redirecionamento, nunca
+  // um valor fixo que possa ficar desatualizado em relação ao Stripe.
+  let precoMensal: string | null = null;
+  let precoAnual: string | null = null;
+  if (!ehPremium && assinaturaConfigurada) {
+    const stripe = obterStripe();
+    if (stripe) {
+      const { moeda } = obterMoedaELocaleDoPais(perfil?.pais);
+      [precoMensal, precoAnual] = await Promise.all([
+        buscarPrecoExibicao(stripe, obterPriceId('mensal'), moeda),
+        buscarPrecoExibicao(stripe, obterPriceId('anual'), moeda),
+      ]);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 pt-6 pb-24 md:pb-8">
@@ -110,6 +127,12 @@ export default async function AssinaturaPage({
 
           {!ehPremium && assinaturaConfigurada && (
             <div className="space-y-3 rounded-2xl border border-borda bg-superficie p-4">
+              {(precoMensal || precoAnual) && (
+                <div className="space-y-1 text-sm text-texto-suave">
+                  {precoMensal && <p>Mensal: {precoMensal}</p>}
+                  {precoAnual && <p>Anual: {precoAnual}</p>}
+                </div>
+              )}
               <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
               <BotaoAssinar plano="anual" rotulo="Assinar anual (economize)" />
               <p className="text-xs text-texto-suave">

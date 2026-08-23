@@ -32,7 +32,9 @@ function criarRequisicao(corpo: unknown = { plano: 'mensal' }) {
   });
 }
 
-function criarPerfilConstrutor(perfil: { stripe_customer_id: string | null; plano: string } | null) {
+type PerfilFake = { stripe_customer_id: string | null; plano: string; pais?: string | null };
+
+function criarPerfilConstrutor(perfil: PerfilFake | null) {
   const construtor = {
     select: vi.fn(() => construtor),
     eq: vi.fn(() => construtor),
@@ -43,7 +45,7 @@ function criarPerfilConstrutor(perfil: { stripe_customer_id: string | null; plan
 
 function criarSupabaseServerFake(opts: {
   user: { id: string; email?: string } | null;
-  perfil?: { stripe_customer_id: string | null; plano: string } | null;
+  perfil?: PerfilFake | null;
 }) {
   return {
     auth: {
@@ -76,6 +78,7 @@ function criarStripeFake(opts: {
   retrieveCustomer?: (id: string) => unknown;
   createCustomer?: () => unknown;
   createCheckoutSession?: () => unknown;
+  retrievePrice?: () => unknown;
 }) {
   return {
     customers: {
@@ -88,7 +91,17 @@ function criarStripeFake(opts: {
       },
     },
     prices: {
-      retrieve: vi.fn(async () => ({ unit_amount: 1990, currency: 'brl' })),
+      retrieve: vi.fn(
+        opts.retrievePrice ??
+          (async () => ({
+            currency: 'eur',
+            unit_amount: 999,
+            currency_options: {
+              eur: { unit_amount: 999 },
+              brl: { unit_amount: 3999 },
+            },
+          }))
+      ),
     },
   };
 }
@@ -235,5 +248,167 @@ describe('POST /api/stripe/checkout', () => {
     expect(resposta.status).toBe(200);
     expect(stripeFake.customers.retrieve).not.toHaveBeenCalled();
     expect(stripeFake.customers.create).toHaveBeenCalled();
+  });
+
+  it('usa BRL para usuária do Brasil no plano mensal (R$ 39,99), com base no país do perfil', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'BR' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal' }));
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'brl', locale: 'pt-BR' })
+    );
+    expect(corpo.valor).toBe(39.99);
+    expect(corpo.moeda).toBe('BRL');
+  });
+
+  it('usa BRL para usuária do Brasil no plano anual (R$ 359,99)', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'BR' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({
+      retrievePrice: async () => ({
+        currency: 'eur',
+        unit_amount: 8999,
+        currency_options: { eur: { unit_amount: 8999 }, brl: { unit_amount: 35999 } },
+      }),
+    });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'anual' }));
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'brl', locale: 'pt-BR' })
+    );
+    expect(corpo.valor).toBe(359.99);
+    expect(corpo.moeda).toBe('BRL');
+  });
+
+  it('usa EUR para usuária de Portugal no plano mensal (9,99 €)', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'PT' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal' }));
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'eur', locale: 'pt' })
+    );
+    expect(corpo.valor).toBe(9.99);
+    expect(corpo.moeda).toBe('EUR');
+  });
+
+  it('usa EUR para usuária de Portugal no plano anual (89,99 €)', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'PT' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({
+      retrievePrice: async () => ({
+        currency: 'eur',
+        unit_amount: 8999,
+        currency_options: { eur: { unit_amount: 8999 }, brl: { unit_amount: 35999 } },
+      }),
+    });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'anual' }));
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'eur', locale: 'pt' })
+    );
+    expect(corpo.valor).toBe(89.99);
+    expect(corpo.moeda).toBe('EUR');
+  });
+
+  it('ignora um campo "pais" enviado no corpo da requisição — usa sempre o país salvo no perfil', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'BR' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    // Tentativa de manipulação: pede plano mensal alegando ser de Portugal
+    // (moeda mais barata em termos nominais) — o perfil diz Brasil.
+    const resposta = await POST(criarRequisicao({ plano: 'mensal', pais: 'PT' }));
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'brl', locale: 'pt-BR' })
+    );
+  });
+
+  it('usa o fallback seguro (Portugal/EUR) quando o perfil não tem país', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: null },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal' }));
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'eur', locale: 'pt' })
+    );
+  });
+
+  it('recusa o checkout com mensagem segura quando o Price não tem currency_options para a moeda esperada, em vez de cobrar em EUR silenciosamente', async () => {
+    const spyConsole = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free', pais: 'BR' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({
+      // Price sem currency_options.brl — cenário de configuração incompleta no Stripe.
+      retrievePrice: async () => ({
+        currency: 'eur',
+        unit_amount: 999,
+        currency_options: { eur: { unit_amount: 999 } },
+      }),
+    });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal' }));
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(503);
+    expect(corpo.erro).toBeTruthy();
+    expect(corpo.moeda).toBeUndefined();
+    expect(stripeFake.checkout.sessions.create).not.toHaveBeenCalled();
+    spyConsole.mockRestore();
   });
 });

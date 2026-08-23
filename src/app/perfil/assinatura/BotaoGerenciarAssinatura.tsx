@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Botao from '@/app/components/Botao';
 
 export default function BotaoGerenciarAssinatura() {
+  const router = useRouter();
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -16,6 +18,12 @@ export default function BotaoGerenciarAssinatura() {
       if (!resposta.ok || !dados.url) {
         setErro(dados.erro ?? 'Não foi possível abrir o gerenciamento de assinatura agora.');
         setCarregando(false);
+        // A rota normalizou o perfil (ex.: premium sem assinatura Stripe
+        // válida) — atualiza a página para refletir o plano real (Gratuito)
+        // em vez de deixar a UI mostrando um estado que não existe mais.
+        if (dados.perfilAtualizado) {
+          router.refresh();
+        }
         return;
       }
       window.location.href = dados.url;

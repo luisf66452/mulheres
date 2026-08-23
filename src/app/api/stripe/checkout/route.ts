@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { obterStripe } from '@/lib/stripe/client';
+import { obterCustomerValido } from '@/lib/stripe/customer';
 import { ehPlanoValido, obterPriceId } from '@/lib/stripe/planos';
 import { obterUrlBaseDoRequest } from '@/lib/site-url';
 
@@ -58,6 +59,15 @@ export async function POST(request: Request) {
 
   try {
     let customerId = perfil?.stripe_customer_id ?? null;
+
+    // A conta Stripe pode ter sido trocada — se o id salvo pertence à conta
+    // antiga (ou aponta para um Customer deletado), trata como se a usuária
+    // nunca tivesse tido um Customer, e recria abaixo. Uma assinatura válida
+    // (customerId ok) nunca é tocada aqui.
+    if (customerId && !(await obterCustomerValido(stripe, customerId))) {
+      customerId = null;
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email ?? undefined,
@@ -65,8 +75,24 @@ export async function POST(request: Request) {
       });
       customerId = customer.id;
       // Só a service role grava stripe_customer_id (fora da lista de colunas
-      // liberadas por 0012 para UPDATE do client).
-      await adminClient.from('perfis').update({ stripe_customer_id: customerId }).eq('id', user.id);
+      // liberadas por 0012 para UPDATE do client). Limpa também dados de
+      // assinatura antigos, que pertenciam ao Customer obsoleto/inexistente.
+      const { error: erroUpdatePerfil } = await adminClient
+        .from('perfis')
+        .update({
+          stripe_customer_id: customerId,
+          stripe_subscription_id: null,
+          assinatura_status: null,
+          assinatura_periodo_fim: null,
+        })
+        .eq('id', user.id);
+
+      if (erroUpdatePerfil) {
+        console.error('[stripe/checkout] falha ao gravar stripe_customer_id no perfil', {
+          message: erroUpdatePerfil.message,
+        });
+        return NextResponse.json({ erro: 'Não foi possível iniciar a assinatura agora. Tente novamente.' }, { status: 500 });
+      }
     }
 
     const siteUrl = await obterUrlBaseDoRequest();

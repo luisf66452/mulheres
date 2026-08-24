@@ -45,7 +45,7 @@ Observação sobre a fonte do CVV: `cvv.org.br` não é um domínio `.gov`, mas 
 ## File Structure
 
 ```
-supabase/migrations/20260824150000_recursos_seguranca_fonte_verificado.sql   [novo] coluna fonte/verificado_em, RLS pública, backfill
+supabase/migrations/20260824150000_recursos_seguranca_fonte_verificado.sql   [novo] coluna fonte/verificado_em + backfill (RLS/GRANT inalterados)
 supabase/seed_recursos_seguranca_pt.sql                                      [modificado] fonte/verificado_em nos inserts PT
 supabase/seed.sql                                                            [modificado] fonte/verificado_em nos inserts BR
 docs/EVIDENCE.md                                                             [modificado] registra a reverificação de fontes (Seção 7)
@@ -67,7 +67,7 @@ src/app/checkin/page.tsx                                                     [mo
 
 ---
 
-### Task 1: Migration — `fonte`/`verificado_em`, leitura pública, backfill dos contatos confirmados
+### Task 1: Migration — `fonte`/`verificado_em`, backfill dos contatos confirmados (RLS/GRANT inalterados)
 
 **Files:**
 - Create: `supabase/migrations/20260824150000_recursos_seguranca_fonte_verificado.sql`
@@ -95,25 +95,15 @@ alter table public.recursos_seguranca
   add column if not exists fonte text,
   add column if not exists verificado_em date;
 
--- recursos_seguranca é um catálogo de texto informativo público (nome de
--- linha de apoio, número, descrição) sem nenhuma coluna ligada a uma
--- usuária específica — nunca teve dado pessoal por trás do RLS. Antes desta
--- migration, a policy só liberava leitura para o papel `authenticated`, o
--- que forçava login para ver o espaço de segurança. Isso conflita
--- diretamente com o requisito da Seção 7 ("nunca depende de login para
--- exibir ajuda emergencial"): quando não há sessão, o cliente Supabase do
--- servidor (src/lib/supabase/server.ts) executa como o papel `anon`, então
--- a leitura precisa ficar aberta também para `anon`. Esta é uma exceção
--- deliberada e estreita à convenção geral de "nunca GRANT a anon" — ela
--- vale para tabelas com dados de usuária; aqui não há.
-drop policy if exists "qualquer usuaria autenticada le recursos de seguranca" on public.recursos_seguranca;
-drop policy if exists "leitura publica de recursos de seguranca" on public.recursos_seguranca;
-
-create policy "leitura publica de recursos de seguranca"
-  on public.recursos_seguranca for select
-  using (true);
-
-grant select on public.recursos_seguranca to anon;
+-- recursos_seguranca continua com a policy/GRANT originais, restritos a
+-- `authenticated` — o projeto nunca concede acesso a `anon` (regra
+-- transversal do design). O requisito da Seção 7 ("/seguranca funciona
+-- mesmo sem sessão") é resolvido na camada de aplicação, não no RLS: quando
+-- não há usuária logada, src/app/seguranca/page.tsx lê esta tabela com o
+-- admin client (service role, que ignora RLS — src/lib/supabase/admin.ts),
+-- exatamente como outras rotas do projeto já fazem para operações que
+-- precisam funcionar independente de sessão (ex.: src/app/api/perfil/excluir-conta/route.ts).
+-- Nenhuma policy nem GRANT muda nesta migration.
 
 -- Backfill dos contatos já confirmados em fontes oficiais (pesquisa
 -- registrada em docs/superpowers/plans/2026-08-24-espaco-seguranca.md e em
@@ -597,7 +587,7 @@ git commit -m "feat(seguranca): componente AvisoSeguranca reaproveitavel como po
 - Test: `src/app/seguranca/page.test.tsx`
 
 **Interfaces:**
-- Consumes: `NUMERO_EMERGENCIA_LOCAL` (Task 3), `SeletorPaisSeguranca` (Task 4), `PAISES_SUPORTADOS`/`PaisSuportado` de `src/lib/perfil/pais.ts`, `RecursoSeguranca` (Task 1), `createSupabaseServerClient` de `src/lib/supabase/server.ts`, `NotificacaoPetalas` de `src/app/components/clube-rose/NotificacaoPetalas.tsx` (já existente, sem alteração).
+- Consumes: `NUMERO_EMERGENCIA_LOCAL` (Task 3), `SeletorPaisSeguranca` (Task 4), `PAISES_SUPORTADOS`/`PaisSuportado` de `src/lib/perfil/pais.ts`, `RecursoSeguranca` (Task 1), `createSupabaseServerClient` de `src/lib/supabase/server.ts`, `createSupabaseAdminClient` de `src/lib/supabase/admin.ts` (a leitura de `recursos_seguranca` usa o admin client — service role, ignora RLS — para funcionar mesmo sem sessão, sem precisar de GRANT a `anon`; `perfis` continua lida com o cliente autenticado normal), `NotificacaoPetalas` de `src/app/components/clube-rose/NotificacaoPetalas.tsx` (já existente, sem alteração).
 - Produces: `SegurancaPage` (default export, server component) aceitando `searchParams: Promise<{ petalas?: string; pais?: string }>` — o novo parâmetro `pais` é consumido pelo próprio componente (setado pelo `SeletorPaisSeguranca` via navegação).
 
 - [ ] **Step 1: Escrever os testes (falham por o comportamento novo não existir ainda)**
@@ -616,33 +606,46 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient: vi.fn() }));
+vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdminClient: vi.fn() }));
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 type RecursoFake = Pick<RecursoSeguranca, 'id' | 'titulo' | 'corpo' | 'ordem'>;
 
-function criarSupabaseFake(opcoes: {
+function criarSupabaseServerFake(opcoes: {
   usuario?: { id: string } | null;
   perfil?: { pais: string; pais_confirmado_em: string | null } | null;
-  recursos?: RecursoFake[];
-  erroRecursos?: boolean;
 }) {
-  const { usuario = null, perfil = null, recursos = [], erroRecursos = false } = opcoes;
+  const { usuario = null, perfil = null } = opcoes;
+  return {
+    auth: { getUser: vi.fn(async () => ({ data: { user: usuario } })) },
+    from: vi.fn((tabela: string) => {
+      if (tabela === 'perfis') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn(async () => ({ data: perfil })),
+            })),
+          })),
+        };
+      }
+      throw new Error(`tabela inesperada no cliente autenticado durante o teste: ${tabela}`);
+    }),
+  };
+}
+
+// recursos_seguranca é lida sempre pelo admin client (service role, ignora
+// RLS) — a tabela não tem GRANT nem policy para `anon` (o projeto nunca
+// concede acesso a `anon`), então a única forma de funcionar sem sessão é
+// não passar pelo cliente autenticado nesta consulta específica.
+function criarSupabaseAdminFake(opcoes: { recursos?: RecursoFake[]; erroRecursos?: boolean }) {
+  const { recursos = [], erroRecursos = false } = opcoes;
   const chamadasRecursos: { metodo: string; args: unknown[] }[] = [];
 
   return {
     client: {
-      auth: { getUser: vi.fn(async () => ({ data: { user: usuario } })) },
       from: vi.fn((tabela: string) => {
-        if (tabela === 'perfis') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                maybeSingle: vi.fn(async () => ({ data: perfil })),
-              })),
-            })),
-          };
-        }
         if (tabela === 'recursos_seguranca') {
           const query = {
             select: vi.fn(() => query),
@@ -660,7 +663,7 @@ function criarSupabaseFake(opcoes: {
           };
           return query;
         }
-        throw new Error(`tabela inesperada no teste: ${tabela}`);
+        throw new Error(`tabela inesperada no admin client durante o teste: ${tabela}`);
       }),
     },
     chamadasRecursos,
@@ -669,8 +672,8 @@ function criarSupabaseFake(opcoes: {
 
 describe('SegurancaPage', () => {
   it('funciona sem sessão: mostra o seletor de país quando não há usuária e nenhum ?pais= foi escolhido', async () => {
-    const { client } = criarSupabaseFake({ usuario: null });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake({}).client as never);
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({}) });
     render(jsx);
@@ -681,11 +684,12 @@ describe('SegurancaPage', () => {
   });
 
   it('sem sessão, mas com ?pais=BR: usa o país da querystring e mostra o número de emergência do Brasil', async () => {
-    const { client } = criarSupabaseFake({
-      usuario: null,
-      recursos: [{ id: 'r1', titulo: 'Apoio emocional gratuito', corpo: 'Ligue 188.', ordem: 1 }],
-    });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(
+      criarSupabaseAdminFake({
+        recursos: [{ id: 'r1', titulo: 'Apoio emocional gratuito', corpo: 'Ligue 188.', ordem: 1 }],
+      }).client as never
+    );
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({ pais: 'BR' }) });
     render(jsx);
@@ -697,12 +701,17 @@ describe('SegurancaPage', () => {
   });
 
   it('com sessão e país confirmado no perfil: usa o país da conta e ignora um ?pais= diferente na querystring', async () => {
-    const { client } = criarSupabaseFake({
-      usuario: { id: 'u1' },
-      perfil: { pais: 'PT', pais_confirmado_em: '2026-01-01T00:00:00Z' },
-      recursos: [{ id: 'r1', titulo: 'Linha Nacional de Prevenção do Suicídio', corpo: 'Ligue 1411.', ordem: 1 }],
-    });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      criarSupabaseServerFake({
+        usuario: { id: 'u1' },
+        perfil: { pais: 'PT', pais_confirmado_em: '2026-01-01T00:00:00Z' },
+      }) as never
+    );
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(
+      criarSupabaseAdminFake({
+        recursos: [{ id: 'r1', titulo: 'Linha Nacional de Prevenção do Suicídio', corpo: 'Ligue 1411.', ordem: 1 }],
+      }).client as never
+    );
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({ pais: 'BR' }) });
     render(jsx);
@@ -713,11 +722,10 @@ describe('SegurancaPage', () => {
   });
 
   it('com sessão mas sem país confirmado: cai para o seletor manual, igual a uma visita sem sessão', async () => {
-    const { client } = criarSupabaseFake({
-      usuario: { id: 'u1' },
-      perfil: { pais: 'BR', pais_confirmado_em: null },
-    });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      criarSupabaseServerFake({ usuario: { id: 'u1' }, perfil: { pais: 'BR', pais_confirmado_em: null } }) as never
+    );
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake({}).client as never);
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({}) });
     render(jsx);
@@ -726,8 +734,9 @@ describe('SegurancaPage', () => {
   });
 
   it('a consulta filtra por fonte e verificado_em preenchidos (contatos não verificados não devem aparecer)', async () => {
-    const { client, chamadasRecursos } = criarSupabaseFake({ usuario: null, recursos: [] });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    const { client, chamadasRecursos } = criarSupabaseAdminFake({ recursos: [] });
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(client as never);
 
     await SegurancaPage({ searchParams: Promise.resolve({ pais: 'PT' }) });
 
@@ -737,8 +746,8 @@ describe('SegurancaPage', () => {
   });
 
   it('resiliente quando a consulta falha: ainda mostra a orientação fixa e o número de emergência', async () => {
-    const { client } = criarSupabaseFake({ usuario: null, erroRecursos: true });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake({ erroRecursos: true }).client as never);
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({ pais: 'PT' }) });
     render(jsx);
@@ -748,8 +757,8 @@ describe('SegurancaPage', () => {
   });
 
   it('resiliente quando a consulta vem vazia: ainda mostra a orientação fixa', async () => {
-    const { client } = criarSupabaseFake({ usuario: null, recursos: [] });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake({ recursos: [] }).client as never);
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({ pais: 'BR' }) });
     render(jsx);
@@ -759,8 +768,8 @@ describe('SegurancaPage', () => {
   });
 
   it('mostra o botão "Voltar ao app"', async () => {
-    const { client } = criarSupabaseFake({ usuario: null });
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(criarSupabaseServerFake({ usuario: null }) as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake({}).client as never);
 
     const jsx = await SegurancaPage({ searchParams: Promise.resolve({ pais: 'PT' }) });
     render(jsx);
@@ -779,6 +788,7 @@ Expected: FAIL (a página atual redireciona/renderiza diferente do esperado; `Se
 
 ```tsx
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 import SeletorPaisSeguranca from '@/app/components/seguranca/SeletorPaisSeguranca';
 import { PAISES_SUPORTADOS, type PaisSuportado } from '@/lib/perfil/pais';
@@ -832,17 +842,31 @@ export default async function SegurancaPage({
   // dos dois preenchidos). Se a consulta falhar ou vier vazia, `recursos`
   // fica [] e a tela continua funcional — o bloco de orientação fixo abaixo
   // nunca depende deste resultado.
+  //
+  // Usa o admin client (service role) em vez do cliente autenticado: a
+  // tabela não tem GRANT nem policy para `anon` (o projeto nunca concede
+  // acesso a `anon`), então para uma visita sem sessão o cliente autenticado
+  // normal não conseguiria ler nada. `recursos_seguranca` é um catálogo
+  // público de texto informativo, sem dado pessoal — ler com o admin client
+  // aqui é seguro e é o mesmo padrão já usado em outras rotas do projeto
+  // para operações independentes de sessão (src/lib/supabase/admin.ts).
+  // createSupabaseAdminClient() retorna null se as variáveis de ambiente do
+  // service role estiverem ausentes — tratado como mais um caso de "consulta
+  // indisponível", nunca como erro fatal da página.
   let recursos: RecursoSeguranca[] = [];
   if (paisEfetivo) {
-    const { data, error } = await supabase
-      .from('recursos_seguranca')
-      .select('*')
-      .eq('pais', paisEfetivo)
-      .not('fonte', 'is', null)
-      .not('verificado_em', 'is', null)
-      .order('ordem');
-    if (!error && data) {
-      recursos = data;
+    const admin = createSupabaseAdminClient();
+    if (admin) {
+      const { data, error } = await admin
+        .from('recursos_seguranca')
+        .select('*')
+        .eq('pais', paisEfetivo)
+        .not('fonte', 'is', null)
+        .not('verificado_em', 'is', null)
+        .order('ordem');
+      if (!error && data) {
+        recursos = data;
+      }
     }
   }
 
@@ -1112,3 +1136,5 @@ No Preview: abrir `/seguranca` sem estar logada (aba anônima) e confirmar que a
 **Placeholder scan:** todo bloco de código deste plano contém conteúdo completo e real — nenhum "TBD", nenhuma fonte inventada, nenhum "adicionar validação apropriada" sem o código da validação. Os únicos valores condicionais são o timestamp exato gerado por `supabase migration new` (Task 1, Step 1), que é inerente à ferramenta, não um placeholder de conteúdo.
 
 **Consistência de tipos:** `RecursoSeguranca` (Task 1) ganha `fonte`/`verificado_em` e é usado com esse formato em `page.tsx` (Task 6) e no teste (Task 6). `NUMERO_EMERGENCIA_LOCAL` (Task 3) é `Record<PaisSuportado, { numero, rotulo }>` e é consumido exatamente assim em `page.tsx`. `SeletorPaisSeguranca` (Task 4) não recebe props e navega para `/seguranca?pais=PT|BR`, formato que `page.tsx` (Task 6) lê via `searchParams.pais` e valida com `paisValido()`. `AvisoSeguranca` (Task 5) não recebe props e é importado sem props nas 3 páginas da Task 8.
+
+**Correção pós-escrita (revisão do orquestrador):** a primeira versão deste plano concedia `GRANT SELECT` a `anon` em `recursos_seguranca` para permitir leitura sem sessão — isso viola a regra transversal "nunca conceder acesso a `anon`" (AGENTS.md / Seção 1 do design). Corrigido: RLS e GRANTs de `recursos_seguranca` ficam exatamente como já são hoje (só `authenticated`); `src/app/seguranca/page.tsx` (Task 6) passa a ler essa tabela com `createSupabaseAdminClient()` (service role, ignora RLS — mesmo padrão já usado em outras rotas do projeto para operações independentes de sessão), com checagem explícita de `admin` nulo (a função retorna `null` se faltarem variáveis de ambiente do service role) tratada como mais um caso de "consulta indisponível". Task 1 e Task 6 (implementação e testes) foram atualizadas de acordo.

@@ -75,6 +75,8 @@ src/app/page.tsx                                                   [modificado �
 **Interfaces:**
 - Produces: tabela `public.favoritos` (`id`, `usuaria_id`, `pratica_id`, `sessao_id`, `criado_em`); coluna `public.praticas.is_pro boolean not null default false`; tipo `Favorito` e entrada `Database['public']['Tables']['favoritos']` em `src/lib/supabase/types.ts`; campo `is_pro: boolean` em `Pratica`.
 
+**Nota de execução:** o plano `docs/superpowers/plans/2026-08-24-fundacao-banco-rose.md` (Seção 1, executado antes deste na ordem definida no design) já cria `public.favoritos` e `public.praticas.is_pro` com o mesmo schema. Se aquele plano já foi executado, **pule a Step 1-2 desta task** (não gere uma segunda migration) e vá direto para a Step 3 (tipos TypeScript) — a menos que o tipo `Favorito`/`is_pro` já tenha sido adicionado por lá, caso em que esta task inteira vira só uma verificação (Step 4). O SQL abaixo é idempotente (`if not exists`/`drop policy if exists` em tudo) e seguro de rodar mesmo se a tabela já existir, caso a ordem de execução real seja diferente da planejada.
+
 - [ ] **Step 1: Gerar o arquivo de migration**
 
 Run: `supabase migration new favoritos_e_praticas_is_pro`

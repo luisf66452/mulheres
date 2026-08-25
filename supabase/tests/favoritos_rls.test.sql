@@ -16,7 +16,7 @@
 -- bateria em linha de outra usuária não lança erro e não afeta nada.
 
 begin;
-select plan(13);
+select plan(14);
 
 -- public.perfis.id referencia auth.users(id) com FK obrigatória (não
 -- deferrable) e um trigger (on_auth_user_created, 0001_init.sql) já cria a
@@ -152,6 +152,12 @@ select lives_ok(
   $$ delete from public.favoritos
      where usuaria_id = 'a0000000-0000-0000-0000-00000000000a' and sessao_id = 'jornada-x:sessao-1' $$,
   'usuária A consegue remover o próprio favorito'
+);
+
+select is(
+  (select count(*)::int from public.favoritos where usuaria_id = 'a0000000-0000-0000-0000-00000000000a' and sessao_id = 'jornada-x:sessao-1'),
+  0,
+  'o favorito removido por A realmente não existe mais'
 );
 
 -- Cenário 8: acesso anônimo é bloqueado.

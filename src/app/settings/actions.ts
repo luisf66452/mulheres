@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export async function salvarHorarioPreferido(horario: string) {
+export async function salvarHorarioPreferido(horario: string | null) {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

@@ -6,6 +6,7 @@ import CabecalhoPerfil from '@/app/components/perfil/CabecalhoPerfil';
 import CartaoMenuPerfil from '@/app/components/perfil/CartaoMenuPerfil';
 import BannerPersonalizacaoPerfil from './BannerPersonalizacaoPerfil';
 import IconePreferencias from '@/app/components/perfil/icones/IconePreferencias';
+import IconeObjetivos from '@/app/components/perfil/icones/IconeObjetivos';
 import IconeNotificacoes from '@/app/components/perfil/icones/IconeNotificacoes';
 import IconeAssinatura from '@/app/components/perfil/icones/IconeAssinatura';
 import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
@@ -16,7 +17,7 @@ import { sair } from './actions';
 
 const ITENS_MENU = [
   { href: '/clube-rose', rotulo: 'Clube Rose e recompensas', Icone: IconeClubeRose },
-  { href: '/perfil/personalizacao', rotulo: 'Personalizar experiência', Icone: IconePreferencias },
+  { href: '/perfil/personalizacao', rotulo: 'Personalizar experiência', Icone: IconeObjetivos },
   { href: '/perfil/preferencias', rotulo: 'Preferências', Icone: IconePreferencias },
   { href: '/perfil/notificacoes', rotulo: 'Notificações', Icone: IconeNotificacoes },
   { href: '/perfil/assinatura', rotulo: 'Minha assinatura', Icone: IconeAssinatura },

@@ -11,10 +11,12 @@
 -- Cobre: usuária A lê/insere/remove os próprios favoritos; usuária A não vê
 -- favoritos da usuária B; acesso anônimo é bloqueado; o constraint XOR
 -- rejeita linhas com os dois alvos ou nenhum; os índices únicos parciais
--- impedem duplicar o mesmo favorito.
+-- impedem duplicar o mesmo favorito; INSERT falsificando usuaria_id de outra
+-- usuária é rejeitado; UPDATE é rejeitado por falta de GRANT; DELETE que só
+-- bateria em linha de outra usuária não lança erro e não afeta nada.
 
 begin;
-select plan(9);
+select plan(13);
 
 -- public.perfis.id referencia auth.users(id) com FK obrigatória (não
 -- deferrable) e um trigger (on_auth_user_created, 0001_init.sql) já cria a
@@ -30,6 +32,16 @@ update public.perfis set nome = 'Usuária B' where id = 'b0000000-0000-0000-0000
 
 insert into public.praticas (id, categoria, tipo, titulo, conteudo, status) values
   ('c0000000-0000-0000-0000-00000000000c', 'respiracao', 'respiracao', 'Prática de teste', 'conteúdo', 'publicada');
+
+-- Cobre ainda (adicionado na Task 10 do plano de favoritos+continuar, que
+-- pediu um arquivo `favoritos_rls.test.sql` cujo texto no brief duplicava
+-- quase integralmente os cenários já escritos aqui pelo plano de fundação de
+-- banco — resolvido estendendo este arquivo em vez de criar um segundo
+-- arquivo redundante com o mesmo nome/objetivo): INSERT falsificando
+-- usuaria_id de outra usuária (rejeitado pela WITH CHECK), UPDATE rejeitado
+-- por falta de GRANT (favoritar/desfavoritar nunca editam), e DELETE que não
+-- bate em nenhuma linha visível (favorito de outra usuária) não lança erro,
+-- só não afeta nenhuma linha.
 
 -- Cenário 1: constraint XOR rejeita quando nenhum alvo é informado.
 select throws_ok(
@@ -96,6 +108,44 @@ select is(
   0,
   'usuária A NÃO vê os favoritos da usuária B via SELECT'
 );
+
+-- Cenário 6b: INSERT tentando falsificar usuaria_id de outra usuária é
+-- rejeitado pela WITH CHECK da policy de insert.
+select throws_ok(
+  $$ insert into public.favoritos (usuaria_id, sessao_id)
+     values ('b0000000-0000-0000-0000-00000000000b', 'jornada-x:sessao-falsificada') $$,
+  '42501',
+  null,
+  'INSERT com usuaria_id de outra usuária é rejeitado pela WITH CHECK da policy'
+);
+
+-- Cenário 6c: não existe policy de UPDATE — o GRANT nem sequer inclui UPDATE.
+select throws_ok(
+  $$ update public.favoritos set sessao_id = 'jornada-x:sessao-editada'
+     where usuaria_id = 'a0000000-0000-0000-0000-00000000000a' and sessao_id = 'jornada-x:sessao-1' $$,
+  '42501',
+  null,
+  'UPDATE em favoritos é rejeitado por falta de GRANT (favoritar/desfavoritar nunca editam, só insert/delete)'
+);
+
+-- Cenário 6d: DELETE que não bate em nenhuma linha visível (favorito da
+-- usuária B) não lança erro — a RLS só filtra a linha do WHERE, então a
+-- instrução "vive" normalmente e simplesmente não afeta nenhuma linha.
+select lives_ok(
+  $$ delete from public.favoritos where usuaria_id = 'b0000000-0000-0000-0000-00000000000b' $$,
+  'DELETE de A que só bateria em favorito de B não lança erro (RLS filtra silenciosamente)'
+);
+
+reset role;
+set local role postgres;
+select is(
+  (select count(*)::int from public.favoritos where usuaria_id = 'b0000000-0000-0000-0000-00000000000b'),
+  1,
+  'o favorito da usuária B continua existindo — o DELETE de A não afetou nenhuma linha'
+);
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-00000000000a","role":"authenticated"}';
 
 -- Cenário 7: usuária A remove o próprio favorito.
 select lives_ok(

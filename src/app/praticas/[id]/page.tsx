@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import PaywallPratica from './PaywallPratica';
+import PlayerAudio from '@/app/components/praticas/PlayerAudio';
 
 export default async function PraticaBibliotecaPage({
   params,
@@ -58,6 +59,16 @@ export default async function PraticaBibliotecaPage({
     notFound();
   }
 
+  // Mesma regra de "áudio completo" da Task 5: só renderiza o player quando
+  // publicada E com todos os campos de mídia preenchidos (evita expor um
+  // player quebrado para rascunho de áudio incompleto).
+  const audioProntoParaExibicao =
+    pratica.status === 'publicada' &&
+    pratica.audio_status === 'publicada' &&
+    !!pratica.audio_url &&
+    !!pratica.duracao_segundos &&
+    !!pratica.transcricao;
+
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">
       <span className="text-xs font-medium uppercase tracking-wide text-destaque">
@@ -65,6 +76,17 @@ export default async function PraticaBibliotecaPage({
       </span>
       <h1 className="font-display text-2xl text-texto">{pratica.titulo}</h1>
       <p className="whitespace-pre-line text-texto">{pratica.conteudo}</p>
+
+      {audioProntoParaExibicao && (
+        <PlayerAudio
+          praticaId={pratica.id}
+          url={pratica.audio_url as string}
+          titulo={pratica.titulo}
+          duracaoSegundosConhecida={pratica.duracao_segundos as number}
+          transcricao={pratica.transcricao as string}
+        />
+      )}
+
       <Link
         href="/praticas"
         className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"

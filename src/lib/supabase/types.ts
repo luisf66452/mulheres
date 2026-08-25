@@ -132,12 +132,15 @@ export type Pratica = {
 };
 
 // Metadado seguro de public.praticas, exposto pela view public.praticas_catalogo
-// (ver migração 20260825060150_praticas_rls_is_pro.sql) — NUNCA inclui
-// conteudo/audio_url/transcricao/duracao_segundos. Legível por qualquer
-// usuária autenticada independente do plano, mesmo para praticas is_pro =
-// true (título/categoria funcionam como teaser); use esta view em vez da
-// tabela base sempre que só precisar de metadado, e reserve a tabela base
-// (com o gate de plano) para quem precisa do conteúdo de verdade.
+// (ver migrações 20260825060150_praticas_rls_is_pro.sql e
+// 20260825130827_praticas_catalogo_duracao.sql) — NUNCA inclui
+// conteudo/audio_url/transcricao. `duracao_segundos` é o único metadado de
+// mídia exposto (não é conteúdo em si, só um número), para permitir o rótulo
+// de duração no teaser. Legível por qualquer usuária autenticada
+// independente do plano, mesmo para praticas is_pro = true (título/categoria/
+// duração funcionam como teaser); use esta view em vez da tabela base sempre
+// que só precisar de metadado, e reserve a tabela base (com o gate de plano)
+// para quem precisa do conteúdo de verdade.
 export type PraticaCatalogo = {
   id: string;
   categoria: string;
@@ -147,6 +150,7 @@ export type PraticaCatalogo = {
   audio_status: StatusAudioPratica;
   is_pro: boolean;
   criado_em: string;
+  duracao_segundos: number | null;
 };
 
 export type RegraRecomendacao = {

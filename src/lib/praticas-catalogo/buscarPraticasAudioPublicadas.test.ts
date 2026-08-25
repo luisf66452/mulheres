@@ -6,26 +6,22 @@ function criarQueryEncadeavel(retorno: { data: unknown; error: unknown }) {
   const query: Record<string, unknown> = {};
   query.select = vi.fn().mockReturnValue(query);
   query.eq = vi.fn().mockReturnValue(query);
-  query.not = vi.fn().mockReturnValue(query);
   query.then = (resolve: (v: typeof retorno) => void) => resolve(retorno);
   return query;
 }
 
 describe('buscarPraticasAudioPublicadas', () => {
-  it('retorna as práticas de áudio quando a consulta é bem-sucedida', async () => {
+  it('busca de praticas_catalogo (teaser, legível mesmo por usuária free em conteúdo Pro)', async () => {
     const linha = {
       id: '1',
       categoria: 'aterramento',
       tipo: 'reflexao',
       titulo: 'Aterramento guiado',
-      conteudo: 'Roteiro...',
       status: 'publicada',
       criado_em: '2026-01-01T00:00:00.000Z',
-      audio_url: 'https://cdn.exemplo.com/a.mp3',
       duracao_segundos: 240,
-      transcricao: 'Transcrição...',
       audio_status: 'publicada',
-      is_pro: false,
+      is_pro: true,
     };
     const query = criarQueryEncadeavel({ data: [linha], error: null });
     const from = vi.fn().mockReturnValue(query);
@@ -33,7 +29,7 @@ describe('buscarPraticasAudioPublicadas', () => {
 
     const resultado = await buscarPraticasAudioPublicadas(supabase);
 
-    expect(from).toHaveBeenCalledWith('praticas');
+    expect(from).toHaveBeenCalledWith('praticas_catalogo');
     expect(resultado).toEqual([linha]);
   });
 

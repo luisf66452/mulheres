@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { unificarCatalogo } from './unificar';
 import type { PraticaRapida } from '@/lib/praticas-conteudo/tipos';
-import type { Pratica } from '@/lib/supabase/types';
+import type { PraticaCatalogo } from '@/lib/supabase/types';
 
 const PRATICA_RAPIDA_EXEMPLO: PraticaRapida = {
   id: 'respiracao',
@@ -18,18 +18,15 @@ const PRATICA_RAPIDA_EXEMPLO: PraticaRapida = {
   midia: { tipo: null, url: null, miniaturaUrl: null },
 };
 
-function praticaAudioExemplo(overrides: Partial<Pratica> = {}): Pratica {
+function praticaAudioExemplo(overrides: Partial<PraticaCatalogo> = {}): PraticaCatalogo {
   return {
     id: '11111111-1111-1111-1111-111111111111',
     categoria: 'autocompaixao',
     tipo: 'reflexao',
     titulo: 'Pausa de autocompaixão',
-    conteudo: 'Roteiro completo...',
     status: 'publicada',
     criado_em: '2026-01-01T00:00:00.000Z',
-    audio_url: 'https://cdn.exemplo.com/audio.mp3',
     duracao_segundos: 300,
-    transcricao: 'Transcrição completa...',
     audio_status: 'publicada',
     is_pro: true,
     ...overrides,
@@ -58,7 +55,7 @@ describe('unificarCatalogo', () => {
     expect(new Set(ids).size).toBe(2);
   });
 
-  it('marca temAudio=true para itens vindos da tabela praticas', () => {
+  it('marca temAudio=true para itens vindos de praticas_catalogo, mesmo Pro (teaser)', () => {
     const resultado = unificarCatalogo([], [praticaAudioExemplo()]);
     expect(resultado[0].temAudio).toBe(true);
     expect(resultado[0].href).toBe('/praticas/11111111-1111-1111-1111-111111111111');
@@ -74,10 +71,9 @@ describe('unificarCatalogo', () => {
     expect(resultado[0].duracaoLabel).toBe('3 min');
   });
 
-  it('usa os primeiros 140 caracteres do conteúdo como descrição curta da prática de áudio', () => {
-    const conteudoLongo = 'x'.repeat(200);
-    const resultado = unificarCatalogo([], [praticaAudioExemplo({ conteudo: conteudoLongo })]);
-    expect(resultado[0].descricaoCurta).toHaveLength(140);
+  it('usa uma descrição genérica de teaser para a prática de áudio, sem expor conteúdo protegido', () => {
+    const resultado = unificarCatalogo([], [praticaAudioExemplo()]);
+    expect(resultado[0].descricaoCurta).toBe('Prática guiada em áudio.');
   });
 
   it('retorna lista vazia quando ambos os catálogos estão vazios', () => {

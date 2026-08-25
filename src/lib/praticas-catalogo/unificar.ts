@@ -1,5 +1,5 @@
 import type { PraticaRapida } from '@/lib/praticas-conteudo/tipos';
-import type { Pratica } from '@/lib/supabase/types';
+import type { PraticaCatalogo } from '@/lib/supabase/types';
 import type { ItemCatalogoPratica } from './tipos';
 
 function duracaoLabelDeSegundos(segundos: number | null): string {
@@ -8,13 +8,16 @@ function duracaoLabelDeSegundos(segundos: number | null): string {
   return `${minutos} min`;
 }
 
-function descricaoCurtaDeConteudo(conteudo: string): string {
-  return conteudo.slice(0, 140);
-}
+// public.praticas_catalogo (fonte de praticasAudio) nunca traz `conteudo` —
+// é conteúdo protegido, só liberado pela RLS da tabela base pra quem tem
+// acesso (ver /praticas/[id]). Na listagem, todo item de áudio é só um
+// teaser: título + duração + este texto genérico, nunca um resumo do
+// conteúdo de verdade.
+const DESCRICAO_TEASER_AUDIO = 'Prática guiada em áudio.';
 
 export function unificarCatalogo(
   praticasRapidas: PraticaRapida[],
-  praticasAudio: Pratica[]
+  praticasAudio: PraticaCatalogo[]
 ): ItemCatalogoPratica[] {
   const itensRapidas: ItemCatalogoPratica[] = praticasRapidas.map((pratica) => ({
     id: `rapida:${pratica.id}`,
@@ -34,7 +37,7 @@ export function unificarCatalogo(
     idOriginal: pratica.id,
     href: `/praticas/${pratica.id}`,
     titulo: pratica.titulo,
-    descricaoCurta: descricaoCurtaDeConteudo(pratica.conteudo),
+    descricaoCurta: DESCRICAO_TEASER_AUDIO,
     duracaoLabel: duracaoLabelDeSegundos(pratica.duracao_segundos),
     categoria: pratica.categoria,
     temAudio: true,

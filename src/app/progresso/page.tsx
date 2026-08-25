@@ -159,7 +159,7 @@ export default async function ProgressoPage({
           totalPraticasRapidas={totalPraticasRapidas ?? 0}
         />
 
-        <MelhorSequencia melhorSequencia={melhorSequencia} />
+        <MelhorSequencia melhorSequencia={melhorSequencia} totalCheckins={todosOsCheckins.length} />
 
         <p className="text-sm text-texto-suave">
           Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo

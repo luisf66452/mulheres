@@ -16,7 +16,7 @@ function montarZipDeCsvs(pacote: PacoteExportado): Uint8Array {
   return criarZip([
     {
       nome: 'checkins.csv',
-      conteudo: paraCsv(pacote.checkins as unknown as Record<string, unknown>[], [
+      conteudo: paraCsv(pacote.checkins, [
         'id', 'data', 'humor', 'imagem_corporal', 'comida', 'texto_livre', 'sinal_seguranca',
         'estado_geral', 'emocao_especifica', 'intensidade', 'alimentacao_percebida',
         'gatilho_local', 'gatilho_pensamento', 'gatilho_emocao_depois', 'fatores', 'proxima_acao', 'criado_em',
@@ -24,25 +24,25 @@ function montarZipDeCsvs(pacote: PacoteExportado): Uint8Array {
     },
     {
       nome: 'reflexoes.csv',
-      conteudo: paraCsv(pacote.jornada_respostas_modulo as unknown as Record<string, unknown>[], [
+      conteudo: paraCsv(pacote.jornada_respostas_modulo, [
         'id', 'jornada_usuario_id', 'atividade_id', 'sessao_id', 'schema_version', 'respostas', 'created_at', 'updated_at',
       ]),
     },
     {
       nome: 'praticas.csv',
-      conteudo: paraCsv(pacote.praticas.praticas_avulsas_concluidas as unknown as Record<string, unknown>[], [
+      conteudo: paraCsv(pacote.praticas.praticas_avulsas_concluidas, [
         'id', 'pratica_id', 'concluida_em', 'duracao_minutos',
       ]),
     },
     {
       nome: 'jornadas.csv',
-      conteudo: paraCsv(pacote.jornadas as unknown as Record<string, unknown>[], [
+      conteudo: paraCsv(pacote.jornadas, [
         'id', 'jornada_id', 'dias_completados', 'status', 'iniciada_em', 'atualizada_em', 'concluida_em',
       ]),
     },
     {
       nome: 'favoritos.csv',
-      conteudo: paraCsv(pacote.favoritos as unknown as Record<string, unknown>[], [
+      conteudo: paraCsv(pacote.favoritos, [
         'id', 'pratica_id', 'sessao_id', 'criado_em',
       ]),
     },

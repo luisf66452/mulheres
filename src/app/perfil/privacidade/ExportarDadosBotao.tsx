@@ -10,11 +10,17 @@ const NOME_PADRAO: Record<Formato, string> = {
   csv: 'rose-meus-dados.zip',
 };
 
-async function baixarExportacao(formato: Formato): Promise<string | null> {
-  const resposta = await fetch(`/api/exportar/${formato}`, { cache: 'no-store' });
+const MENSAGEM_ERRO_GENERICA = 'Não foi possível exportar seus dados agora. Tente novamente.';
 
-  if (!resposta.ok) {
-    return 'Não foi possível exportar seus dados agora. Tente novamente.';
+async function baixarExportacao(formato: Formato): Promise<string | null> {
+  const resposta = await fetch(`/api/exportar/${formato}`, { cache: 'no-store', redirect: 'manual' });
+
+  // redirect: 'manual' faz respostas 3xx (ex.: sessão expirada redirecionada
+  // para /login pelo proxy) chegarem aqui como type 'opaqueredirect', sem
+  // seguir o redirect e baixar o HTML da página de login como se fosse o
+  // arquivo exportado.
+  if (!resposta.ok || resposta.type === 'opaqueredirect') {
+    return MENSAGEM_ERRO_GENERICA;
   }
 
   const disposicao = resposta.headers.get('content-disposition') ?? '';

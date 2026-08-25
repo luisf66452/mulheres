@@ -25,7 +25,7 @@ function linhaCsv(valores: unknown[]): string {
   return valores.map(escaparCelulaCsv).join(',') + '\r\n';
 }
 
-export function paraCsv<T extends Record<string, unknown>>(linhas: T[], colunas: string[]): string {
+export function paraCsv<T extends Record<string, unknown>>(linhas: T[], colunas: (keyof T & string)[]): string {
   const cabecalho = linhaCsv(colunas);
   const corpo = linhas.map((linha) => linhaCsv(colunas.map((coluna) => linha[coluna]))).join('');
   return cabecalho + corpo;

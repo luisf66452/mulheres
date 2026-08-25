@@ -62,6 +62,27 @@ describe('ExportarDadosBotao', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível exportar/i);
   });
 
+  it('mostra erro amigável e não tenta baixar quando a sessão expirou e a resposta é um redirect (opaqueredirect)', async () => {
+    const blobSpy = vi.fn();
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      type: 'opaqueredirect',
+      headers: new Headers(),
+      blob: blobSpy,
+    } as never);
+    const cliqueSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    cliqueSpy.mockClear();
+
+    render(<ExportarDadosBotao />);
+    fireEvent.click(screen.getByRole('button', { name: /baixar em json/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível exportar/i);
+    expect(fetch).toHaveBeenCalledWith('/api/exportar/json', expect.objectContaining({ redirect: 'manual' }));
+    expect(blobSpy).not.toHaveBeenCalled();
+    expect(cliqueSpy).not.toHaveBeenCalled();
+    cliqueSpy.mockRestore();
+  });
+
   it('desabilita os botões enquanto uma exportação está em andamento', async () => {
     let resolverFetch: (valor: unknown) => void = () => {};
     vi.mocked(fetch).mockReturnValue(new Promise((resolve) => (resolverFetch = resolve)) as never);

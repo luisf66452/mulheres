@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calcularProgresso7Dias, calcularMelhorSequencia, formatarSequencia, descreverSequencia } from './streak';
+import { VOCABULARIO_PROIBIDO } from '@/lib/testing/vocabularioProibido';
 
 describe('calcularProgresso7Dias', () => {
   const hoje = new Date(2026, 7, 10); // 2026-08-10, a Monday
@@ -97,26 +98,98 @@ describe('formatarSequencia', () => {
 });
 
 describe('descreverSequencia', () => {
-  it('mostra a mensagem de início quando não há nenhum check-in', () => {
-    const resultado = descreverSequencia(0, 0);
+  it('mostra a mensagem de início no primeiro check-in (nenhum check-in ainda)', () => {
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 0,
+      totalCheckins: 0,
+      diasAtivosUltimos7: [false, false, false, false, false, false, false],
+      fezCheckinHoje: false,
+    });
     expect(resultado.titulo).toBe('Comece hoje sua jornada');
   });
 
-  it('mostra a mensagem acolhedora de recomeço quando a sequência foi quebrada mas há histórico', () => {
-    const resultado = descreverSequencia(0, 5);
-    expect(resultado.titulo).toBe('Sua sequência está pronta para recomeçar');
-    expect(resultado.mensagem).toBe('Cada retorno também faz parte da jornada.');
+  it('mostra o número real de dias consecutivos quando há check-in hoje', () => {
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 3,
+      totalCheckins: 5,
+      diasAtivosUltimos7: [false, false, false, false, true, true, true],
+      fezCheckinHoje: true,
+    });
+    expect(resultado.titulo).toBe('3 dias de sequência');
+    expect(resultado.mensagem).toBe('Que lindo ver você priorizando você.');
   });
 
   it('usa singular para 1 dia de sequência', () => {
-    expect(descreverSequencia(1, 1).titulo).toBe('1 dia de sequência');
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 1,
+      totalCheckins: 1,
+      diasAtivosUltimos7: [false, false, false, false, false, false, true],
+      fezCheckinHoje: true,
+    });
+    expect(resultado.titulo).toBe('1 dia de sequência');
   });
 
-  it('usa plural para mais de 1 dia de sequência', () => {
-    expect(descreverSequencia(7, 10).titulo).toBe('7 dias de sequência');
+  it('dia perdido: sem check-in hoje mas com a maior parte da semana ativa, mostra quantos dias cuidou de si', () => {
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 0,
+      totalCheckins: 10,
+      diasAtivosUltimos7: [true, true, true, true, true, true, false],
+      fezCheckinHoje: false,
+    });
+    expect(resultado.titulo).toBe('Você pode recomeçar hoje');
+    expect(resultado.mensagem).toBe('Você cuidou de si em 6 dos últimos 7 dias.');
+  });
+
+  it('retorno após pausa: sem check-in hoje e só um dia ativo na semana, ainda reconhece o dia cuidado', () => {
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 0,
+      totalCheckins: 10,
+      diasAtivosUltimos7: [false, false, false, false, false, true, false],
+      fezCheckinHoje: false,
+    });
+    expect(resultado.titulo).toBe('Você pode recomeçar hoje');
+    expect(resultado.mensagem).toBe('Você cuidou de si em 1 dos últimos 7 dias.');
+  });
+
+  it('semana sem atividade: nenhum dos últimos 7 dias tem check-in, mesmo havendo histórico anterior', () => {
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 0,
+      totalCheckins: 10,
+      diasAtivosUltimos7: [false, false, false, false, false, false, false],
+      fezCheckinHoje: false,
+    });
+    expect(resultado.titulo).toBe('Você pode recomeçar hoje');
+    expect(resultado.mensagem).toBe(
+      'Nenhum dos últimos 7 dias teve registro — você pode recomeçar quando fizer sentido para você.'
+    );
   });
 
   it('reflete o número real de dias recebido, nunca um valor fixo', () => {
-    expect(descreverSequencia(3, 3).titulo).toBe('3 dias de sequência');
+    const resultado = descreverSequencia({
+      diasConsecutivosAtuais: 7,
+      totalCheckins: 20,
+      diasAtivosUltimos7: [true, true, true, true, true, true, true],
+      fezCheckinHoje: true,
+    });
+    expect(resultado.titulo).toBe('7 dias de sequência');
+  });
+
+  it('nunca usa vocabulário proibido, em nenhuma combinação de estado', () => {
+    const combinacoes: Parameters<typeof descreverSequencia>[0][] = [
+      { diasConsecutivosAtuais: 0, totalCheckins: 0, diasAtivosUltimos7: [false, false, false, false, false, false, false], fezCheckinHoje: false },
+      { diasConsecutivosAtuais: 1, totalCheckins: 1, diasAtivosUltimos7: [false, false, false, false, false, false, true], fezCheckinHoje: true },
+      { diasConsecutivosAtuais: 5, totalCheckins: 12, diasAtivosUltimos7: [true, true, true, true, true, false, true], fezCheckinHoje: true },
+      { diasConsecutivosAtuais: 0, totalCheckins: 8, diasAtivosUltimos7: [true, true, true, true, true, true, false], fezCheckinHoje: false },
+      { diasConsecutivosAtuais: 0, totalCheckins: 8, diasAtivosUltimos7: [false, false, false, false, false, true, false], fezCheckinHoje: false },
+      { diasConsecutivosAtuais: 0, totalCheckins: 8, diasAtivosUltimos7: [false, false, false, false, false, false, false], fezCheckinHoje: false },
+    ];
+
+    for (const params of combinacoes) {
+      const { titulo, mensagem } = descreverSequencia(params);
+      const textoCompleto = `${titulo} ${mensagem}`.toLowerCase();
+      for (const termoProibido of VOCABULARIO_PROIBIDO) {
+        expect(textoCompleto).not.toContain(termoProibido);
+      }
+    }
   });
 });

@@ -73,25 +73,49 @@ export interface DescricaoSequencia {
   mensagem: string;
 }
 
-export function descreverSequencia(
-  diasConsecutivosAtuais: number,
-  totalCheckins: number
-): DescricaoSequencia {
+export interface DescreverSequenciaParams {
+  diasConsecutivosAtuais: number;
+  totalCheckins: number;
+  // 7 posições, do dia mais antigo ao mais recente — o último é hoje.
+  // Normalmente vem de `ultimos7Dias.map((d) => d.completou)` (ver
+  // Progresso7Dias acima).
+  diasAtivosUltimos7: boolean[];
+  fezCheckinHoje: boolean;
+}
+
+export function descreverSequencia(params: DescreverSequenciaParams): DescricaoSequencia {
+  const { diasConsecutivosAtuais, totalCheckins, diasAtivosUltimos7, fezCheckinHoje } = params;
+
   if (totalCheckins === 0) {
     return {
       titulo: 'Comece hoje sua jornada',
       mensagem: 'Toda jornada começa com um passo — e hoje pode ser o seu.',
     };
   }
-  if (diasConsecutivosAtuais === 0) {
+
+  if (fezCheckinHoje) {
+    const unidade = diasConsecutivosAtuais === 1 ? 'dia' : 'dias';
     return {
-      titulo: 'Sua sequência está pronta para recomeçar',
-      mensagem: 'Cada retorno também faz parte da jornada.',
+      titulo: `${diasConsecutivosAtuais} ${unidade} de sequência`,
+      mensagem: 'Que lindo ver você priorizando você.',
     };
   }
-  const unidade = diasConsecutivosAtuais === 1 ? 'dia' : 'dias';
+
+  // Sem check-in hoje: em vez de tratar "um dia perdido" e "uma semana
+  // inteira sem atividade" da mesma forma (o que a versão antiga fazia,
+  // por não ter os últimos 7 dias disponíveis), reconhece explicitamente
+  // quantos dos últimos 7 dias tiveram check-in — nunca "perdeu"/"quebrou".
+  const diasAtivosNaSemana = diasAtivosUltimos7.filter(Boolean).length;
+
+  if (diasAtivosNaSemana === 0) {
+    return {
+      titulo: 'Você pode recomeçar hoje',
+      mensagem: 'Nenhum dos últimos 7 dias teve registro — você pode recomeçar quando fizer sentido para você.',
+    };
+  }
+
   return {
-    titulo: `${diasConsecutivosAtuais} ${unidade} de sequência`,
-    mensagem: 'Que lindo ver você priorizando você.',
+    titulo: 'Você pode recomeçar hoje',
+    mensagem: `Você cuidou de si em ${diasAtivosNaSemana} dos últimos 7 dias.`,
   };
 }

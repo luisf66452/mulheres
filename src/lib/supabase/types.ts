@@ -2,6 +2,7 @@ export type Plano = 'free' | 'premium';
 export type PapelUsuaria = 'usuaria' | 'admin';
 export type StatusPratica = 'rascunho' | 'revisada' | 'publicada';
 export type TipoPratica = 'respiracao' | 'reflexao' | 'afirmacao' | 'movimento';
+export type StatusAudioPratica = 'rascunho' | 'revisada' | 'publicada';
 export type FaixaEtaria = '18-24' | '25-34' | '35-44' | '45-54' | '55+';
 
 export type Perfil = {
@@ -28,6 +29,19 @@ export type Perfil = {
   stripe_subscription_id: string | null;
   assinatura_status: string | null;
   assinatura_periodo_fim: string | null;
+  // Onboarding personalizado (ver migração
+  // 20260825001010_perfis_onboarding_extra.sql). Validados no servidor contra
+  // listas fechadas — nunca string arbitrária. Sem GRANT de UPDATE direto
+  // para authenticated: escrita só via server action dedicada com admin
+  // client (mesmo padrão de pais/plano).
+  objetivos: string[];
+  temas_sensiveis: string[];
+  // Preenchido só ao concluir efetivamente a etapa de personalização
+  // (mesmo pulando campos). Nulo = ainda não concluída.
+  onboarding_extra_concluido_em: string | null;
+  // Preenchido só quando uma usuária antiga dispensa o banner sem preencher
+  // nada. Distinto de onboarding_extra_concluido_em.
+  onboarding_extra_dispensado_em: string | null;
 };
 
 export type PreferenciasNotificacao = {
@@ -104,6 +118,17 @@ export type Pratica = {
   conteudo: string;
   status: StatusPratica;
   criado_em: string;
+  // Colunas de áudio (ver migração 20260825000415_praticas_audio.sql). Todas
+  // nulas até a psicóloga revisar e publicar o áudio — visibilidade do
+  // player decidida na aplicação (status='publicada' AND
+  // audio_status='publicada' AND os três campos abaixo não nulos), nunca só
+  // pelo schema.
+  audio_url: string | null;
+  duracao_segundos: number | null;
+  transcricao: string | null;
+  audio_status: StatusAudioPratica;
+  // true = exige plano premium para tocar o áudio (checado no servidor).
+  is_pro: boolean;
 };
 
 export type RegraRecomendacao = {
@@ -137,6 +162,11 @@ export type RecursoSeguranca = {
   titulo: string;
   corpo: string;
   ordem: number;
+  // Nulo = contato ainda não verificado nesta fase; só exibir como recurso
+  // confirmado quando fonte e verificado_em estiverem os dois preenchidos
+  // (ver migração 20260825000730_recursos_seguranca_verificacao.sql).
+  fonte: string | null;
+  verificado_em: string | null; // YYYY-MM-DD
 };
 
 export type IntencaoPagamento = {
@@ -196,6 +226,29 @@ export type AcessoAdministrativo = {
   usuaria_id: string;
   acessado_por: string;
   motivo: string;
+  criado_em: string;
+};
+
+export type Favorito = {
+  id: string;
+  usuaria_id: string;
+  // Exatamente um dos dois é não-nulo por linha (constraint
+  // favoritos_exatamente_um_alvo na migração 20260824181939_favoritos.sql).
+  pratica_id: string | null;
+  sessao_id: string | null;
+  criado_em: string;
+};
+
+export type TipoExportacaoDados = 'json' | 'csv';
+
+// Tabela interna (sem GRANT/policy para authenticated/anon) — só registra
+// que uma exportação ocorreu, nunca o conteúdo. Escrita exclusiva via
+// admin client no servidor (ver migração
+// 20260824182330_exportacoes_dados.sql).
+export type ExportacaoDados = {
+  id: string;
+  usuaria_id: string;
+  tipo: TipoExportacaoDados;
   criado_em: string;
 };
 
@@ -430,6 +483,18 @@ export interface Database {
         Row: PushEnvio;
         Insert: Omit<PushEnvio, 'id' | 'criado_em'> & { id?: string };
         Update: Partial<PushEnvio>;
+        Relationships: [];
+      };
+      favoritos: {
+        Row: Favorito;
+        Insert: Omit<Favorito, 'id' | 'criado_em'> & { id?: string };
+        Update: Partial<Favorito>;
+        Relationships: [];
+      };
+      exportacoes_dados: {
+        Row: ExportacaoDados;
+        Insert: Omit<ExportacaoDados, 'id' | 'criado_em'> & { id?: string };
+        Update: Partial<ExportacaoDados>;
         Relationships: [];
       };
     };

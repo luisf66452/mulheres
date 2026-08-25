@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, unstable_rethrow } from 'next/navigation';
 import { desfavoritar, type TipoFavorito } from './actions';
 
 export default function BotaoRemoverFavorito({ tipo, id }: { tipo: TipoFavorito; id: string }) {
@@ -15,7 +15,12 @@ export default function BotaoRemoverFavorito({ tipo, id }: { tipo: TipoFavorito;
       try {
         await desfavoritar(tipo, id);
         router.refresh();
-      } catch {
+      } catch (error) {
+        // Deixa erros internos do Next.js (ex.: redirect('/login') quando a
+        // sessão expirou) propagarem para o framework tratar — mesmo padrão
+        // usado em BotaoFavorito, nunca engolir o sinal de redirect.
+        unstable_rethrow(error);
+
         setErro(true);
       }
     });

@@ -4,17 +4,21 @@ import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import Botao from '@/app/components/Botao';
 import CabecalhoPerfil from '@/app/components/perfil/CabecalhoPerfil';
 import CartaoMenuPerfil from '@/app/components/perfil/CartaoMenuPerfil';
+import BannerPersonalizacaoPerfil from './BannerPersonalizacaoPerfil';
 import IconePreferencias from '@/app/components/perfil/icones/IconePreferencias';
+import IconeObjetivos from '@/app/components/perfil/icones/IconeObjetivos';
 import IconeNotificacoes from '@/app/components/perfil/icones/IconeNotificacoes';
 import IconeAssinatura from '@/app/components/perfil/icones/IconeAssinatura';
 import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
 import IconeConfiguracoes from '@/app/components/perfil/icones/IconeConfiguracoes';
 import IconeClubeRose from '@/app/components/perfil/icones/IconeClubeRose';
 import IconeAjuda from '@/app/components/perfil/icones/IconeAjuda';
+import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 import { sair } from './actions';
 
 const ITENS_MENU = [
   { href: '/clube-rose', rotulo: 'Clube Rose e recompensas', Icone: IconeClubeRose },
+  { href: '/perfil/personalizacao', rotulo: 'Personalizar experiência', Icone: IconeObjetivos },
   { href: '/perfil/preferencias', rotulo: 'Preferências', Icone: IconePreferencias },
   { href: '/perfil/notificacoes', rotulo: 'Notificações', Icone: IconeNotificacoes },
   { href: '/perfil/assinatura', rotulo: 'Minha assinatura', Icone: IconeAssinatura },
@@ -35,9 +39,14 @@ export default async function PerfilPage() {
 
   const { data: perfil, error: erroPerfil } = await supabase
     .from('perfis')
-    .select('nome, frase_pessoal, foto_url')
+    .select(
+      'nome, frase_pessoal, foto_url, onboarding_extra_concluido_em, onboarding_extra_dispensado_em'
+    )
     .eq('id', user.id)
     .single();
+
+  const mostrarBannerPersonalizacao =
+    !perfil?.onboarding_extra_concluido_em && !perfil?.onboarding_extra_dispensado_em;
 
   return (
     <main className="mx-auto max-w-md pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-8">
@@ -54,6 +63,10 @@ export default async function PerfilPage() {
             aparecer incompletas.
           </div>
         )}
+
+        {mostrarBannerPersonalizacao && <BannerPersonalizacaoPerfil />}
+
+        <AvisoSeguranca />
 
         <nav aria-label="Menu do perfil" className="space-y-3">
           {ITENS_MENU.map((item) => (

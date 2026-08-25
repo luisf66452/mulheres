@@ -12,9 +12,11 @@ import SeletorHumor from '@/app/components/inicio/SeletorHumor';
 import SequenciaDias from '@/app/components/inicio/SequenciaDias';
 import MensagemAcolhedora from '@/app/components/inicio/MensagemAcolhedora';
 import JornadaEmAndamento, { type JornadaEmAndamentoInfo } from '@/app/components/inicio/JornadaEmAndamento';
+import ContinuarDeOndeParei from '@/app/components/inicio/ContinuarDeOndeParei';
 import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
 import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRegistration';
 import InstalarRose from '@/app/components/InstalarRose';
+import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 
 export default async function InicioPage({
   searchParams,
@@ -81,15 +83,19 @@ export default async function InicioPage({
 
       {jaFezCheckinHoje ? <ResumoDoDia checkinHoje={checkinHoje} /> : <SeletorHumor />}
 
-      <SequenciaDias progresso={progresso} />
+      <SequenciaDias progresso={progresso} totalCheckins={(checkins ?? []).length} />
 
       <JornadaEmAndamento jornada={jornadaEmAndamento} />
+
+      <ContinuarDeOndeParei supabase={supabase} usuariaId={user.id} />
 
       <RitualDeHoje jaFezCheckinHoje={jaFezCheckinHoje} />
 
       <CartaoClubeRose saldo={saldoPetalas} />
 
       <MensagemAcolhedora />
+
+      <AvisoSeguranca />
 
       <NavegacaoInferior />
     </main>

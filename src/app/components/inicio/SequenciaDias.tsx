@@ -1,11 +1,5 @@
 import Link from 'next/link';
-import type { Progresso7Dias } from '@/lib/progress/streak';
-
-function tituloSequencia(dias: number): string {
-  if (dias === 0) return 'Comece sua sequência hoje';
-  if (dias === 1) return '1 dia de sequência';
-  return `${dias} dias de sequência`;
-}
+import { descreverSequencia, type Progresso7Dias } from '@/lib/progress/streak';
 
 function IlustracaoRosaVaso() {
   return (
@@ -33,12 +27,21 @@ function IlustracaoRosaVaso() {
   );
 }
 
-export default function SequenciaDias({ progresso }: { progresso: Progresso7Dias }) {
-  const titulo = tituloSequencia(progresso.diasConsecutivosAtuais);
-  const subtitulo =
-    progresso.diasConsecutivosAtuais > 0
-      ? 'Continue assim! Você está cuidando de você.'
-      : 'Seu primeiro check-in começa a sequência.';
+export default function SequenciaDias({
+  progresso,
+  totalCheckins,
+}: {
+  progresso: Progresso7Dias;
+  totalCheckins: number;
+}) {
+  const diasAtivosUltimos7 = progresso.ultimos7Dias.map((dia) => dia.completou);
+  const fezCheckinHoje = diasAtivosUltimos7[diasAtivosUltimos7.length - 1] ?? false;
+  const { titulo, mensagem } = descreverSequencia({
+    diasConsecutivosAtuais: progresso.diasConsecutivosAtuais,
+    totalCheckins,
+    diasAtivosUltimos7,
+    fezCheckinHoje,
+  });
 
   return (
     <div className="space-y-3">
@@ -46,7 +49,7 @@ export default function SequenciaDias({ progresso }: { progresso: Progresso7Dias
         <div className="min-w-0 flex-1 space-y-3">
           <div>
             <p className="font-display text-lg text-texto">{titulo}</p>
-            <p className="text-sm text-texto-suave">{subtitulo}</p>
+            <p className="text-sm text-texto-suave">{mensagem}</p>
           </div>
           <div className="flex gap-2">
             {progresso.ultimos7Dias.map((dia) => (

@@ -30,6 +30,14 @@ export default async function SessaoJornadaPage({
 
   const { sessao, modulo } = resultado;
 
+  const { data: favoritoExistente } = await supabase
+    .from('favoritos')
+    .select('id')
+    .eq('usuaria_id', user.id)
+    .eq('sessao_id', sessaoId)
+    .maybeSingle();
+  const favoritado = !!favoritoExistente;
+
   let estados: ReturnType<typeof calcularEstadosSessoes>;
   try {
     const progresso = await carregarProgressoJornada(supabase, user.id, jornada.slug);
@@ -74,6 +82,7 @@ export default async function SessaoJornadaPage({
       jornadaSlug={jornada.slug}
       jornadaTitulo={jornada.titulo}
       proximaSessaoHref={proximaSessaoHref}
+      favoritado={favoritado}
       onConcluir={concluirSessao.bind(null, jornada.slug, sessao.id)}
     />
   );

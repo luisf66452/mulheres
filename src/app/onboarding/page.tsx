@@ -14,14 +14,22 @@ export default async function OnboardingPage() {
 
   const { data: perfil } = await supabase
     .from('perfis')
-    .select('consentimento_dados_sensiveis_em, pais_confirmado_em')
+    .select('consentimento_dados_sensiveis_em, pais_confirmado_em, onboarding_extra_concluido_em')
     .eq('id', user.id)
     .single();
+
+  // Já passou por tudo (país confirmado e personalização concluída) — não há
+  // mais etapa nenhuma para retomar. Sem este redirect, revisitar /onboarding
+  // manualmente re-montaria o wizard do zero para quem já terminou.
+  if (perfil?.pais_confirmado_em && perfil?.onboarding_extra_concluido_em) {
+    redirect('/');
+  }
 
   return (
     <OnboardingClient
       consentimentoJaRegistrado={Boolean(perfil?.consentimento_dados_sensiveis_em)}
       paisJaConfirmado={Boolean(perfil?.pais_confirmado_em)}
+      personalizacaoJaConcluida={Boolean(perfil?.onboarding_extra_concluido_em)}
     />
   );
 }

@@ -7,7 +7,8 @@ import {
   semanaAnteriorISO,
   semanaSeguinteISO,
 } from '@/lib/progress/semana';
-import { formatDateISO, hojeNoFuso } from '@/lib/date';
+import { calcularResumoSemanal, type CheckinResumoSemanal } from '@/lib/progress/resumoSemanal';
+import { formatDateISO, hojeNoFuso, dataISONoFuso } from '@/lib/date';
 import { resolverItensHistorico } from '@/lib/historico/resolverItens';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoProgresso from './CabecalhoProgresso';
@@ -15,6 +16,7 @@ import CartaoSequencia from './CartaoSequencia';
 import HumorSemana from './HumorSemana';
 import CartaoConquistas from './CartaoConquistas';
 import MelhorSequencia from './MelhorSequencia';
+import ResumoSemanalPessoal from './ResumoSemanalPessoal';
 import GraficoEvolucao from './GraficoEvolucao';
 import Historico from './Historico';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
@@ -37,16 +39,17 @@ export default async function ProgressoPage({
     redirect('/login');
   }
 
-  const { data: perfilFuso } = await supabase
+  const { data: perfil } = await supabase
     .from('perfis')
-    .select('fuso_horario')
+    .select('fuso_horario, plano')
     .eq('id', user.id)
     .single();
-  const fusoHorario = perfilFuso?.fuso_horario ?? 'America/Sao_Paulo';
+  const fusoHorario = perfil?.fuso_horario ?? 'America/Sao_Paulo';
+  const ehPremium = perfil?.plano === 'premium';
 
   const { data: checkins, error: erroCheckins } = await supabase
     .from('checkins')
-    .select('id, data, humor, imagem_corporal, comida')
+    .select('id, data, humor, imagem_corporal, comida, estado_geral, emocao_especifica, fatores')
     .eq('usuaria_id', user.id)
     .order('data', { ascending: true });
 
@@ -80,6 +83,26 @@ export default async function ProgressoPage({
     segundaFeiraISO
   );
 
+  const diasDaSemanaAtualISO = diasDaSemana.map((d) => d.data);
+  const diasDaSemanaAnteriorISO = calcularSemana([], semanaAnteriorISO(segundaFeiraISO)).map((d) => d.data);
+
+  const paraCheckinResumoSemanal = (c: (typeof todosOsCheckins)[number]): CheckinResumoSemanal => ({
+    data: c.data,
+    humor: c.humor,
+    imagem_corporal: c.imagem_corporal,
+    comida: c.comida,
+    estado_geral: c.estado_geral,
+    emocao_especifica: c.emocao_especifica,
+    fatores: c.fatores,
+  });
+
+  const checkinsSemana = todosOsCheckins
+    .filter((c) => diasDaSemanaAtualISO.includes(c.data))
+    .map(paraCheckinResumoSemanal);
+  const checkinsSemanaAnterior = todosOsCheckins
+    .filter((c) => diasDaSemanaAnteriorISO.includes(c.data))
+    .map(paraCheckinResumoSemanal);
+
   const [{ count: totalPraticasCuradas }, { count: totalPraticasRapidas }] = await Promise.all([
     supabase
       .from('sessoes')
@@ -91,6 +114,27 @@ export default async function ProgressoPage({
       .select('id', { count: 'exact', head: true })
       .eq('usuaria_id', user.id),
   ]);
+
+  const [{ data: sessoesComPratica }, { data: praticasRapidasConcluidas }] = await Promise.all([
+    supabase
+      .from('sessoes')
+      .select('criado_em')
+      .eq('usuaria_id', user.id)
+      .not('pratica_id', 'is', null),
+    supabase.from('conclusoes_praticas_conteudo').select('concluida_em').eq('usuaria_id', user.id),
+  ]);
+
+  const datasAtividadesConcluidas = [
+    ...(sessoesComPratica ?? []).map((s) => dataISONoFuso(new Date(s.criado_em), fusoHorario)),
+    ...(praticasRapidasConcluidas ?? []).map((p) => dataISONoFuso(new Date(p.concluida_em), fusoHorario)),
+  ];
+
+  const resumoSemanal = calcularResumoSemanal({
+    checkinsSemana,
+    checkinsSemanaAnterior,
+    diasDaSemana: diasDaSemanaAtualISO,
+    datasAtividadesConcluidas,
+  });
 
   const checkinsParaGrafico = todosOsCheckins.slice(-30);
   const checkinsRecentes = todosOsCheckins.slice(-20).reverse();
@@ -159,7 +203,9 @@ export default async function ProgressoPage({
           totalPraticasRapidas={totalPraticasRapidas ?? 0}
         />
 
-        <MelhorSequencia melhorSequencia={melhorSequencia} />
+        <MelhorSequencia melhorSequencia={melhorSequencia} totalCheckins={todosOsCheckins.length} />
+
+        <ResumoSemanalPessoal resumo={resumoSemanal} ehPremium={ehPremium} />
 
         <p className="text-sm text-texto-suave">
           Este resumo é só um retrato acolhedor da sua semana — ele não tira conclusões sobre o motivo

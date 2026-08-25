@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { JORNADAS, contarModulos, contarSessoes, listarSessoesEmOrdem, buscarSessaoPorId } from './dados';
+import {
+  JORNADAS,
+  contarModulos,
+  contarSessoes,
+  listarSessoesEmOrdem,
+  buscarSessaoPorId,
+  buscarSessaoEmQualquerJornada,
+} from './dados';
 import { REFERENCIAS } from './referencias';
 
 const PROIBIDAS_ALIMENTACAO =
@@ -114,5 +121,17 @@ describe('estrutura das jornadas', () => {
         sessoes[sessoes.length - 1].id
       );
     });
+  });
+
+  it('buscarSessaoEmQualquerJornada encontra uma sessão sem precisar do slug da jornada', () => {
+    const jornada = JORNADAS[0];
+    const sessoes = listarSessoesEmOrdem(jornada);
+    const encontrada = buscarSessaoEmQualquerJornada(sessoes[0].id);
+    expect(encontrada?.jornada.slug).toBe(jornada.slug);
+    expect(encontrada?.sessao.id).toBe(sessoes[0].id);
+  });
+
+  it('buscarSessaoEmQualquerJornada retorna undefined para um id inexistente', () => {
+    expect(buscarSessaoEmQualquerJornada('id-que-nao-existe')).toBeUndefined();
   });
 });

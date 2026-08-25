@@ -8,6 +8,7 @@ import type { EstadoGeral, AlimentacaoPercebida } from '@/lib/supabase/types';
 import { estadoInicialParaHumor, type HumorInicial } from '@/lib/checkin/humorInicial';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
 import NotificacaoLimitePetalas from '@/app/components/clube-rose/NotificacaoLimitePetalas';
+import { EMOCOES_POR_QUADRANTE, FATORES_DISPONIVEIS } from '@/lib/checkin/opcoesCheckin';
 
 type Etapa =
   | 'estado_geral'
@@ -27,35 +28,6 @@ const QUADRANTES: { valor: EstadoGeral; titulo: string; descricao: string }[] = 
   { valor: 'baixa_energia_conforto', titulo: 'Energia baixa, conforto', descricao: 'Calma, segurança, serenidade, satisfação' },
 ];
 
-const EMOCOES_POR_QUADRANTE: Record<EstadoGeral, { palavra: string; explicacao: string }[]> = {
-  alta_energia_desconforto: [
-    { palavra: 'Ansiosa', explicacao: 'Uma sensação de alerta ou preocupação com o que pode vir.' },
-    { palavra: 'Apreensiva', explicacao: 'Um receio sobre algo que ainda não aconteceu.' },
-    { palavra: 'Assustada', explicacao: 'Uma reação forte a algo que pareceu ameaçador.' },
-    { palavra: 'Sobrecarregada', explicacao: 'A sensação de ter mais do que dá conta agora.' },
-    { palavra: 'Irritada', explicacao: 'Um incômodo que pede espaço.' },
-    { palavra: 'Frustrada', explicacao: 'Quando algo não saiu como você esperava.' },
-  ],
-  baixa_energia_desconforto: [
-    { palavra: 'Insegura', explicacao: 'Uma dúvida sobre si mesma ou sobre a situação.' },
-    { palavra: 'Decepcionada', explicacao: 'Quando a realidade ficou aquém do que você esperava.' },
-    { palavra: 'Triste', explicacao: 'Uma sensação de perda ou vazio.' },
-    { palavra: 'Solitária', explicacao: 'A sensação de estar sozinha, mesmo que não esteja.' },
-    { palavra: 'Cansada', explicacao: 'Pouca energia para continuar agora.' },
-    { palavra: 'Desanimada', explicacao: 'Falta de ânimo para seguir em frente.' },
-  ],
-  baixa_energia_conforto: [
-    { palavra: 'Tranquila', explicacao: 'Uma sensação de paz, sem pressa.' },
-    { palavra: 'Aliviada', explicacao: 'Quando um peso parece ter diminuído.' },
-    { palavra: 'Esperançosa', explicacao: 'Uma expectativa gentil de que as coisas podem melhorar.' },
-  ],
-  alta_energia_conforto: [
-    { palavra: 'Animada', explicacao: 'Energia boa, com vontade de agir.' },
-    { palavra: 'Inspirada', explicacao: 'Uma ideia ou vontade que te move.' },
-    { palavra: 'Confiante', explicacao: 'Uma sensação de segurança em si mesma.' },
-  ],
-};
-
 const LOCAIS_GATILHO = ['Redes sociais', 'Diante do espelho', 'Em fotografias', 'Ao experimentar roupas', 'Após um comentário', 'Outra situação'];
 
 const OPCOES_ALIMENTACAO: { valor: AlimentacaoPercebida; rotulo: string }[] = [
@@ -67,12 +39,6 @@ const OPCOES_ALIMENTACAO: { valor: AlimentacaoPercebida; rotulo: string }[] = [
   { valor: 'confusa', rotulo: 'Confusa' },
   { valor: 'vontade_punir', rotulo: 'Com vontade de me punir' },
   { valor: 'prefiro_nao_responder', rotulo: 'Prefiro não responder' },
-];
-
-const FATORES_DISPONIVEIS = [
-  'Sono', 'Redes sociais', 'Estudos', 'Trabalho', 'Exercício', 'Ciclo menstrual',
-  'Comentários sobre aparência', 'Relacionamento', 'Família', 'Alimentação',
-  'Situação social', 'Fotografia', 'Roupa', 'Espelho',
 ];
 
 export default function CheckinFormClient({ humorInicial }: { humorInicial: HumorInicial | null }) {

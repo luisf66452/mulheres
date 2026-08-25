@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { formatDateISO, hojeISONoFuso, hojeNoFuso } from './date';
+import { formatDateISO, hojeISONoFuso, hojeNoFuso, dataISONoFuso } from './date';
 
 describe('formatDateISO', () => {
   it('formats a date as YYYY-MM-DD', () => {
@@ -57,5 +57,18 @@ describe('hojeNoFuso', () => {
     vi.setSystemTime(new Date('2026-08-11T02:00:00.000Z'));
 
     expect(formatDateISO(hojeNoFuso('America/Sao_Paulo'))).toBe('2026-08-10');
+  });
+});
+
+describe('dataISONoFuso', () => {
+  it('converte um Date arbitrário (não só "agora") para a data local da usuária', () => {
+    const data = new Date('2026-08-11T02:00:00.000Z');
+    expect(dataISONoFuso(data, 'America/Sao_Paulo')).toBe('2026-08-10');
+    expect(dataISONoFuso(data, 'UTC')).toBe('2026-08-11');
+  });
+
+  it('cai de volta ao formatDateISO do próprio Date se o fuso for inválido', () => {
+    const data = new Date('2026-08-11T12:00:00.000Z');
+    expect(dataISONoFuso(data, 'fuso-que-nao-existe')).toBe(formatDateISO(data));
   });
 });

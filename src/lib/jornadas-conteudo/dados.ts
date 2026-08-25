@@ -1597,6 +1597,18 @@ export function buscarSessaoPorId(
   return undefined;
 }
 
+export function buscarSessaoEmQualquerJornada(
+  sessaoId: string
+): { jornada: Jornada; modulo: Modulo; sessao: Sessao } | undefined {
+  for (const jornada of JORNADAS) {
+    for (const modulo of jornada.modulos) {
+      const sessao = modulo.sessoes.find((s) => s.id === sessaoId);
+      if (sessao) return { jornada, modulo, sessao };
+    }
+  }
+  return undefined;
+}
+
 export function contarModulos(jornada: Jornada): number {
   return jornada.modulos.length;
 }

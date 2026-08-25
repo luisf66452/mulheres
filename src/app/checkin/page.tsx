@@ -4,6 +4,7 @@ import { hojeISONoFuso } from '@/lib/date';
 import LembreteBanner from '@/app/components/LembreteBanner';
 import CheckinFormClient from './CheckinFormClient';
 import { validarHumorParam } from '@/lib/checkin/humorInicial';
+import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 
 export default async function CheckinPage({
   searchParams,
@@ -51,7 +52,12 @@ export default async function CheckinPage({
           </a>
         </main>
       ) : (
-        <CheckinFormClient humorInicial={humorInicial} />
+        <>
+          <div className="mx-auto max-w-md px-6 pt-4">
+            <AvisoSeguranca />
+          </div>
+          <CheckinFormClient humorInicial={humorInicial} />
+        </>
       )}
     </>
   );

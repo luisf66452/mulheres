@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Botao from '@/app/components/Botao';
+import BotaoFavorito from '@/app/components/favoritos/BotaoFavorito';
 import type { Sessao, Modulo } from '@/lib/jornadas-conteudo/tipos';
 import BaseCientifica from './BaseCientifica';
 
@@ -13,6 +14,7 @@ export default function SessaoClient({
   jornadaSlug,
   jornadaTitulo,
   proximaSessaoHref,
+  favoritado,
   onConcluir,
 }: {
   sessao: Sessao;
@@ -20,6 +22,7 @@ export default function SessaoClient({
   jornadaSlug: string;
   jornadaTitulo: string;
   proximaSessaoHref: string | null;
+  favoritado: boolean;
   onConcluir: () => Promise<void>;
 }) {
   const router = useRouter();
@@ -49,6 +52,7 @@ export default function SessaoClient({
         >
           ← {jornadaTitulo}
         </Link>
+        <BotaoFavorito tipo="sessao" id={sessao.id} favoritadoInicial={favoritado} />
       </div>
 
       <header className="space-y-1">

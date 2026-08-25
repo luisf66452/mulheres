@@ -43,10 +43,29 @@ function criarSupabaseFake(
           }),
         };
       }
+      if (tabela === 'praticas_catalogo') {
+        return {
+          select: () => ({
+            in: async () => ({
+              data: praticas.map(({ id, titulo, categoria, status, is_pro }) => ({
+                id,
+                titulo,
+                categoria,
+                status,
+                is_pro: is_pro ?? false,
+              })),
+              error: null,
+            }),
+          }),
+        };
+      }
       if (tabela === 'praticas') {
         return {
           select: () => ({
-            in: async () => ({ data: praticas.map((p) => ({ is_pro: false, ...p })), error: null }),
+            in: async () => ({
+              data: praticas.map(({ id, conteudo }) => ({ id, conteudo })),
+              error: null,
+            }),
           }),
         };
       }

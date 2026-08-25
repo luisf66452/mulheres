@@ -34,21 +34,27 @@ export default async function FavoritosPage() {
     .filter((f) => f.pratica_id !== null)
     .map((f) => f.pratica_id as string);
 
-  const { data: praticas } =
+  // Metadado (título/categoria/status/is_pro) vem de praticas_catalogo — essa
+  // view devolve a linha mesmo para uma prática Pro quando a usuária é free
+  // (o teaser "Conteúdo Pro" abaixo depende disso continuar disponível).
+  // O `conteudo` de verdade só vem da tabela base, cuja RLS (ver migração
+  // 20260825060150_praticas_rls_is_pro.sql) agora nega a linha inteira para
+  // free numa prática is_pro — então essa segunda consulta naturalmente não
+  // traz `conteudo` para as práticas que serão renderizadas como bloqueadas.
+  const { data: praticasCatalogo } =
     praticaIds.length > 0
-      ? await supabase.from('praticas').select('id, titulo, conteudo, categoria, status, is_pro').in('id', praticaIds)
-      : {
-          data: [] as {
-            id: string;
-            titulo: string;
-            conteudo: string;
-            categoria: string;
-            status: string;
-            is_pro: boolean;
-          }[],
-        };
+      ? await supabase.from('praticas_catalogo').select('id, titulo, categoria, status, is_pro').in('id', praticaIds)
+      : { data: [] as { id: string; titulo: string; categoria: string; status: string; is_pro: boolean }[] };
 
-  const praticasPorId = new Map((praticas ?? []).map((p) => [p.id, p]));
+  const { data: praticasConteudo } =
+    praticaIds.length > 0
+      ? await supabase.from('praticas').select('id, conteudo').in('id', praticaIds)
+      : { data: [] as { id: string; conteudo: string }[] };
+
+  const conteudoPorId = new Map((praticasConteudo ?? []).map((p) => [p.id, p.conteudo]));
+  const praticasPorId = new Map(
+    (praticasCatalogo ?? []).map((p) => [p.id, { ...p, conteudo: conteudoPorId.get(p.id) ?? '' }])
+  );
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6 pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-6">

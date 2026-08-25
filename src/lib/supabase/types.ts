@@ -131,6 +131,24 @@ export type Pratica = {
   is_pro: boolean;
 };
 
+// Metadado seguro de public.praticas, exposto pela view public.praticas_catalogo
+// (ver migração 20260825060150_praticas_rls_is_pro.sql) — NUNCA inclui
+// conteudo/audio_url/transcricao/duracao_segundos. Legível por qualquer
+// usuária autenticada independente do plano, mesmo para praticas is_pro =
+// true (título/categoria funcionam como teaser); use esta view em vez da
+// tabela base sempre que só precisar de metadado, e reserve a tabela base
+// (com o gate de plano) para quem precisa do conteúdo de verdade.
+export type PraticaCatalogo = {
+  id: string;
+  categoria: string;
+  tipo: TipoPratica;
+  titulo: string;
+  status: StatusPratica;
+  audio_status: StatusAudioPratica;
+  is_pro: boolean;
+  criado_em: string;
+};
+
 export type RegraRecomendacao = {
   id: string;
   humor_min: number;
@@ -498,7 +516,9 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      praticas_catalogo: { Row: PraticaCatalogo; Relationships: [] };
+    };
     Functions: {
       conceder_petalas: {
         Args: {

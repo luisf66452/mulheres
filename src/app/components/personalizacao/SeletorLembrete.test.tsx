@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import SeletorLembrete from './SeletorLembrete';
 
 const onSalvar = vi.fn(async (horario: string | null) => {
@@ -48,8 +51,9 @@ describe('SeletorLembrete', () => {
     });
   });
 
-  it('nunca referencia a API Notification do navegador', () => {
-    const codigoFonte = SeletorLembrete.toString();
+  it('nunca referencia a API Notification do navegador em nenhum lugar do arquivo (incluindo imports)', () => {
+    const caminhoArquivo = join(dirname(fileURLToPath(import.meta.url)), 'SeletorLembrete.tsx');
+    const codigoFonte = readFileSync(caminhoArquivo, 'utf-8');
     expect(codigoFonte).not.toMatch(/Notification/);
   });
 

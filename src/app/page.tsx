@@ -15,6 +15,7 @@ import JornadaEmAndamento, { type JornadaEmAndamentoInfo } from '@/app/component
 import ContinuarDeOndeParei from '@/app/components/inicio/ContinuarDeOndeParei';
 import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
 import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRegistration';
+import MetaCompleteRegistration from '@/app/components/meta/MetaCompleteRegistration';
 import InstalarRose from '@/app/components/InstalarRose';
 import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 
@@ -75,6 +76,7 @@ export default async function InicioPage({
   return (
     <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       {cadastro === 'concluido' && <TikTokCompleteRegistration />}
+      {cadastro === 'concluido' && <MetaCompleteRegistration />}
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

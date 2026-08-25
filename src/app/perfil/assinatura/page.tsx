@@ -5,6 +5,7 @@ import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
 import { stripeConfigurado } from '@/lib/stripe/planos';
 import TikTokPurchase from '@/app/components/tiktok/TikTokPurchase';
+import MetaSubscribe from '@/app/components/meta/MetaSubscribe';
 import BotaoAssinar from './BotaoAssinar';
 import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
 import ModalAgradecimento from './ModalAgradecimento';
@@ -66,6 +67,7 @@ export default async function AssinaturaPage({
       <CabecalhoSubpagina titulo="Minha assinatura" subtitulo="O estado real do seu plano" />
 
       {checkout === 'sucesso' && sessionId && <TikTokPurchase sessionId={sessionId} />}
+      {checkout === 'sucesso' && sessionId && <MetaSubscribe sessionId={sessionId} />}
 
       {checkout === 'sucesso' && <ModalAgradecimento />}
       {checkout === 'cancelado' && (

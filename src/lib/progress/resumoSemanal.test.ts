@@ -169,7 +169,7 @@ describe('calcularResumoSemanal', () => {
     expect(totalAlimentacao).toBe(1);
   });
 
-  it('nunca usa vocabulário proibido na mensagem, em nenhum cenário', () => {
+  it('nunca usa vocabulário proibido na mensagem nem nos rótulos de distribuição, em nenhum cenário', () => {
     const cenarios = [
       { checkinsSemana: [], checkinsSemanaAnterior: [], diasDaSemana: DIAS_DA_SEMANA, datasAtividadesConcluidas: [] },
       {
@@ -182,10 +182,38 @@ describe('calcularResumoSemanal', () => {
 
     for (const cenario of cenarios) {
       const resultado = calcularResumoSemanal(cenario);
-      const textoCompleto = resultado.mensagem.toLowerCase();
+      const rotulosDistribuicao = [
+        ...resultado.distribuicaoHumor,
+        ...resultado.distribuicaoImagemCorporal,
+        ...resultado.distribuicaoAlimentacao,
+      ].map((item) => item.rotulo);
+      const textoCompleto = [resultado.mensagem, ...rotulosDistribuicao].join(' ').toLowerCase();
       for (const termoProibido of VOCABULARIO_PROIBIDO) {
         expect(textoCompleto).not.toContain(termoProibido);
       }
     }
+
+    // Garante que o cenário com registros de fato populou as distribuições
+    // (senão a varredura acima passaria trivialmente sem testar nada).
+    const resultadoComRegistros = calcularResumoSemanal(cenarios[1]);
+    expect(resultadoComRegistros.distribuicaoHumor.length).toBeGreaterThan(0);
+    expect(resultadoComRegistros.distribuicaoImagemCorporal.length).toBeGreaterThan(0);
+  });
+
+  it('exclui "prefiro_nao_responder" do cômputo do tema em destaque quando presente em fatores', () => {
+    const resultado = calcularResumoSemanal({
+      checkinsSemana: [
+        checkin({ data: '2026-08-10', fatores: ['prefiro_nao_responder'] }),
+        checkin({ data: '2026-08-11', fatores: ['prefiro_nao_responder', 'sono'] }),
+        checkin({ data: '2026-08-12', fatores: ['sono'] }),
+      ],
+      checkinsSemanaAnterior: [],
+      diasDaSemana: DIAS_DA_SEMANA,
+      datasAtividadesConcluidas: [],
+    });
+
+    // "prefiro_nao_responder" aparece 2x mas deve ser excluído; "sono" aparece
+    // 2x e é o único tema legítimo com ocorrências suficientes para destaque.
+    expect(resultado.temaDestaque).toEqual({ rotulo: 'sono', ocorrencias: 2 });
   });
 });

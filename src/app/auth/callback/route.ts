@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.redirect(`${origin}/`);
+    // O marcador é controlado por esta rota e usado apenas para apresentar
+    // o convite ao Rose Pro uma vez, logo após um login bem-sucedido. Ao
+    // dispensar ou abrir os planos, o componente remove o marcador da URL.
+    return NextResponse.redirect(`${origin}/?entrada=1`);
   }
 
   return NextResponse.redirect(

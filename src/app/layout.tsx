@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import AplicarPreferenciasDispositivo from "./components/AplicarPreferenciasDispositivo";
+import ConsentimentoMarketingBanner from "./components/ConsentimentoMarketingBanner";
+import FacebookPixel from "./components/FacebookPixel";
+import FacebookPageView from "./components/facebook/FacebookPageView";
 import RegistrarServiceWorker from "./components/RegistrarServiceWorker";
 import TikTokPixel from "./components/TikTokPixel";
 import TikTokPageView from "./components/tiktok/TikTokPageView";
@@ -59,7 +62,10 @@ window.addEventListener('beforeinstallprompt', function (e) {
         <RegistrarServiceWorker />
         <TikTokPixel />
         <TikTokPageView />
+        <FacebookPixel />
+        <FacebookPageView />
         {children}
+        <ConsentimentoMarketingBanner />
       </body>
     </html>
   );

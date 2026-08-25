@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Botao from '@/app/components/Botao';
 import type { PlanoStripe } from '@/lib/stripe/planos';
-import { rastrearEvento } from '@/lib/tiktok/eventos';
+import { rastrearEvento as rastrearEventoTikTok } from '@/lib/tiktok/eventos';
+import { rastrearEvento as rastrearEventoMeta } from '@/lib/meta/eventos';
 
 export default function BotaoAssinar({ plano, rotulo }: { plano: PlanoStripe; rotulo: string }) {
   const [carregando, setCarregando] = useState(false);
@@ -26,8 +27,13 @@ export default function BotaoAssinar({ plano, rotulo }: { plano: PlanoStripe; ro
       }
       // Só dispara quando a sessão de checkout do Stripe foi mesmo criada
       // (não no clique do botão) — valor/moeda vêm do price real do Stripe,
-      // retornado por /api/stripe/checkout.
-      rastrearEvento('InitiateCheckout', {
+      // retornado por /api/stripe/checkout. Dispara para os dois pixels
+      // imediatamente antes do redirect para o Stripe.
+      rastrearEventoTikTok('InitiateCheckout', {
+        value: dados.valor ?? undefined,
+        currency: dados.moeda ?? undefined,
+      });
+      rastrearEventoMeta('InitiateCheckout', {
         value: dados.valor ?? undefined,
         currency: dados.moeda ?? undefined,
       });

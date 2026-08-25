@@ -53,8 +53,8 @@ describe('calcularResumoSemanal', () => {
   it('poucos registros: menos de 3 check-ins não calcula tema em destaque nem comparação', () => {
     const resultado = calcularResumoSemanal({
       checkinsSemana: [
-        checkin({ data: '2026-08-10', emocao_especifica: 'ansiedade' }),
-        checkin({ data: '2026-08-11', emocao_especifica: 'ansiedade' }),
+        checkin({ data: '2026-08-10', emocao_especifica: 'Ansiosa' }),
+        checkin({ data: '2026-08-11', emocao_especifica: 'Ansiosa' }),
       ],
       checkinsSemanaAnterior: [],
       diasDaSemana: DIAS_DA_SEMANA,
@@ -108,16 +108,16 @@ describe('calcularResumoSemanal', () => {
   it('destaque de tema exige pelo menos 3 check-ins na semana e o item aparecer pelo menos 2 vezes', () => {
     const resultado = calcularResumoSemanal({
       checkinsSemana: [
-        checkin({ data: '2026-08-10', emocao_especifica: 'gratidao' }),
-        checkin({ data: '2026-08-11', emocao_especifica: 'ansiedade' }),
-        checkin({ data: '2026-08-12', emocao_especifica: 'ansiedade' }),
+        checkin({ data: '2026-08-10', emocao_especifica: 'Esperançosa' }),
+        checkin({ data: '2026-08-11', emocao_especifica: 'Ansiosa' }),
+        checkin({ data: '2026-08-12', emocao_especifica: 'Ansiosa' }),
       ],
       checkinsSemanaAnterior: [],
       diasDaSemana: DIAS_DA_SEMANA,
       datasAtividadesConcluidas: [],
     });
 
-    expect(resultado.temaDestaque).toEqual({ rotulo: 'ansiedade', ocorrencias: 2 });
+    expect(resultado.temaDestaque).toEqual({ rotulo: 'Ansiosa', ocorrencias: 2 });
   });
 
   it('exclui "prefiro_nao_responder" do cômputo do tema em destaque', () => {
@@ -138,9 +138,9 @@ describe('calcularResumoSemanal', () => {
   it('também considera fatores (não só emocao_especifica) no cômputo do tema em destaque', () => {
     const resultado = calcularResumoSemanal({
       checkinsSemana: [
-        checkin({ data: '2026-08-10', fatores: ['sono', 'trabalho'] }),
-        checkin({ data: '2026-08-11', fatores: ['sono'] }),
-        checkin({ data: '2026-08-12', fatores: ['trabalho'] }),
+        checkin({ data: '2026-08-10', fatores: ['Sono', 'Trabalho'] }),
+        checkin({ data: '2026-08-11', fatores: ['Sono'] }),
+        checkin({ data: '2026-08-12', fatores: ['Trabalho'] }),
       ],
       checkinsSemanaAnterior: [],
       diasDaSemana: DIAS_DA_SEMANA,
@@ -148,7 +148,7 @@ describe('calcularResumoSemanal', () => {
     });
 
     expect(resultado.temaDestaque?.ocorrencias).toBe(2);
-    expect(['sono', 'trabalho']).toContain(resultado.temaDestaque?.rotulo);
+    expect(['Sono', 'Trabalho']).toContain(resultado.temaDestaque?.rotulo);
   });
 
   it('monta a distribuição de humor, imagem corporal e alimentação com todos os níveis de 1 a 5', () => {
@@ -173,7 +173,7 @@ describe('calcularResumoSemanal', () => {
     const cenarios = [
       { checkinsSemana: [], checkinsSemanaAnterior: [], diasDaSemana: DIAS_DA_SEMANA, datasAtividadesConcluidas: [] },
       {
-        checkinsSemana: DIAS_DA_SEMANA.map((data) => checkin({ data, emocao_especifica: 'ansiedade' })),
+        checkinsSemana: DIAS_DA_SEMANA.map((data) => checkin({ data, emocao_especifica: 'Ansiosa' })),
         checkinsSemanaAnterior: DIAS_SEMANA_ANTERIOR.map((data) => checkin({ data })),
         diasDaSemana: DIAS_DA_SEMANA,
         datasAtividadesConcluidas: ['2026-08-11'],
@@ -204,16 +204,37 @@ describe('calcularResumoSemanal', () => {
     const resultado = calcularResumoSemanal({
       checkinsSemana: [
         checkin({ data: '2026-08-10', fatores: ['prefiro_nao_responder'] }),
-        checkin({ data: '2026-08-11', fatores: ['prefiro_nao_responder', 'sono'] }),
-        checkin({ data: '2026-08-12', fatores: ['sono'] }),
+        checkin({ data: '2026-08-11', fatores: ['prefiro_nao_responder', 'Sono'] }),
+        checkin({ data: '2026-08-12', fatores: ['Sono'] }),
       ],
       checkinsSemanaAnterior: [],
       diasDaSemana: DIAS_DA_SEMANA,
       datasAtividadesConcluidas: [],
     });
 
-    // "prefiro_nao_responder" aparece 2x mas deve ser excluído; "sono" aparece
+    // "prefiro_nao_responder" aparece 2x mas deve ser excluído; "Sono" aparece
     // 2x e é o único tema legítimo com ocorrências suficientes para destaque.
-    expect(resultado.temaDestaque).toEqual({ rotulo: 'sono', ocorrencias: 2 });
+    expect(resultado.temaDestaque).toEqual({ rotulo: 'Sono', ocorrencias: 2 });
+  });
+
+  it('ignora texto livre (fora das listas fechadas de emoção/fatores) no cômputo do tema em destaque, mesmo repetido', () => {
+    // Simula o campo "outro fator" do check-in (texto livre digitado pela
+    // usuária, sem validação contra FATORES_DISPONIVEIS) e um valor livre de
+    // emoção que não pertence a EMOCOES_POR_QUADRANTE. Nenhum dos dois pode
+    // virar temaDestaque, mesmo aparecendo 2+ vezes — senão a Rose ecoaria
+    // esse texto literalmente na frase gerada.
+    const resultado = calcularResumoSemanal({
+      checkinsSemana: [
+        checkin({ data: '2026-08-10', fatores: ['me senti ruim'], emocao_especifica: 'me senti ruim' }),
+        checkin({ data: '2026-08-11', fatores: ['me senti ruim'], emocao_especifica: 'me senti ruim' }),
+        checkin({ data: '2026-08-12', fatores: ['Sono'] }),
+      ],
+      checkinsSemanaAnterior: [],
+      diasDaSemana: DIAS_DA_SEMANA,
+      datasAtividadesConcluidas: [],
+    });
+
+    expect(resultado.temaDestaque).toBeNull();
+    expect(resultado.mensagem).not.toContain('me senti ruim');
   });
 });

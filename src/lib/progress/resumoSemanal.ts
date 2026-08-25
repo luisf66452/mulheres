@@ -1,4 +1,5 @@
 import { ROTULO_HUMOR } from './semana';
+import { EMOCOES_POR_QUADRANTE, FATORES_DISPONIVEIS } from '@/lib/checkin/opcoesCheckin';
 import type { EstadoGeral } from '@/lib/supabase/types';
 
 // Ainda sem revisão da psicóloga para rótulos clínicos de imagem corporal e
@@ -22,6 +23,19 @@ const ROTULO_ALIMENTACAO: Record<number, string> = {
 };
 
 const VALORES_EXCLUIDOS_DO_DESTAQUE = new Set(['prefiro_nao_responder']);
+
+// O "tema em destaque" só pode ser calculado a partir de valores que
+// pertencem às listas fechadas reais da UI de check-in (mesmas opções de
+// emocao_especifica/fatores oferecidas em CheckinFormClient.tsx, via
+// src/lib/checkin/opcoesCheckin.ts). Isso é essencial: alguns desses campos
+// aceitam texto livre digitado pela usuária sem validação contra uma lista
+// fechada (ex. o campo "outro fator" do check-in) — se esse texto livre
+// pudesse virar tema em destaque, a Rose ecoaria literalmente palavras da
+// usuária, inclusive vocabulário proibido, na frase gerada.
+const EMOCOES_VALIDAS = new Set(
+  Object.values(EMOCOES_POR_QUADRANTE).flatMap((emocoes) => emocoes.map((e) => e.palavra))
+);
+const FATORES_VALIDOS = new Set(FATORES_DISPONIVEIS);
 
 export interface CheckinResumoSemanal {
   data: string;
@@ -85,11 +99,15 @@ function calcularTemaDestaque(checkinsSemana: CheckinResumoSemanal[]): TemaDesta
 
   const contagem = new Map<string, number>();
   for (const checkin of checkinsSemana) {
-    if (checkin.emocao_especifica && !VALORES_EXCLUIDOS_DO_DESTAQUE.has(checkin.emocao_especifica)) {
+    if (
+      checkin.emocao_especifica &&
+      !VALORES_EXCLUIDOS_DO_DESTAQUE.has(checkin.emocao_especifica) &&
+      EMOCOES_VALIDAS.has(checkin.emocao_especifica)
+    ) {
       contagem.set(checkin.emocao_especifica, (contagem.get(checkin.emocao_especifica) ?? 0) + 1);
     }
     for (const fator of checkin.fatores ?? []) {
-      if (!VALORES_EXCLUIDOS_DO_DESTAQUE.has(fator)) {
+      if (!VALORES_EXCLUIDOS_DO_DESTAQUE.has(fator) && FATORES_VALIDOS.has(fator)) {
         contagem.set(fator, (contagem.get(fator) ?? 0) + 1);
       }
     }

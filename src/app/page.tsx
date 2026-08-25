@@ -17,13 +17,15 @@ import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
 import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRegistration';
 import InstalarRose from '@/app/components/InstalarRose';
 import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
+import OfertaRosePro from '@/app/components/inicio/OfertaRosePro';
+import { deveMostrarOfertaRosePro } from '@/lib/assinatura/ofertaPosLogin';
 
 export default async function InicioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cadastro?: string }>;
+  searchParams: Promise<{ cadastro?: string; entrada?: string }>;
 }) {
-  const { cadastro } = await searchParams;
+  const { cadastro, entrada } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -42,7 +44,7 @@ export default async function InicioPage({
   const hoje = hojeISONoFuso(fusoHorario);
 
   const [{ data: perfil }, { data: checkinHoje }, { data: checkins }, { data: carteira }] = await Promise.all([
-    supabase.from('perfis').select('nome').eq('id', user.id).single(),
+    supabase.from('perfis').select('nome, plano').eq('id', user.id).single(),
     supabase.from('checkins').select('*').eq('usuaria_id', user.id).eq('data', hoje).maybeSingle(),
     supabase.from('checkins').select('data').eq('usuaria_id', user.id),
     supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user.id).maybeSingle(),
@@ -55,6 +57,11 @@ export default async function InicioPage({
   const checkinHojeId: string | null = checkinHoje?.id ?? null;
 
   const jornadaAtiva = await buscarJornadaAtivaParaExibir(supabase, user.id, checkinHojeId);
+  const mostrarOfertaRosePro = deveMostrarOfertaRosePro({
+    plano: perfil?.plano ?? null,
+    entrada,
+    cadastro,
+  });
 
   let jornadaEmAndamento: JornadaEmAndamentoInfo | null = null;
   if (jornadaAtiva) {
@@ -75,6 +82,7 @@ export default async function InicioPage({
   return (
     <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       {cadastro === 'concluido' && <TikTokCompleteRegistration />}
+      {mostrarOfertaRosePro && <OfertaRosePro />}
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

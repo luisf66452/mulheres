@@ -81,7 +81,7 @@ export default async function InicioPage({
 
       {jaFezCheckinHoje ? <ResumoDoDia checkinHoje={checkinHoje} /> : <SeletorHumor />}
 
-      <SequenciaDias progresso={progresso} />
+      <SequenciaDias progresso={progresso} totalCheckins={(checkins ?? []).length} />
 
       <JornadaEmAndamento jornada={jornadaEmAndamento} />
 

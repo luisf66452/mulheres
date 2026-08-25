@@ -162,12 +162,6 @@ export default function PlayerAudio({
             <button
               type="button"
               onClick={alternarReproducao}
-              onKeyDown={(evento) => {
-                if (evento.key === ' ') {
-                  evento.preventDefault();
-                  alternarReproducao();
-                }
-              }}
               aria-label={tocando ? `Pausar áudio de ${titulo}` : `Tocar áudio de ${titulo}`}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-acao text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acao/60 focus-visible:ring-offset-2"
             >

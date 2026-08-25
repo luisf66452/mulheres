@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, type MouseEvent } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 import { favoritar, desfavoritar, type TipoFavorito } from '@/app/favoritos/actions';
 
 export default function BotaoFavorito({
@@ -33,9 +34,15 @@ export default function BotaoFavorito({
         } else {
           await desfavoritar(tipo, id);
         }
-      } catch {
-        // Reverte a UI otimista se a action falhar (rede, RLS, validação de
-        // servidor) — nunca deixa o botão "mentir" sobre o estado real.
+      } catch (error) {
+        // Deixa erros internos do Next.js (ex.: redirect('/login') quando a
+        // sessão expirou) propagarem para o framework tratar — nunca reverte
+        // a UI otimista nesse caso, a usuária está mesmo sendo redirecionada.
+        unstable_rethrow(error);
+
+        // Reverte a UI otimista se a action falhar de verdade (rede, RLS,
+        // validação de servidor) — nunca deixa o botão "mentir" sobre o
+        // estado real.
         setFavoritado(!proximoValor);
       }
     });

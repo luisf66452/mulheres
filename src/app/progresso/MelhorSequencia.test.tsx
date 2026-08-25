@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import MelhorSequencia from './MelhorSequencia';
+import { VOCABULARIO_PROIBIDO } from '@/lib/testing/vocabularioProibido';
 
 describe('MelhorSequencia', () => {
   it('não renderiza nada quando não há nenhuma sequência (sem check-ins)', () => {
@@ -18,5 +19,13 @@ describe('MelhorSequencia', () => {
     render(<MelhorSequencia melhorSequencia={1} totalCheckins={1} />);
     expect(screen.getByText('1 dia seguido')).toBeTruthy();
     expect(screen.getByText('1')).toBeTruthy();
+  });
+
+  it('nunca usa vocabulário proibido no texto estático do componente', () => {
+    const { container } = render(<MelhorSequencia melhorSequencia={5} totalCheckins={23} />);
+    const textoCompleto = (container.textContent ?? '').toLowerCase();
+    for (const termoProibido of VOCABULARIO_PROIBIDO) {
+      expect(textoCompleto).not.toContain(termoProibido);
+    }
   });
 });

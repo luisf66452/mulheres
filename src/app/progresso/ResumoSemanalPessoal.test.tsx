@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ResumoSemanalPessoal from './ResumoSemanalPessoal';
 import type { ResumoSemanal } from '@/lib/progress/resumoSemanal';
+import { VOCABULARIO_PROIBIDO } from '@/lib/testing/vocabularioProibido';
 
 const AVISO_LEGAL =
   'Este resumo descreve apenas o que você registrou e não representa diagnóstico ou avaliação clínica.';
@@ -78,5 +79,13 @@ describe('ResumoSemanalPessoal', () => {
     expect(screen.getByText('Nos seus registros, você fez check-in em 4 dos 7 dias desta semana.')).toBeTruthy();
     expect(screen.getByText('Nível 2: 4')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Conhecer o Rose Pro' })).toBeNull();
+  });
+
+  it('nunca usa vocabulário proibido no texto estático do componente (títulos, aviso legal, labels)', () => {
+    const { container } = render(<ResumoSemanalPessoal resumo={resumoComRegistros} ehPremium={true} />);
+    const textoCompleto = (container.textContent ?? '').toLowerCase();
+    for (const termoProibido of VOCABULARIO_PROIBIDO) {
+      expect(textoCompleto).not.toContain(termoProibido);
+    }
   });
 });

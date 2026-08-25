@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import SequenciaDias from './SequenciaDias';
 import type { Progresso7Dias } from '@/lib/progress/streak';
+import { VOCABULARIO_PROIBIDO } from '@/lib/testing/vocabularioProibido';
 
 const progressoComDias = (completos: boolean[]): Progresso7Dias => {
   const ultimos7Dias = completos.map((completou, i) => ({ data: `2026-08-1${i}`, completou }));
@@ -47,5 +48,18 @@ describe('SequenciaDias', () => {
     );
     expect(screen.getByText('Você pode recomeçar hoje')).toBeTruthy();
     expect(screen.getByText('Você cuidou de si em 6 dos últimos 7 dias.')).toBeTruthy();
+  });
+
+  it('nunca usa vocabulário proibido no texto estático do componente (título, mensagem, link)', () => {
+    const { container } = render(
+      <SequenciaDias
+        progresso={progressoComDias([true, true, true, true, false, false, true])}
+        totalCheckins={8}
+      />
+    );
+    const textoCompleto = (container.textContent ?? '').toLowerCase();
+    for (const termoProibido of VOCABULARIO_PROIBIDO) {
+      expect(textoCompleto).not.toContain(termoProibido);
+    }
   });
 });

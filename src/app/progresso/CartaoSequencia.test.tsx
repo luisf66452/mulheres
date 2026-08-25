@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import CartaoSequencia from './CartaoSequencia';
+import { VOCABULARIO_PROIBIDO } from '@/lib/testing/vocabularioProibido';
 
 const seteDias = (completos: boolean[]) =>
   completos.map((completou, i) => ({ data: `2026-08-1${i}`, completou }));
@@ -65,5 +66,19 @@ describe('CartaoSequencia', () => {
         'Nenhum dos últimos 7 dias teve registro — você pode recomeçar quando fizer sentido para você.'
       )
     ).toBeTruthy();
+  });
+
+  it('nunca usa vocabulário proibido no texto estático do componente', () => {
+    const { container } = render(
+      <CartaoSequencia
+        diasConsecutivosAtuais={4}
+        totalCheckins={6}
+        ultimos7Dias={seteDias([false, false, false, true, true, true, true])}
+      />
+    );
+    const textoCompleto = (container.textContent ?? '').toLowerCase();
+    for (const termoProibido of VOCABULARIO_PROIBIDO) {
+      expect(textoCompleto).not.toContain(termoProibido);
+    }
   });
 });

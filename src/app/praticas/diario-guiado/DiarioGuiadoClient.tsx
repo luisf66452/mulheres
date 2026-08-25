@@ -5,6 +5,7 @@ import type { PraticaRapida } from '@/lib/praticas-conteudo/tipos';
 import { PERGUNTAS_DIARIO_GUIADO } from '@/lib/praticas-conteudo/perguntasDiarioGuiado';
 import { usePersistedState } from '@/lib/persistencia-local/usePersistedState';
 import { registrarConclusao } from '@/lib/praticas-progresso/armazenamento';
+import { chaveRascunhoPratica } from '@/lib/praticas-progresso/chaveLocal';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import IndicadorEtapas from '@/app/components/praticas/IndicadorEtapas';
 import TelaConclusao from '@/app/components/praticas/TelaConclusao';
@@ -21,7 +22,7 @@ export default function DiarioGuiadoClient({
   pratica: PraticaRapida;
   usuariaId: string;
 }) {
-  const chave = `praticas:diario:${usuariaId}:${dataDeHoje()}`;
+  const chave = chaveRascunhoPratica('diario', usuariaId, dataDeHoje());
   const [respostas, setRespostas, limparRespostas] = usePersistedState<string[]>(
     chave,
     PERGUNTAS_DIARIO_GUIADO.map(() => '')

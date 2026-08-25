@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Cartao from '@/app/components/Cartao';
+import { chaveRascunhoPratica } from '@/lib/praticas-progresso/chaveLocal';
 
 interface CandidatoRascunho {
   chaveCategoria: 'diario' | 'autocompaixao';
@@ -26,7 +27,7 @@ export default function ContinuarPraticaLocalClient({ usuariaId }: { usuariaId: 
 
   useEffect(() => {
     for (const candidato of CANDIDATOS) {
-      const chave = `praticas:${candidato.chaveCategoria}:${usuariaId}:${dataDeHoje()}`;
+      const chave = chaveRascunhoPratica(candidato.chaveCategoria, usuariaId, dataDeHoje());
       let bruto: string | null = null;
       try {
         bruto = window.localStorage.getItem(chave);

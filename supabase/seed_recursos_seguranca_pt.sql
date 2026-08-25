@@ -6,7 +6,7 @@
 --     https://www.gov.pt/guias/contactos-de-emergencia-em-portugal
 --
 -- `fonte`/`verificado_em` seguem os mesmos valores do backfill de produção
--- em supabase/migrations/20260824150000_recursos_seguranca_fonte_verificado.sql
+-- em supabase/migrations/20260825131757_recursos_seguranca_fonte_verificado.sql
 -- — só recursos com os dois preenchidos aparecem em /seguranca (Seção 7 do
 -- design de evolução da Rose). A linha introdutória ("Não está sozinha")
 -- fica sem fonte de propósito: não é um contato verificável, e o texto de

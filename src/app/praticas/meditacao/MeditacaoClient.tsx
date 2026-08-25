@@ -98,7 +98,7 @@ export default function MeditacaoClient({
           url={pratica.midia.url}
           titulo={pratica.titulo}
           duracaoSegundosConhecida={DURACAO_TOTAL_S}
-          transcricao=""
+          transcricao="Transcrição em breve."
         />
       ) : (
         <p className="rounded-2xl border border-borda/60 bg-superficie px-4 py-3 text-center text-sm text-texto-suave">

@@ -16,7 +16,9 @@ export default async function PersonalizacaoPage() {
 
   const { data: perfil } = await supabase
     .from('perfis')
-    .select('objetivos, temas_sensiveis, horario_preferido_notificacao')
+    .select(
+      'objetivos, temas_sensiveis, horario_preferido_notificacao, onboarding_extra_concluido_em, onboarding_extra_dispensado_em'
+    )
     .eq('id', user.id)
     .single();
 
@@ -30,6 +32,9 @@ export default async function PersonalizacaoPage() {
         objetivosIniciais={perfil?.objetivos ?? []}
         temasIniciais={perfil?.temas_sensiveis ?? []}
         horarioInicial={perfil?.horario_preferido_notificacao ?? null}
+        personalizacaoJaVista={Boolean(
+          perfil?.onboarding_extra_concluido_em || perfil?.onboarding_extra_dispensado_em
+        )}
       />
       <NavegacaoInferior />
     </main>

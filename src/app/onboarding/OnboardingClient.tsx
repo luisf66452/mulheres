@@ -2,19 +2,30 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { registrarConsentimento, confirmarPais } from './actions';
+import {
+  registrarConsentimento,
+  confirmarPais,
+  salvarObjetivos,
+  salvarTemasSensiveis,
+  concluirPersonalizacao,
+} from './actions';
 import { sair } from '@/app/perfil/actions';
 import Botao from '@/app/components/Botao';
+import SeletorObjetivos from '@/app/components/personalizacao/SeletorObjetivos';
+import SeletorTemasSensiveis from '@/app/components/personalizacao/SeletorTemasSensiveis';
+import SeletorLembrete from '@/app/components/personalizacao/SeletorLembrete';
 import { PAISES_SUPORTADOS, NOME_PAIS, type PaisSuportado } from '@/lib/perfil/pais';
 
-type Etapa = 'perguntando' | 'confirmada' | 'negada' | 'pais';
+type Etapa = 'perguntando' | 'confirmada' | 'negada' | 'pais' | 'objetivos' | 'temas' | 'lembrete';
 
 export default function OnboardingClient({
   consentimentoJaRegistrado,
   paisJaConfirmado,
+  personalizacaoJaConcluida,
 }: {
   consentimentoJaRegistrado: boolean;
   paisJaConfirmado: boolean;
+  personalizacaoJaConcluida: boolean;
 }) {
   // Se o consentimento já existe (conta que já passou pelo onboarding antes
   // de pais_confirmado_em existir), pula direto para a etapa de país — nunca
@@ -60,8 +71,17 @@ export default function OnboardingClient({
       const resultado = await confirmarPais(paisEscolhido);
       if (resultado?.erro) {
         setErroPais(resultado.erro);
+        return;
       }
-      // Em sucesso, a própria action redireciona para '/'.
+      // País deixou de ser a última etapa: quem já concluiu a personalização
+      // antes (edge case de revisitar /onboarding manualmente) vai direto
+      // para a home; quem não concluiu segue para objetivos → temas →
+      // lembrete.
+      if (personalizacaoJaConcluida) {
+        router.push('/');
+      } else {
+        setEtapaMaioridade('objetivos');
+      }
     });
   }
 
@@ -139,6 +159,59 @@ export default function OnboardingClient({
         <Botao disabled={!paisEscolhido || confirmandoPais} onClick={handleConfirmarPais}>
           {confirmandoPais ? 'Confirmando...' : 'Confirmar'}
         </Botao>
+      </main>
+    );
+  }
+
+  if (etapaMaioridade === 'objetivos') {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-2xl text-texto">O que você quer priorizar agora?</h1>
+          <p className="text-texto-suave">
+            Escolha quantos fizerem sentido — isso ajuda a personalizar seu ritual diário. Você pode
+            mudar de ideia quando quiser em Perfil.
+          </p>
+        </div>
+        <SeletorObjetivos
+          selecaoInicial={[]}
+          onSalvar={salvarObjetivos}
+          aoSalvarComSucesso={() => setEtapaMaioridade('temas')}
+        />
+      </main>
+    );
+  }
+
+  if (etapaMaioridade === 'temas') {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-2xl text-texto">Algum desses temas é sensível para você?</h1>
+          <p className="text-texto-suave">
+            Isso nos ajuda a ter mais cuidado com a linguagem que usamos com você. Também pode ser
+            mudado depois.
+          </p>
+        </div>
+        <SeletorTemasSensiveis
+          selecaoInicial={[]}
+          onSalvar={salvarTemasSensiveis}
+          aoSalvarComSucesso={() => setEtapaMaioridade('lembrete')}
+        />
+      </main>
+    );
+  }
+
+  if (etapaMaioridade === 'lembrete') {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-2xl text-texto">Quer um lembrete diário?</h1>
+          <p className="text-texto-suave">
+            Escolha um horário confortável para o seu ritual. Nada é enviado automaticamente — isso só
+            define sua preferência.
+          </p>
+        </div>
+        <SeletorLembrete horarioInicial={null} onSalvar={concluirPersonalizacao} rotuloBotao="Concluir" />
       </main>
     );
   }

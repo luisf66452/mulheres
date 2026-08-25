@@ -14,7 +14,7 @@ export default async function OnboardingPage() {
 
   const { data: perfil } = await supabase
     .from('perfis')
-    .select('consentimento_dados_sensiveis_em, pais_confirmado_em')
+    .select('consentimento_dados_sensiveis_em, pais_confirmado_em, onboarding_extra_concluido_em')
     .eq('id', user.id)
     .single();
 
@@ -22,6 +22,7 @@ export default async function OnboardingPage() {
     <OnboardingClient
       consentimentoJaRegistrado={Boolean(perfil?.consentimento_dados_sensiveis_em)}
       paisJaConfirmado={Boolean(perfil?.pais_confirmado_em)}
+      personalizacaoJaConcluida={Boolean(perfil?.onboarding_extra_concluido_em)}
     />
   );
 }

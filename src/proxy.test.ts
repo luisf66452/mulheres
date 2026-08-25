@@ -49,6 +49,26 @@ describe('proxy (middleware)', () => {
     expect(resposta.headers.get('location')).toContain('/login');
   });
 
+  it('permite acesso sem sessão a /seguranca — o espaço "Preciso de ajuda agora" nunca pode depender de login', async () => {
+    vi.mocked(createServerClient).mockReturnValue(criarSupabaseFake(null) as never);
+    const request = new NextRequest('https://rose.exemplo.com/seguranca');
+
+    const resposta = await proxy(request);
+
+    expect(resposta.headers.get('location')).toBeNull();
+  });
+
+  it('permite acesso a /seguranca mesmo autenticada sem consentimento/país confirmados (não força /onboarding)', async () => {
+    vi.mocked(createServerClient).mockReturnValue(
+      criarSupabaseFake({ id: 'u1' }, { consentimento_dados_sensiveis_em: null, pais_confirmado_em: null }) as never
+    );
+    const request = new NextRequest('https://rose.exemplo.com/seguranca');
+
+    const resposta = await proxy(request);
+
+    expect(resposta.headers.get('location')).toBeNull();
+  });
+
   it('permite acesso sem sessão às rotas públicas conhecidas', async () => {
     vi.mocked(createServerClient).mockReturnValue(criarSupabaseFake(null) as never);
 

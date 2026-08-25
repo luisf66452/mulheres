@@ -22,6 +22,14 @@ const ROTAS_PUBLICAS = [
   // CRON_SECRET` (a autenticação de verdade, feita dentro da própria rota).
   // Mesma justificativa do webhook do Stripe acima.
   '/api/push/send-due',
+  // O espaço "Preciso de ajuda agora" (Seção 7 do design de evolução da
+  // Rose) precisa funcionar mesmo sem sessão e mesmo para quem ainda não
+  // completou o onboarding — quem está buscando ajuda agora não pode ficar
+  // preso a um redirect de login ou de confirmação de país. A própria
+  // página (src/app/seguranca/page.tsx) já lida com os dois casos (sem
+  // usuária, ou usuária sem país confirmado) mostrando a seleção manual de
+  // país em vez de dados que ainda não existem.
+  '/seguranca',
 ];
 
 export async function proxy(request: NextRequest) {

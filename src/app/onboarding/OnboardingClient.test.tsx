@@ -187,6 +187,15 @@ describe('OnboardingClient — etapa de personalização (após país)', () => {
     await waitFor(() => expect(concluirPersonalizacao).toHaveBeenCalledWith(null));
   });
 
+  it('retoma na etapa de objetivos quando país já está confirmado mas a personalização ainda não foi concluída (usuária que abandonou o wizard no meio)', () => {
+    render(
+      <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={true} personalizacaoJaConcluida={false} />
+    );
+
+    expect(screen.getByText(/fortalecer minha autoestima/i)).toBeInTheDocument();
+    expect(screen.queryByText(/de qual país você está acessando/i)).not.toBeInTheDocument();
+  });
+
   it('se a personalização já foi concluída antes, confirmar país manda direto para a home, sem repetir a etapa', async () => {
     render(
       <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={false} personalizacaoJaConcluida={true} />

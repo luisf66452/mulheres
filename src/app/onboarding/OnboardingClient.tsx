@@ -29,10 +29,17 @@ export default function OnboardingClient({
 }) {
   // Se o consentimento já existe (conta que já passou pelo onboarding antes
   // de pais_confirmado_em existir), pula direto para a etapa de país — nunca
-  // repete a pergunta de maioridade nem os termos para quem já aceitou.
-  const [etapaMaioridade, setEtapaMaioridade] = useState<Etapa>(
-    consentimentoJaRegistrado ? 'pais' : 'perguntando'
-  );
+  // repete a pergunta de maioridade nem os termos para quem já aceitou. E se
+  // o país também já foi confirmado mas a personalização (objetivos/temas/
+  // lembrete) ainda não foi concluída — ex.: a usuária fechou o app no meio
+  // do wizard —, retoma direto na etapa de objetivos em vez de mandar pra
+  // pais de novo. Quem já concluiu tudo nunca chega a montar este componente
+  // (ver o redirect em page.tsx).
+  const [etapaMaioridade, setEtapaMaioridade] = useState<Etapa>(() => {
+    if (!consentimentoJaRegistrado) return 'perguntando';
+    if (!paisJaConfirmado) return 'pais';
+    return 'objetivos';
+  });
   const [saindo, startSaida] = useTransition();
   const router = useRouter();
 

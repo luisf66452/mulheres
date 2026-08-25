@@ -18,6 +18,13 @@ export default async function OnboardingPage() {
     .eq('id', user.id)
     .single();
 
+  // Já passou por tudo (país confirmado e personalização concluída) — não há
+  // mais etapa nenhuma para retomar. Sem este redirect, revisitar /onboarding
+  // manualmente re-montaria o wizard do zero para quem já terminou.
+  if (perfil?.pais_confirmado_em && perfil?.onboarding_extra_concluido_em) {
+    redirect('/');
+  }
+
   return (
     <OnboardingClient
       consentimentoJaRegistrado={Boolean(perfil?.consentimento_dados_sensiveis_em)}

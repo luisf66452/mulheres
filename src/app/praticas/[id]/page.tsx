@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
+import PaywallPratica from './PaywallPratica';
 
 export default async function PraticaBibliotecaPage({
   params,
@@ -10,6 +11,9 @@ export default async function PraticaBibliotecaPage({
 }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: pratica } = await supabase
     .from('praticas')
@@ -20,6 +24,18 @@ export default async function PraticaBibliotecaPage({
 
   if (!pratica) {
     notFound();
+  }
+
+  // Checagem sempre server-side: uma usuária sem sessão nunca deve ver
+  // conteúdo Pro, e o cliente nunca é a fonte de verdade sobre o plano.
+  let plano: 'free' | 'premium' = 'free';
+  if (user) {
+    const { data: perfil } = await supabase.from('perfis').select('plano').eq('id', user.id).single();
+    plano = perfil?.plano ?? 'free';
+  }
+
+  if (pratica.is_pro && plano !== 'premium') {
+    return <PaywallPratica titulo={pratica.titulo} categoria={pratica.categoria} />;
   }
 
   return (

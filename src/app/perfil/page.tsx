@@ -13,6 +13,7 @@ import IconePrivacidade from '@/app/components/perfil/icones/IconePrivacidade';
 import IconeConfiguracoes from '@/app/components/perfil/icones/IconeConfiguracoes';
 import IconeClubeRose from '@/app/components/perfil/icones/IconeClubeRose';
 import IconeAjuda from '@/app/components/perfil/icones/IconeAjuda';
+import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 import { sair } from './actions';
 
 const ITENS_MENU = [
@@ -64,6 +65,8 @@ export default async function PerfilPage() {
         )}
 
         {mostrarBannerPersonalizacao && <BannerPersonalizacaoPerfil />}
+
+        <AvisoSeguranca />
 
         <nav aria-label="Menu do perfil" className="space-y-3">
           {ITENS_MENU.map((item) => (

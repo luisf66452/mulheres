@@ -16,6 +16,7 @@ import ContinuarDeOndeParei from '@/app/components/inicio/ContinuarDeOndeParei';
 import CartaoClubeRose from '@/app/components/inicio/CartaoClubeRose';
 import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRegistration';
 import InstalarRose from '@/app/components/InstalarRose';
+import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 
 export default async function InicioPage({
   searchParams,
@@ -93,6 +94,8 @@ export default async function InicioPage({
       <CartaoClubeRose saldo={saldoPetalas} />
 
       <MensagemAcolhedora />
+
+      <AvisoSeguranca />
 
       <NavegacaoInferior />
     </main>

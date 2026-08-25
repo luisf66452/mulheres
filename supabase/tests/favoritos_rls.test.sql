@@ -113,7 +113,7 @@ select throws_ok(
   $$ select * from public.favoritos $$,
   '42501',
   null,
-  'acesso anônimo é bloqueado por falta de GRANT (permission denied for table)'
+  'acesso anônimo é bloqueado por falta de GRANT e de policy para anon (permission denied for table)'
 );
 
 select * from finish();

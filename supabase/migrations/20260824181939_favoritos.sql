@@ -37,21 +37,33 @@ alter table public.favoritos enable row level security;
 drop policy if exists "usuaria le proprios favoritos" on public.favoritos;
 create policy "usuaria le proprios favoritos"
   on public.favoritos for select
+  to authenticated
   using ((select auth.uid()) = usuaria_id);
 
 drop policy if exists "usuaria insere proprios favoritos" on public.favoritos;
 create policy "usuaria insere proprios favoritos"
   on public.favoritos for insert
+  to authenticated
   with check ((select auth.uid()) = usuaria_id);
 
 drop policy if exists "usuaria remove proprios favoritos" on public.favoritos;
 create policy "usuaria remove proprios favoritos"
   on public.favoritos for delete
+  to authenticated
   using ((select auth.uid()) = usuaria_id);
 
 -- Sem policy de UPDATE de propósito — um favorito não muda de estado, só é
 -- criado ou removido (favoritar/desfavoritar).
 
 grant select, insert, delete on public.favoritos to authenticated;
+
+-- Supabase concede TRUNCATE/REFERENCES/TRIGGER a anon/authenticated em toda
+-- tabela nova via ALTER DEFAULT PRIVILEGES, e TRUNCATE não é filtrado por
+-- RLS (mesmo cuidado já tomado em
+-- 20260822093000_push_fila_revoga_anon_authenticated.sql). Revoga
+-- explicitamente de anon (authenticated mantém select/insert/delete do
+-- GRANT acima, só perde truncate/references/trigger).
+revoke all on public.favoritos from anon;
+revoke truncate, references, trigger on public.favoritos from authenticated;
 
 notify pgrst, 'reload schema';

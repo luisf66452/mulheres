@@ -31,4 +31,17 @@ describe('CartaoPratica', () => {
     render(<CartaoPratica pratica={PRATICA} favoritado={true} />);
     expect(screen.getByRole('button', { name: 'Remover dos favoritos' })).toHaveAttribute('aria-pressed', 'true');
   });
+
+  it('não renderiza o conteúdo de uma prática Pro quando a usuária não é premium', () => {
+    const praticaPro: Pratica = { ...PRATICA, is_pro: true };
+    render(<CartaoPratica pratica={praticaPro} favoritado={false} plano="free" />);
+    expect(screen.queryByText(PRATICA.conteudo)).not.toBeInTheDocument();
+    expect(screen.getByText(/Conteúdo Pro/i)).toBeInTheDocument();
+  });
+
+  it('renderiza o conteúdo de uma prática Pro normalmente para usuária premium', () => {
+    const praticaPro: Pratica = { ...PRATICA, is_pro: true };
+    render(<CartaoPratica pratica={praticaPro} favoritado={false} plano="premium" />);
+    expect(screen.getByText(PRATICA.conteudo)).toBeInTheDocument();
+  });
 });

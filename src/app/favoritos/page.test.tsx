@@ -17,9 +17,20 @@ vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient: vi.fn() })
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 type FavoritoLinha = { id: string; pratica_id: string | null; sessao_id: string | null; criado_em: string };
-type PraticaLinha = { id: string; titulo: string; conteudo: string; categoria: string; status: string };
+type PraticaLinha = {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  categoria: string;
+  status: string;
+  is_pro?: boolean;
+};
 
-function criarSupabaseFake(favoritos: FavoritoLinha[], praticas: PraticaLinha[]) {
+function criarSupabaseFake(
+  favoritos: FavoritoLinha[],
+  praticas: PraticaLinha[],
+  plano: 'free' | 'premium' = 'free'
+) {
   return {
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'usuaria-1' } } })) },
     from(tabela: string) {
@@ -35,7 +46,16 @@ function criarSupabaseFake(favoritos: FavoritoLinha[], praticas: PraticaLinha[])
       if (tabela === 'praticas') {
         return {
           select: () => ({
-            in: async () => ({ data: praticas, error: null }),
+            in: async () => ({ data: praticas.map((p) => ({ is_pro: false, ...p })), error: null }),
+          }),
+        };
+      }
+      if (tabela === 'perfis') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: async () => ({ data: { plano }, error: null }),
+            }),
           }),
         };
       }
@@ -101,5 +121,73 @@ describe('FavoritosPage', () => {
     const jsx = await FavoritosPage();
     render(jsx);
     expect(screen.getByText('Conteúdo indisponível')).toBeInTheDocument();
+  });
+
+  it('não vaza o conteúdo de uma prática Pro favoritada por usuária não-premium', async () => {
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      criarSupabaseFake(
+        [{ id: 'fav-5', pratica_id: 'pratica-pro', sessao_id: null, criado_em: '2026-08-20T10:00:00.000Z' }],
+        [
+          {
+            id: 'pratica-pro',
+            titulo: 'Respiração avançada',
+            conteudo: 'Texto pago sigiloso que não pode vazar',
+            categoria: 'aterramento',
+            status: 'publicada',
+            is_pro: true,
+          },
+        ],
+        'free'
+      ) as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>
+    );
+    const jsx = await FavoritosPage();
+    const { container } = render(jsx);
+    expect(container.innerHTML).not.toContain('Texto pago sigiloso que não pode vazar');
+    expect(screen.getByText('Respiração avançada')).toBeInTheDocument();
+    expect(screen.getByText(/Conteúdo Pro/i)).toBeInTheDocument();
+  });
+
+  it('mostra o conteúdo de uma prática Pro favoritada por usuária premium', async () => {
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      criarSupabaseFake(
+        [{ id: 'fav-6', pratica_id: 'pratica-pro', sessao_id: null, criado_em: '2026-08-20T10:00:00.000Z' }],
+        [
+          {
+            id: 'pratica-pro',
+            titulo: 'Respiração avançada',
+            conteudo: 'Texto pago liberado para premium',
+            categoria: 'aterramento',
+            status: 'publicada',
+            is_pro: true,
+          },
+        ],
+        'premium'
+      ) as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>
+    );
+    const jsx = await FavoritosPage();
+    render(jsx);
+    expect(screen.getByText('Texto pago liberado para premium')).toBeInTheDocument();
+  });
+
+  it('sempre mostra o conteúdo de uma prática não-Pro, independente do plano', async () => {
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      criarSupabaseFake(
+        [{ id: 'fav-7', pratica_id: 'pratica-1', sessao_id: null, criado_em: '2026-08-20T10:00:00.000Z' }],
+        [
+          {
+            id: 'pratica-1',
+            titulo: 'Respiração 4-7-8',
+            conteudo: 'texto gratuito',
+            categoria: 'aterramento',
+            status: 'publicada',
+            is_pro: false,
+          },
+        ],
+        'free'
+      ) as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>
+    );
+    const jsx = await FavoritosPage();
+    render(jsx);
+    expect(screen.getByText('texto gratuito')).toBeInTheDocument();
   });
 });

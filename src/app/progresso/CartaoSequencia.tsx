@@ -9,7 +9,14 @@ export default function CartaoSequencia({
   totalCheckins: number;
   ultimos7Dias: ProgressoDia[];
 }) {
-  const { titulo, mensagem } = descreverSequencia(diasConsecutivosAtuais, totalCheckins);
+  const diasAtivosUltimos7 = ultimos7Dias.map((dia) => dia.completou);
+  const fezCheckinHoje = diasAtivosUltimos7[diasAtivosUltimos7.length - 1] ?? false;
+  const { titulo, mensagem } = descreverSequencia({
+    diasConsecutivosAtuais,
+    totalCheckins,
+    diasAtivosUltimos7,
+    fezCheckinHoje,
+  });
 
   return (
     <div className="flex items-center gap-4 rounded-2xl bg-superficie p-4 shadow-[0_2px_8px_rgba(74,63,53,0.08)]">

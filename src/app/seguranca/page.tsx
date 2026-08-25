@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import NotificacaoPetalas from '@/app/components/clube-rose/NotificacaoPetalas';
@@ -112,12 +113,12 @@ export default async function SegurancaPage({
           </div>
         ))}
 
-        <a
+        <Link
           href="/"
           className="block w-full rounded-2xl border border-borda p-3 text-center font-medium text-texto-suave transition-colors hover:bg-superficie"
         >
           Voltar ao app
-        </a>
+        </Link>
       </main>
     </>
   );

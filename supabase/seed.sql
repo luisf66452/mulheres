@@ -29,12 +29,20 @@ values
   (1, 5, 1, 5, 1, 2, false, 'comida_culpa', 8, true),
   (1, 5, 1, 5, 1, 5, false, 'geral_positivo', 0, true);
 
-insert into public.recursos_seguranca (pais, titulo, corpo, ordem) values
+-- `fonte`/`verificado_em` seguem os mesmos valores do backfill de produção
+-- em supabase/migrations/20260824150000_recursos_seguranca_fonte_verificado.sql
+-- — só recursos com os dois preenchidos aparecem em /seguranca (Seção 7 do
+-- design de evolução da Rose). A linha introdutória ("Você não está
+-- sozinha") fica sem fonte de propósito: não é um contato verificável.
+insert into public.recursos_seguranca (pais, titulo, corpo, ordem, fonte, verificado_em) values
   ('BR', 'Você não está sozinha',
-   'O que você está sentindo importa. Isso não é uma emergência, mas merece atenção e cuidado.', 0),
+   'O que você está sentindo importa. Isso não é uma emergência, mas merece atenção e cuidado.', 0,
+   null, null),
   ('BR', 'Apoio emocional gratuito',
-   'O CVV (Centro de Valorização da Vida) oferece apoio emocional gratuito e sigiloso, 24h por dia, pelo telefone 188, ou pelo chat em cvv.org.br. Não é um serviço de emergência — é alguém disposto a te ouvir.', 1),
+   'O CVV (Centro de Valorização da Vida) oferece apoio emocional gratuito e sigiloso, 24h por dia, pelo telefone 188, ou pelo chat em cvv.org.br. Não é um serviço de emergência — é alguém disposto a te ouvir.', 1,
+   'CVV — Centro de Valorização da Vida (https://cvv.org.br/ligue-188/)', '2026-08-24'),
   ('BR', 'Em caso de risco imediato',
-   'Se você ou alguém perto de você está em risco imediato, procure o SAMU (192), uma UPA, um pronto-socorro ou hospital mais próximo.', 2);
+   'Se você ou alguém perto de você está em risco imediato, procure o SAMU (192), uma UPA, um pronto-socorro ou hospital mais próximo.', 2,
+   'Ministério da Saúde — SAMU 192 (https://www.gov.br/saude/pt-br/composicao/saes/samu-192)', '2026-08-24');
 
 update public.praticas set status = 'publicada';

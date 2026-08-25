@@ -15,14 +15,21 @@ export default async function PraticaBibliotecaPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: pratica } = await supabase
-    .from('praticas')
-    .select('*')
+  // Metadado (título/categoria/status/is_pro) vem sempre de praticas_catalogo
+  // — essa view devolve a linha mesmo para uma prática Pro vista por uma
+  // usuária free (mesmo padrão de src/app/favoritos/page.tsx), porque a RLS
+  // da tabela base (ver migração 20260825060150_praticas_rls_is_pro.sql)
+  // agora nega a linha inteira nesse caso. Se buscássemos direto na tabela
+  // base primeiro, uma prática Pro pra usuária free retornaria 0 linhas e
+  // cairíamos erroneamente em notFound() em vez do paywall.
+  const { data: praticaCatalogo } = await supabase
+    .from('praticas_catalogo')
+    .select('id, categoria, tipo, titulo, status, audio_status, is_pro, criado_em')
     .eq('id', id)
     .eq('status', 'publicada')
     .single();
 
-  if (!pratica) {
+  if (!praticaCatalogo) {
     notFound();
   }
 
@@ -34,8 +41,21 @@ export default async function PraticaBibliotecaPage({
     plano = perfil?.plano ?? 'free';
   }
 
-  if (pratica.is_pro && plano !== 'premium') {
-    return <PaywallPratica titulo={pratica.titulo} categoria={pratica.categoria} />;
+  if (praticaCatalogo.is_pro && plano !== 'premium') {
+    return <PaywallPratica titulo={praticaCatalogo.titulo} categoria={praticaCatalogo.categoria} />;
+  }
+
+  // Prática não-Pro, ou usuária premium: a RLS da tabela base libera a linha
+  // completa (incluindo `conteudo`) normalmente nesse caso.
+  const { data: pratica } = await supabase
+    .from('praticas')
+    .select('*')
+    .eq('id', id)
+    .eq('status', 'publicada')
+    .single();
+
+  if (!pratica) {
+    notFound();
   }
 
   return (

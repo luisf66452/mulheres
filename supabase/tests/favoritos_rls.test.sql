@@ -16,9 +16,17 @@
 begin;
 select plan(9);
 
-insert into public.perfis (id, nome) values
-  ('a0000000-0000-0000-0000-00000000000a', 'Usuária A'),
-  ('b0000000-0000-0000-0000-00000000000b', 'Usuária B');
+-- public.perfis.id referencia auth.users(id) com FK obrigatória (não
+-- deferrable) e um trigger (on_auth_user_created, 0001_init.sql) já cria a
+-- linha em public.perfis automaticamente ao inserir em auth.users — por
+-- isso o fixture insere em auth.users (não em perfis diretamente) e só
+-- ajusta o nome depois via UPDATE.
+insert into auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at, aud, role) values
+  ('a0000000-0000-0000-0000-00000000000a', 'usuaria-a@teste.rose.local', 'senha-nao-usada-neste-teste', now(), now(), now(), 'authenticated', 'authenticated'),
+  ('b0000000-0000-0000-0000-00000000000b', 'usuaria-b@teste.rose.local', 'senha-nao-usada-neste-teste', now(), now(), now(), 'authenticated', 'authenticated');
+
+update public.perfis set nome = 'Usuária A' where id = 'a0000000-0000-0000-0000-00000000000a';
+update public.perfis set nome = 'Usuária B' where id = 'b0000000-0000-0000-0000-00000000000b';
 
 insert into public.praticas (id, categoria, tipo, titulo, conteudo, status) values
   ('c0000000-0000-0000-0000-00000000000c', 'respiracao', 'respiracao', 'Prática de teste', 'conteúdo', 'publicada');

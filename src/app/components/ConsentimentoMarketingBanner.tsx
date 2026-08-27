@@ -28,7 +28,7 @@ export default function ConsentimentoMarketingBanner() {
     <div
       role="region"
       aria-label="Preferências de cookies"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-borda bg-superficie p-4 shadow-[0_-2px_12px_rgba(74,63,53,0.12)]"
+      className="fixed inset-x-0 bottom-0 z-[60] border-t border-borda bg-superficie p-4 shadow-[0_-2px_12px_rgba(74,63,53,0.12)]"
     >
       <div className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-texto-suave">

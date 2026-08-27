@@ -18,7 +18,7 @@ import TikTokCompleteRegistration from '@/app/components/tiktok/TikTokCompleteRe
 import MetaCompleteRegistration from '@/app/components/meta/MetaCompleteRegistration';
 import InstalarRose from '@/app/components/InstalarRose';
 import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
-import OfertaRosePro from '@/app/components/inicio/OfertaRosePro';
+import OfertaRoseProAposConsentimento from '@/app/components/inicio/OfertaRoseProAposConsentimento';
 import { deveMostrarOfertaRosePro } from '@/lib/assinatura/ofertaPosLogin';
 
 export default async function InicioPage({
@@ -84,7 +84,7 @@ export default async function InicioPage({
     <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       {cadastro === 'concluido' && <TikTokCompleteRegistration />}
       {cadastro === 'concluido' && <MetaCompleteRegistration />}
-      {mostrarOfertaRosePro && <OfertaRosePro />}
+      {mostrarOfertaRosePro && <OfertaRoseProAposConsentimento />}
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

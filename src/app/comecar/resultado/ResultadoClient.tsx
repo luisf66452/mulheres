@@ -23,16 +23,13 @@ export default function ResultadoClient({
   percentualEconomiaAnual: number | null;
 }) {
   const router = useRouter();
-  const [respostas, setRespostas] = useState<RespostasQuiz | undefined>(undefined);
+  const [respostas] = useState<RespostasQuiz | null>(() => lerRespostasQuiz());
 
   useEffect(() => {
-    const salvas = lerRespostasQuiz();
-    if (!salvas) {
+    if (!respostas) {
       router.replace('/comecar');
-      return;
     }
-    setRespostas(salvas);
-  }, [router]);
+  }, [respostas, router]);
 
   if (!respostas) return null;
 

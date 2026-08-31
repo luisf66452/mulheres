@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import Botao from '@/app/components/Botao';
 import SeloProvaSocial from '@/app/components/inicio/SeloProvaSocial';
@@ -13,6 +13,20 @@ import {
 } from '@/lib/quiz/copyResultado';
 import type { RespostasQuiz } from '@/lib/quiz/tipos';
 
+// lerRespostasQuiz lê localStorage, que não existe durante o SSR de page.tsx
+// (Server Component) — useSyncExternalStore com getServerSnapshot fixo em
+// null garante que o HTML do servidor e o primeiro render do cliente batam,
+// evitando o aviso de hidratação (mesmo padrão de
+// consentimentoMarketing.ts + FacebookPixel.tsx). Não há evento externo real
+// para assinar aqui, então subscribe é um no-op.
+function inscrever(): () => void {
+  return () => {};
+}
+
+function obterRespostasNoServidor(): RespostasQuiz | null {
+  return null;
+}
+
 export default function ResultadoClient({
   precoMensal,
   precoAnual,
@@ -23,7 +37,7 @@ export default function ResultadoClient({
   percentualEconomiaAnual: number | null;
 }) {
   const router = useRouter();
-  const [respostas] = useState<RespostasQuiz | null>(() => lerRespostasQuiz());
+  const respostas = useSyncExternalStore(inscrever, lerRespostasQuiz, obterRespostasNoServidor);
 
   useEffect(() => {
     if (!respostas) {

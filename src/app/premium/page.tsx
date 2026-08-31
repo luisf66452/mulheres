@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { stripeConfigurado } from '@/lib/stripe/planos';
+import { obterStripe } from '@/lib/stripe/client';
+import { buscarPrecoDetalhado, obterMoedaELocaleDoPais, obterPriceId, stripeConfigurado } from '@/lib/stripe/planos';
 import BotaoAssinar from '@/app/perfil/assinatura/BotaoAssinar';
 import BotaoGerenciarAssinatura from '@/app/perfil/assinatura/BotaoGerenciarAssinatura';
 
@@ -25,12 +26,27 @@ export default async function PremiumPage() {
 
   const { data: perfil, error } = await supabase
     .from('perfis')
-    .select('plano')
+    .select('plano, pais')
     .eq('id', user.id)
     .single();
 
   const ehPremium = perfil?.plano === 'premium';
   const assinaturaConfigurada = stripeConfigurado();
+
+  let precoMensal: string | null = null;
+  let precoAnual: string | null = null;
+  if (!ehPremium && assinaturaConfigurada) {
+    const stripe = obterStripe();
+    if (stripe) {
+      const { moeda } = obterMoedaELocaleDoPais(perfil?.pais);
+      const [detalheMensal, detalheAnual] = await Promise.all([
+        buscarPrecoDetalhado(stripe, obterPriceId('mensal'), moeda),
+        buscarPrecoDetalhado(stripe, obterPriceId('anual'), moeda),
+      ]);
+      precoMensal = detalheMensal?.formatado ?? null;
+      precoAnual = detalheAnual?.formatado ?? null;
+    }
+  }
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">
@@ -58,14 +74,16 @@ export default async function PremiumPage() {
 
       {!error && !ehPremium && assinaturaConfigurada && (
         <div className="space-y-3 rounded-2xl border border-borda bg-superficie p-4">
-          <div className="space-y-1 text-sm text-texto-suave">
-            <p>Mensal: R$ 39,99 (Brasil) · 9,99 € (Portugal)</p>
-            <p>Anual: R$ 359,99 (Brasil) · 89,99 € (Portugal)</p>
-          </div>
+          {(precoMensal || precoAnual) && (
+            <div className="space-y-1 text-sm text-texto-suave">
+              {precoMensal && <p>Mensal: {precoMensal}</p>}
+              {precoAnual && <p>Anual: {precoAnual}</p>}
+            </div>
+          )}
           <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
           <BotaoAssinar plano="anual" rotulo="Assinar anual" />
           <p className="text-xs text-texto-suave">
-            Pagamento processado com segurança pelo Stripe. Você pode cancelar quando quiser.
+            Pagamento processado com segurança pelo Stripe. Cancele quando quiser, sem multa.
           </p>
         </div>
       )}

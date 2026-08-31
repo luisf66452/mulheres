@@ -3,15 +3,17 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Botao from '@/app/components/Botao';
+import SeloProvaSocial from '@/app/components/inicio/SeloProvaSocial';
 
 const BENEFICIOS = [
-  'Todas as jornadas guiadas',
+  'Histórico completo de check-ins e progresso',
+  'Insights semanais sobre seus padrões',
   'Biblioteca completa de práticas',
-  'Histórico e insights semanais',
+  'Todas as jornadas guiadas',
   'Recompensas exclusivas no Clube Rose',
 ];
 
-export default function OfertaRosePro() {
+export default function OfertaRosePro({ precoMensal = null }: { precoMensal?: string | null }) {
   const router = useRouter();
   const tituloRef = useRef<HTMLHeadingElement>(null);
 
@@ -71,7 +73,12 @@ export default function OfertaRosePro() {
               Com o Rose Pro, você aprofunda seu cuidado com acesso a todos os conteúdos e acompanha
               sua evolução por completo.
             </p>
+            {precoMensal && (
+              <p className="text-sm font-semibold text-texto">A partir de {precoMensal}/mês</p>
+            )}
           </div>
+
+          <SeloProvaSocial />
 
           <ul className="space-y-2.5 text-sm text-texto">
             {BENEFICIOS.map((beneficio) => (
@@ -97,7 +104,7 @@ export default function OfertaRosePro() {
           </div>
 
           <p className="text-center text-xs text-texto-suave">
-            Ver os planos não gera nenhuma cobrança. Você pode cancelar quando quiser.
+            Ver os planos não gera nenhuma cobrança. Cancele quando quiser, sem multa.
           </p>
         </div>
       </section>

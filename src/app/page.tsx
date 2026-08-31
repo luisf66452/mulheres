@@ -20,6 +20,8 @@ import InstalarRose from '@/app/components/InstalarRose';
 import AvisoSeguranca from '@/app/components/seguranca/AvisoSeguranca';
 import OfertaRoseProAposConsentimento from '@/app/components/inicio/OfertaRoseProAposConsentimento';
 import { deveMostrarOfertaRosePro } from '@/lib/assinatura/ofertaPosLogin';
+import { obterStripe } from '@/lib/stripe/client';
+import { buscarPrecoExibicao, obterMoedaELocaleDoPais, obterPriceId, stripeConfigurado } from '@/lib/stripe/planos';
 
 export default async function InicioPage({
   searchParams,
@@ -45,7 +47,7 @@ export default async function InicioPage({
   const hoje = hojeISONoFuso(fusoHorario);
 
   const [{ data: perfil }, { data: checkinHoje }, { data: checkins }, { data: carteira }] = await Promise.all([
-    supabase.from('perfis').select('nome, plano').eq('id', user.id).single(),
+    supabase.from('perfis').select('nome, plano, pais').eq('id', user.id).single(),
     supabase.from('checkins').select('*').eq('usuaria_id', user.id).eq('data', hoje).maybeSingle(),
     supabase.from('checkins').select('data').eq('usuaria_id', user.id),
     supabase.from('carteiras_petalas').select('saldo').eq('usuaria_id', user.id).maybeSingle(),
@@ -63,6 +65,17 @@ export default async function InicioPage({
     entrada,
     cadastro,
   });
+
+  // Preço só é buscado quando a oferta realmente vai aparecer — evita uma
+  // chamada ao Stripe em toda visita à Início sem necessidade.
+  let precoMensalOferta: string | null = null;
+  if (mostrarOfertaRosePro && stripeConfigurado()) {
+    const stripe = obterStripe();
+    if (stripe) {
+      const { moeda } = obterMoedaELocaleDoPais(perfil?.pais);
+      precoMensalOferta = await buscarPrecoExibicao(stripe, obterPriceId('mensal'), moeda);
+    }
+  }
 
   let jornadaEmAndamento: JornadaEmAndamentoInfo | null = null;
   if (jornadaAtiva) {
@@ -84,7 +97,7 @@ export default async function InicioPage({
     <main className="relative mx-auto max-w-md space-y-6 overflow-hidden p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
       {cadastro === 'concluido' && <TikTokCompleteRegistration />}
       {cadastro === 'concluido' && <MetaCompleteRegistration />}
-      {mostrarOfertaRosePro && <OfertaRoseProAposConsentimento />}
+      {mostrarOfertaRosePro && <OfertaRoseProAposConsentimento precoMensal={precoMensalOferta} />}
       <FundoDecorativo />
 
       <Saudacao nome={perfil?.nome ?? null} />

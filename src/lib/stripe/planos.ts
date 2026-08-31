@@ -83,6 +83,39 @@ export async function buscarPrecoExibicao(
   }
 }
 
+// Igual a buscarPrecoExibicao, mas também devolve o unitAmount bruto — usado
+// onde além de mostrar o preço formatado é preciso comparar valores (ex.:
+// calcular o desconto real do anual em relação ao mensal).
+export async function buscarPrecoDetalhado(
+  stripe: Stripe,
+  priceId: string | null,
+  moeda: MoedaStripe
+): Promise<{ formatado: string; unitAmount: number } | null> {
+  if (!priceId) return null;
+  try {
+    const price = await stripe.prices.retrieve(priceId, { expand: ['currency_options'] });
+    const unitAmount = obterUnitAmountNaMoeda(price, moeda);
+    return unitAmount === null ? null : { formatado: formatarPrecoExibicao(unitAmount, moeda), unitAmount };
+  } catch (erro) {
+    console.error('[stripe/planos] falha ao buscar preço detalhado', {
+      priceId,
+      moeda,
+      message: erro instanceof Error ? erro.message : 'erro desconhecido',
+    });
+    return null;
+  }
+}
+
+// Desconto real do plano anual frente a pagar o mensal 12x, sempre a partir
+// dos unitAmount reais do Stripe — nunca um percentual fixo que possa
+// dessincronizar se o preço mudar no painel.
+export function calcularPercentualEconomiaAnual(unitAmountMensal: number, unitAmountAnual: number): number {
+  const totalMensalAnualizado = unitAmountMensal * 12;
+  if (totalMensalAnualizado <= 0) return 0;
+  const economia = totalMensalAnualizado - unitAmountAnual;
+  return Math.max(0, Math.round((economia / totalMensalAnualizado) * 100));
+}
+
 const ROTULOS: Record<PlanoStripe, string> = {
   mensal: 'Rose Pro — mensal',
   anual: 'Rose Pro — anual',

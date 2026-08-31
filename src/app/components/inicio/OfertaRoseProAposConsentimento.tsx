@@ -13,7 +13,7 @@ import OfertaRosePro from './OfertaRosePro';
  * disputem a tela no primeiro acesso. Tanto aceitar quanto recusar libera a
  * oferta — a decisão de marketing não muda o acesso ao app.
  */
-export default function OfertaRoseProAposConsentimento() {
+export default function OfertaRoseProAposConsentimento({ precoMensal = null }: { precoMensal?: string | null }) {
   const consentimento = useSyncExternalStore(
     inscreverConsentimentoMarketing,
     obterConsentimentoMarketing,
@@ -22,5 +22,5 @@ export default function OfertaRoseProAposConsentimento() {
 
   if (consentimento === 'indefinido') return null;
 
-  return <OfertaRosePro />;
+  return <OfertaRosePro precoMensal={precoMensal} />;
 }

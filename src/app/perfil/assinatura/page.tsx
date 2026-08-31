@@ -4,11 +4,18 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import NavegacaoInferior from '@/app/components/NavegacaoInferior';
 import CabecalhoSubpagina from '@/app/components/perfil/CabecalhoSubpagina';
 import { obterStripe } from '@/lib/stripe/client';
-import { buscarPrecoExibicao, obterMoedaELocaleDoPais, obterPriceId, stripeConfigurado } from '@/lib/stripe/planos';
+import {
+  buscarPrecoDetalhado,
+  calcularPercentualEconomiaAnual,
+  obterMoedaELocaleDoPais,
+  obterPriceId,
+  stripeConfigurado,
+} from '@/lib/stripe/planos';
 import TikTokPurchase from '@/app/components/tiktok/TikTokPurchase';
 import MetaSubscribe from '@/app/components/meta/MetaSubscribe';
 import BotaoAssinar from './BotaoAssinar';
 import BotaoGerenciarAssinatura from './BotaoGerenciarAssinatura';
+import SeloProvaSocial from '@/app/components/inicio/SeloProvaSocial';
 import ModalAgradecimento from './ModalAgradecimento';
 
 const BENEFICIOS = [
@@ -68,14 +75,20 @@ export default async function AssinaturaPage({
   // um valor fixo que possa ficar desatualizado em relação ao Stripe.
   let precoMensal: string | null = null;
   let precoAnual: string | null = null;
+  let percentualEconomiaAnual: number | null = null;
   if (!ehPremium && assinaturaConfigurada) {
     const stripe = obterStripe();
     if (stripe) {
       const { moeda } = obterMoedaELocaleDoPais(perfil?.pais);
-      [precoMensal, precoAnual] = await Promise.all([
-        buscarPrecoExibicao(stripe, obterPriceId('mensal'), moeda),
-        buscarPrecoExibicao(stripe, obterPriceId('anual'), moeda),
+      const [detalheMensal, detalheAnual] = await Promise.all([
+        buscarPrecoDetalhado(stripe, obterPriceId('mensal'), moeda),
+        buscarPrecoDetalhado(stripe, obterPriceId('anual'), moeda),
       ]);
+      precoMensal = detalheMensal?.formatado ?? null;
+      precoAnual = detalheAnual?.formatado ?? null;
+      if (detalheMensal && detalheAnual) {
+        percentualEconomiaAnual = calcularPercentualEconomiaAnual(detalheMensal.unitAmount, detalheAnual.unitAmount);
+      }
     }
   }
 
@@ -118,6 +131,11 @@ export default async function AssinaturaPage({
 
           <div className="rounded-2xl border border-borda bg-superficie p-4">
             <p className="font-display text-base text-texto">O que o Rose Pro inclui</p>
+            {!ehPremium && (
+              <div className="mt-2">
+                <SeloProvaSocial />
+              </div>
+            )}
             <ul className="mt-2 space-y-1.5 text-sm text-texto-suave">
               {BENEFICIOS.map((beneficio) => (
                 <li key={beneficio}>• {beneficio}</li>
@@ -136,9 +154,14 @@ export default async function AssinaturaPage({
                 </div>
               )}
               <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
-              <BotaoAssinar plano="anual" rotulo="Assinar anual (economize)" />
+              <BotaoAssinar
+                plano="anual"
+                rotulo={
+                  percentualEconomiaAnual ? `Assinar anual (economize ${percentualEconomiaAnual}%)` : 'Assinar anual'
+                }
+              />
               <p className="text-xs text-texto-suave">
-                Pagamento processado com segurança pelo Stripe. Você pode cancelar quando quiser.
+                Pagamento processado com segurança pelo Stripe. Cancele quando quiser, sem multa.
               </p>
             </div>
           )}

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { salvarRespostasQuiz, lerRespostasQuiz, apagarRespostasQuiz } from './armazenamento';
 import type { RespostasQuiz } from './tipos';
 
@@ -11,8 +11,21 @@ const RESPOSTAS: RespostasQuiz = {
   tempoDisponivel: '5_a_10min',
 };
 
+const OUTRAS_RESPOSTAS: RespostasQuiz = {
+  identificacao: 'compara',
+  frequenciaEmocional: 'de_vez_em_quando',
+  objetivo: 'praticar_autocompaixao',
+  temasSensiveis: ['comparacao'],
+  tempoDisponivel: 'mais_10min',
+};
+
 beforeEach(() => {
   window.localStorage.clear();
+  apagarRespostasQuiz();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('quiz — armazenamento', () => {
@@ -34,5 +47,47 @@ describe('quiz — armazenamento', () => {
     salvarRespostasQuiz(RESPOSTAS);
     apagarRespostasQuiz();
     expect(lerRespostasQuiz()).toBeNull();
+  });
+
+  it('retorna a MESMA referência em leituras consecutivas sem mudança (memoização p/ useSyncExternalStore)', () => {
+    salvarRespostasQuiz(RESPOSTAS);
+    const primeira = lerRespostasQuiz();
+    const segunda = lerRespostasQuiz();
+    expect(primeira).not.toBeNull();
+    expect(primeira).toBe(segunda);
+  });
+
+  it('invalida o cache e retorna dados novos depois de um novo salvarRespostasQuiz', () => {
+    salvarRespostasQuiz(RESPOSTAS);
+    const antes = lerRespostasQuiz();
+
+    salvarRespostasQuiz(OUTRAS_RESPOSTAS);
+    const depois = lerRespostasQuiz();
+
+    expect(depois).not.toBe(antes);
+    expect(depois).toEqual(OUTRAS_RESPOSTAS);
+  });
+
+  it('salvarRespostasQuiz não lança quando localStorage.setItem lança (quota excedida/bloqueado)', () => {
+    vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    expect(() => salvarRespostasQuiz(RESPOSTAS)).not.toThrow();
+  });
+
+  it('lerRespostasQuiz não lança e retorna null quando localStorage.getItem lança', () => {
+    vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
+      throw new Error('storage bloqueado');
+    });
+    expect(() => lerRespostasQuiz()).not.toThrow();
+    expect(lerRespostasQuiz()).toBeNull();
+  });
+
+  it('apagarRespostasQuiz não lança quando localStorage.removeItem lança', () => {
+    salvarRespostasQuiz(RESPOSTAS);
+    vi.spyOn(window.localStorage, 'removeItem').mockImplementation(() => {
+      throw new Error('storage bloqueado');
+    });
+    expect(() => apagarRespostasQuiz()).not.toThrow();
   });
 });

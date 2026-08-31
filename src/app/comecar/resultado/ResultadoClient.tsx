@@ -67,6 +67,9 @@ export default function ResultadoClient({
               {percentualEconomiaAnual ? ` (economize ${percentualEconomiaAnual}%)` : ''}
             </p>
           )}
+          <p className="text-center text-xs text-texto-suave">
+            Preço de referência para o Brasil — o valor final é confirmado no seu país ao criar a conta.
+          </p>
         </div>
       )}
 

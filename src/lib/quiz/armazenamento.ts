@@ -8,6 +8,21 @@ import { ehIdentificacaoValida, ehFrequenciaEmocionalValida, ehTempoDisponivelVa
 
 const CHAVE = 'rose:quiz-respostas';
 
+// Cache de referência estável: useSyncExternalStore (ver ResultadoClient)
+// exige que getSnapshot retorne a MESMA referência entre chamadas quando
+// nada mudou. Sem isso, cada leitura fazia um JSON.parse novo e devolvia
+// um objeto novo, o que o React interpretava como "mudou sempre" e entrava
+// em loop infinito de render. `cacheBruto === undefined` significa "ainda
+// não há nada em cache"; qualquer outro valor (incluindo null) é comparado
+// contra o que veio do localStorage para decidir se reaproveita `cacheDados`.
+let cacheBruto: string | null | undefined = undefined;
+let cacheDados: RespostasQuiz | null = null;
+
+function invalidarCache(): void {
+  cacheBruto = undefined;
+  cacheDados = null;
+}
+
 function localStorageDisponivel(): boolean {
   try {
     return typeof window !== 'undefined' && !!window.localStorage;
@@ -18,14 +33,36 @@ function localStorageDisponivel(): boolean {
 
 export function salvarRespostasQuiz(respostas: RespostasQuiz): void {
   if (!localStorageDisponivel()) return;
-  window.localStorage.setItem(CHAVE, JSON.stringify(respostas));
+  try {
+    window.localStorage.setItem(CHAVE, JSON.stringify(respostas));
+  } catch {
+    // localStorage pode lançar (cota excedida, storage bloqueado/particionado
+    // em browsers in-app como Instagram/Facebook) — degrada para no-op.
+    return;
+  } finally {
+    invalidarCache();
+  }
 }
 
 export function lerRespostasQuiz(): RespostasQuiz | null {
   if (!localStorageDisponivel()) return null;
 
-  const bruto = window.localStorage.getItem(CHAVE);
-  if (!bruto) return null;
+  let bruto: string | null;
+  try {
+    bruto = window.localStorage.getItem(CHAVE);
+  } catch {
+    return null;
+  }
+
+  if (cacheBruto !== undefined && bruto === cacheBruto) {
+    return cacheDados;
+  }
+
+  if (!bruto) {
+    cacheBruto = bruto;
+    cacheDados = null;
+    return null;
+  }
 
   try {
     const dados = JSON.parse(bruto) as Partial<RespostasQuiz>;
@@ -41,15 +78,27 @@ export function lerRespostasQuiz(): RespostasQuiz | null {
       typeof dados.tempoDisponivel !== 'string' ||
       !ehTempoDisponivelValido(dados.tempoDisponivel)
     ) {
+      cacheBruto = bruto;
+      cacheDados = null;
       return null;
     }
-    return dados as RespostasQuiz;
+    cacheBruto = bruto;
+    cacheDados = dados as RespostasQuiz;
+    return cacheDados;
   } catch {
+    cacheBruto = bruto;
+    cacheDados = null;
     return null;
   }
 }
 
 export function apagarRespostasQuiz(): void {
+  invalidarCache();
   if (!localStorageDisponivel()) return;
-  window.localStorage.removeItem(CHAVE);
+  try {
+    window.localStorage.removeItem(CHAVE);
+  } catch {
+    // idem: degrada para no-op em vez de lançar.
+    return;
+  }
 }

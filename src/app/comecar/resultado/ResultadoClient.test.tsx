@@ -39,6 +39,7 @@ describe('ResultadoClient', () => {
     expect(screen.getByText(/5 a 10 minutos por dia/i)).toBeInTheDocument();
     expect(screen.getByText(/R\$ 39,99/)).toBeInTheDocument();
     expect(screen.getByText(/economize 25%/i)).toBeInTheDocument();
+    expect(screen.getByText(/preço de referência para o brasil/i)).toBeInTheDocument();
   });
 
   it('redireciona pro quiz quando não há respostas salvas', () => {

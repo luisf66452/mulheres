@@ -71,20 +71,29 @@ export default function OnboardingClient({
     let cancelado = false;
 
     (async () => {
-      const resultadoObjetivos = await salvarObjetivos([respostas.objetivo]);
-      if (cancelado) return;
-      if (resultadoObjetivos.erro) {
-        setAplicandoRespostasQuiz(false);
-        return;
+      try {
+        const resultadoObjetivos = await salvarObjetivos([respostas.objetivo]);
+        if (cancelado) return;
+        if (resultadoObjetivos.erro) {
+          setAplicandoRespostasQuiz(false);
+          return;
+        }
+        const resultadoTemas = await salvarTemasSensiveis(respostas.temasSensiveis);
+        if (cancelado) return;
+        if (resultadoTemas.erro) {
+          setAplicandoRespostasQuiz(false);
+          return;
+        }
+        apagarRespostasQuiz();
+        setEtapaMaioridade('lembrete');
+      } catch {
+        // salvarObjetivos/salvarTemasSensiveis rejeitou (falha de rede/servidor)
+        // em vez de resolver com { erro } — sem este catch a usuária ficava
+        // presa para sempre em "Preparando seu plano...", já que /onboarding
+        // é um gate obrigatório do middleware. Cai no fluxo manual, sem apagar
+        // o quiz (mesma lógica dos ramos { erro } acima).
+        if (!cancelado) setAplicandoRespostasQuiz(false);
       }
-      const resultadoTemas = await salvarTemasSensiveis(respostas.temasSensiveis);
-      if (cancelado) return;
-      if (resultadoTemas.erro) {
-        setAplicandoRespostasQuiz(false);
-        return;
-      }
-      apagarRespostasQuiz();
-      setEtapaMaioridade('lembrete');
     })();
 
     return () => {

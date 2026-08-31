@@ -272,4 +272,22 @@ describe('OnboardingClient — ponte do quiz pré-cadastro', () => {
     await waitFor(() => expect(screen.getByText(/o que você quer priorizar agora/i)).toBeInTheDocument());
     expect(apagarRespostasQuiz).not.toHaveBeenCalled();
   });
+
+  it('se salvarObjetivos rejeitar (erro de rede/servidor), cai de volta no fluxo manual em vez de travar', async () => {
+    vi.mocked(lerRespostasQuiz).mockReturnValue({
+      identificacao: 'compara',
+      frequenciaEmocional: 'raramente',
+      objetivo: 'criar_ritual_diario',
+      temasSensiveis: [],
+      tempoDisponivel: 'menos_5min',
+    });
+    salvarObjetivos.mockRejectedValueOnce(new Error('network error'));
+
+    render(
+      <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={true} personalizacaoJaConcluida={false} />
+    );
+
+    await waitFor(() => expect(screen.getByText(/o que você quer priorizar agora/i)).toBeInTheDocument());
+    expect(apagarRespostasQuiz).not.toHaveBeenCalled();
+  });
 });

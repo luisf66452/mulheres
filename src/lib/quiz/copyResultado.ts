@@ -14,7 +14,7 @@ const HEADLINE_POR_OBJETIVO: Record<ObjetivoId, string> = {
 };
 
 export function headlineParaObjetivo(objetivo: ObjetivoId): string {
-  return `Seu plano: ${HEADLINE_POR_OBJETIVO[objetivo]}, 5 minutos por dia`;
+  return `Seu plano: ${HEADLINE_POR_OBJETIVO[objetivo]}`;
 }
 
 const VALIDACAO_POR_IDENTIFICACAO: Record<IdentificacaoId, string> = {

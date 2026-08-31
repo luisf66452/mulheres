@@ -8,13 +8,11 @@ import {
 
 describe('quiz — copyResultado', () => {
   it('headlineParaObjetivo monta a frase com o rótulo do objetivo', () => {
-    expect(headlineParaObjetivo('fortalecer_autoestima')).toBe(
-      'Seu plano: Fortalecer sua autoestima, 5 minutos por dia'
-    );
+    expect(headlineParaObjetivo('fortalecer_autoestima')).toBe('Seu plano: Fortalecer sua autoestima');
   });
 
   it('headlineParaObjetivo usa frase genérica para a sentinela "decidir depois"', () => {
-    expect(headlineParaObjetivo('decidir_depois')).toBe('Seu plano: Cuidar de você, 5 minutos por dia');
+    expect(headlineParaObjetivo('decidir_depois')).toBe('Seu plano: Cuidar de você');
   });
 
   it('validacaoParaIdentificacao devolve uma frase por opção, sem número inventado', () => {

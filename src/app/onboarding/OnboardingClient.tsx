@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   registrarConsentimento,
@@ -10,6 +10,7 @@ import {
   concluirPersonalizacao,
 } from './actions';
 import { sair } from '@/app/perfil/actions';
+import { lerRespostasQuiz, apagarRespostasQuiz } from '@/lib/quiz/armazenamento';
 import Botao from '@/app/components/Botao';
 import SeletorObjetivos from '@/app/components/personalizacao/SeletorObjetivos';
 import SeletorTemasSensiveis from '@/app/components/personalizacao/SeletorTemasSensiveis';
@@ -52,6 +53,43 @@ export default function OnboardingClient({
   const [paisEscolhido, setPaisEscolhido] = useState<PaisSuportado | null>(null);
   const [erroPais, setErroPais] = useState<string | null>(null);
   const [confirmandoPais, startConfirmacaoPais] = useTransition();
+
+  // Ponte do quiz pré-cadastro (/comecar) — ver spec 2026-08-31. Só age
+  // quando existem respostas salvas no localStorage; caso contrário,
+  // aplicandoRespostasQuiz nunca sai de `false` e a etapa 'objetivos'
+  // renderiza exatamente como antes (fallback seguro, ver Global
+  // Constraints do plano).
+  const [aplicandoRespostasQuiz, setAplicandoRespostasQuiz] = useState(false);
+
+  useEffect(() => {
+    if (etapaMaioridade !== 'objetivos') return;
+    const respostas = lerRespostasQuiz();
+    if (!respostas) return;
+
+    setAplicandoRespostasQuiz(true);
+    let cancelado = false;
+
+    (async () => {
+      const resultadoObjetivos = await salvarObjetivos([respostas.objetivo]);
+      if (cancelado) return;
+      if (resultadoObjetivos.erro) {
+        setAplicandoRespostasQuiz(false);
+        return;
+      }
+      const resultadoTemas = await salvarTemasSensiveis(respostas.temasSensiveis);
+      if (cancelado) return;
+      if (resultadoTemas.erro) {
+        setAplicandoRespostasQuiz(false);
+        return;
+      }
+      apagarRespostasQuiz();
+      setEtapaMaioridade('lembrete');
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [etapaMaioridade]);
 
   const podeContinuar = aceitouTermos && aceitouDadosSensiveis;
 
@@ -171,6 +209,13 @@ export default function OnboardingClient({
   }
 
   if (etapaMaioridade === 'objetivos') {
+    if (aplicandoRespostasQuiz) {
+      return (
+        <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
+          <p className="text-texto-suave">Preparando seu plano...</p>
+        </main>
+      );
+    }
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
         <div className="space-y-2 text-center">

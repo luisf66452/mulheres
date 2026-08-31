@@ -210,3 +210,66 @@ describe('OnboardingClient — etapa de personalização (após país)', () => {
     expect(screen.queryByText(/fortalecer minha autoestima/i)).not.toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/quiz/armazenamento', () => ({
+  lerRespostasQuiz: vi.fn(),
+  apagarRespostasQuiz: vi.fn(),
+}));
+
+import { lerRespostasQuiz, apagarRespostasQuiz } from '@/lib/quiz/armazenamento';
+
+describe('OnboardingClient — ponte do quiz pré-cadastro', () => {
+  beforeEach(() => {
+    vi.mocked(lerRespostasQuiz).mockReset();
+    vi.mocked(apagarRespostasQuiz).mockReset();
+  });
+
+  it('quando há respostas do quiz salvas, aplica objetivo e temas automaticamente e pula pro lembrete', async () => {
+    vi.mocked(lerRespostasQuiz).mockReturnValue({
+      identificacao: 'evita_espelho',
+      frequenciaEmocional: 'quase_todo_dia',
+      objetivo: 'fortalecer_autoestima',
+      temasSensiveis: ['alimentacao'],
+      tempoDisponivel: '5_a_10min',
+    });
+
+    render(
+      <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={true} personalizacaoJaConcluida={false} />
+    );
+
+    await waitFor(() => expect(salvarObjetivos).toHaveBeenCalledWith(['fortalecer_autoestima']));
+    await waitFor(() => expect(salvarTemasSensiveis).toHaveBeenCalledWith(['alimentacao']));
+    await waitFor(() => expect(apagarRespostasQuiz).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByLabelText(/horário/i)).toBeInTheDocument());
+    expect(screen.queryByText(/o que você quer priorizar agora/i)).not.toBeInTheDocument();
+  });
+
+  it('quando não há respostas do quiz salvas, pergunta objetivos e temas normalmente', () => {
+    vi.mocked(lerRespostasQuiz).mockReturnValue(null);
+
+    render(
+      <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={true} personalizacaoJaConcluida={false} />
+    );
+
+    expect(screen.getByText(/o que você quer priorizar agora/i)).toBeInTheDocument();
+    expect(salvarObjetivos).not.toHaveBeenCalled();
+  });
+
+  it('se salvar o objetivo do quiz falhar, cai de volta no fluxo manual em vez de travar', async () => {
+    vi.mocked(lerRespostasQuiz).mockReturnValue({
+      identificacao: 'compara',
+      frequenciaEmocional: 'raramente',
+      objetivo: 'criar_ritual_diario',
+      temasSensiveis: [],
+      tempoDisponivel: 'menos_5min',
+    });
+    salvarObjetivos.mockResolvedValueOnce({ erro: 'falhou' });
+
+    render(
+      <OnboardingClient consentimentoJaRegistrado={true} paisJaConfirmado={true} personalizacaoJaConcluida={false} />
+    );
+
+    await waitFor(() => expect(screen.getByText(/o que você quer priorizar agora/i)).toBeInTheDocument());
+    expect(apagarRespostasQuiz).not.toHaveBeenCalled();
+  });
+});

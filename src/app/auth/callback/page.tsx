@@ -4,16 +4,19 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-// Fluxo implícito: a sessão (ou o erro) chega no fragmento da URL
-// (#access_token=... ou #error_description=...), que nunca é enviado ao
-// servidor — por isso essa etapa precisa rodar no navegador, diferente do
-// antigo fluxo PKCE que trocava um "?code=" numa rota de servidor.
+// Fallback para quem ainda clica no link do e-mail em vez de digitar o
+// código de 6 dígitos (ver login/actions.ts) — @supabase/ssr sempre usa PKCE
+// por baixo (não dá pra trocar, ver client.ts), então o link só funciona
+// quando aberto no mesmo navegador que pediu o login. O erro chega como
+// query string (?error_description=...) nesse caso; hash só existiria num
+// fluxo implícito, que este projeto não usa — checamos os dois por segurança.
 export default function AuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const erroSupabase = hash.get('error_description');
+    const erroSupabase = query.get('error_description') ?? hash.get('error_description');
     if (erroSupabase) {
       router.replace(`/login?erro=${encodeURIComponent(erroSupabase)}`);
       return;

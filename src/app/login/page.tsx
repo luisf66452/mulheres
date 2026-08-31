@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { enviarLinkMagico } from './actions';
+import { confirmarCodigoAcesso, enviarLinkMagico } from './actions';
 import Botao from '@/app/components/Botao';
 import IlustracaoBotanica from './IlustracaoBotanica';
 import RosasDecorativas from './RosasDecorativas';
@@ -12,6 +12,8 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [confirmouMaioridade, setConfirmouMaioridade] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [confirmando, setConfirmando] = useState(false);
   const [erro, setErro] = useState<string | null>(searchParams.get('erro'));
   const contaExcluida = searchParams.get('conta_excluida') === '1';
 
@@ -26,13 +28,49 @@ function LoginForm() {
     }
   }
 
+  async function handleConfirmarCodigo(e: React.FormEvent) {
+    e.preventDefault();
+    setErro(null);
+    setConfirmando(true);
+    const resultado = await confirmarCodigoAcesso(email, codigo);
+    if (resultado.erro) {
+      setErro(resultado.erro);
+      setConfirmando(false);
+      return;
+    }
+    // Navegação completa (não router.push) para garantir que o middleware
+    // já enxergue a sessão recém-criada pelo cookie definido na server action.
+    window.location.href = '/?entrada=1';
+  }
+
   if (enviado) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-fundo p-6">
         <IlustracaoBotanica />
-        <p className="text-center text-lg text-texto">
-          Enviamos um link de acesso para <strong>{email}</strong>. Abra seu e-mail para entrar.
-        </p>
+        <div className="relative w-full max-w-sm space-y-4 text-center">
+          <p className="text-lg text-texto">
+            Enviamos um código de acesso para <strong>{email}</strong>.
+          </p>
+          <p className="text-sm text-texto-suave">
+            Abra seu e-mail e digite abaixo o código de 6 dígitos (não precisa clicar em nenhum link).
+          </p>
+          <form onSubmit={handleConfirmarCodigo} className="space-y-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              placeholder="000000"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              className="w-full rounded-2xl border border-borda bg-superficie p-3 text-center text-2xl tracking-[0.4em] text-texto"
+            />
+            {erro && <p className="text-alerta">{erro}</p>}
+            <Botao type="submit" disabled={confirmando}>
+              {confirmando ? 'Confirmando...' : 'Entrar'}
+            </Botao>
+          </form>
+        </div>
       </main>
     );
   }
@@ -71,7 +109,7 @@ function LoginForm() {
           </label>
           {erro && <p className="text-alerta">{erro}</p>}
           <Botao type="submit" disabled={!confirmouMaioridade}>
-            Receber link de acesso
+            Receber código de acesso
           </Botao>
         </form>
       </div>

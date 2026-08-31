@@ -6,6 +6,11 @@ const ROTAS_PUBLICAS = [
   '/auth/callback',
   '/privacidade',
   '/api/stripe/webhook',
+  // Quiz pré-cadastro (/comecar e /comecar/resultado, cobertos pelo
+  // startsWith abaixo) — acessado sempre sem sessão, é o novo primeiro
+  // contato do funil de anúncio, antes de existir conta (ver spec
+  // 2026-08-31-funil-quiz-pre-cadastro-design.md).
+  '/comecar',
   // Destino do magic link de confirmação de exclusão de conta (Tarefa 10):
   // é acessado sem sessão válida sempre que a usuária abre o e-mail num
   // dispositivo/navegador diferente do que está logada, ou depois que a

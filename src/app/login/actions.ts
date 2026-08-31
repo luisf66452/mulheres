@@ -29,3 +29,24 @@ export async function enviarLinkMagico(email: string): Promise<{ erro?: string }
 
   return {};
 }
+
+// Confirma o código de 6 dígitos enviado por e-mail (mesmo pedido acima,
+// signInWithOtp manda os dois: link e código). Não depende de nenhum estado
+// salvo no navegador que pediu o código — funciona mesmo que o código seja
+// digitado num navegador/dispositivo diferente, ao contrário do link.
+export async function confirmarCodigoAcesso(email: string, codigo: string): Promise<{ erro?: string }> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token: codigo, type: 'email' });
+
+  if (error) {
+    console.error('[confirmarCodigoAcesso] erro ao verificar código:', {
+      email,
+      status: error.status,
+      code: error.code,
+      message: error.message,
+    });
+    return { erro: 'Código inválido ou expirado. Peça um novo código.' };
+  }
+
+  return {};
+}

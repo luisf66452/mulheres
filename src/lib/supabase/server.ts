@@ -9,11 +9,6 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      // Mesmo flowType do cliente do navegador (ver client.ts) — é este
-      // cliente que chama signInWithOtp em enviarLinkMagico, e é o flowType
-      // usado nessa chamada que decide se o Supabase gera um link mágico com
-      // "?code=" (PKCE) ou com o token direto no fragmento (implícito).
-      auth: { flowType: 'implicit' },
       cookies: {
         getAll() {
           return cookieStore.getAll();

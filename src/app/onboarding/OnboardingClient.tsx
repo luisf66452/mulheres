@@ -66,6 +66,7 @@ export default function OnboardingClient({
     const respostas = lerRespostasQuiz();
     if (!respostas) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAplicandoRespostasQuiz(true);
     let cancelado = false;
 

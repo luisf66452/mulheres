@@ -20,6 +20,16 @@ export function obterStripe(): Stripe | null {
   // stripe (ou de versão default configurada no dashboard) pode mudar o
   // formato dos eventos/objetos silenciosamente, sem nenhum controle de
   // versão no código.
-  instancia = new Stripe(chaveSecreta, { apiVersion: '2026-07-29.dahlia' });
+  //
+  // httpClient: createFetchHttpClient() — o cliente padrão da lib usa
+  // https.Agent do Node com keep-alive, que em runtimes serverless (como as
+  // functions da Vercel) pode reaproveitar um socket de uma instância fria
+  // anterior já morto, causando "An error occurred with our connection to
+  // Stripe" de forma consistente (não é uma falha passageira, se repete a
+  // cada chamada). O cliente baseado em fetch não sofre desse problema.
+  instancia = new Stripe(chaveSecreta, {
+    apiVersion: '2026-07-29.dahlia',
+    httpClient: Stripe.createFetchHttpClient(),
+  });
   return instancia;
 }

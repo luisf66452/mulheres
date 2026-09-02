@@ -19,7 +19,7 @@ describe('EbookClient', () => {
     const originalLocation = window.location;
     // @ts-expect-error -- substituição controlada só para este teste, restaurada no final
     delete window.location;
-    window.location = { ...originalLocation, href: '' } as any;
+    window.location = { ...originalLocation, href: '' } as unknown as (string & Location);
 
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
@@ -33,7 +33,7 @@ describe('EbookClient', () => {
       expect(window.location.href).toBe('https://checkout.stripe.com/sessao-ebook');
     });
 
-    window.location = originalLocation as any;
+    window.location = originalLocation as unknown as (string & Location);
   });
 
   it('mostra mensagem de erro quando a API falha', async () => {

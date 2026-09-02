@@ -224,3 +224,87 @@ html[data-reduzir-animacoes="true"] .notificacao-petalas {
     transform: scale(1);
   }
 }
+
+/* Tela de resultado do quiz (/comecar/resultado): blocos entram em cascata,
+   os ramos florais balançam continuamente (como ao vento), blobs pulsam no
+   fundo, o selo de prova social "bate" e o CTA final brilha — reforçam que
+   o plano é uma revelação, não só mais uma tela de preço. */
+@keyframes resultado-bloco-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultado-bloco {
+  opacity: 0;
+  animation: resultado-bloco-entrada 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.resultado-bloco-1 { animation-delay: 0s; }
+.resultado-bloco-2 { animation-delay: 0.18s; }
+.resultado-bloco-3 { animation-delay: 0.36s; }
+.resultado-bloco-4 { animation-delay: 0.54s; }
+.resultado-bloco-5 { animation-delay: 0.72s; }
+.resultado-bloco-6 { animation-delay: 0.9s; }
+.resultado-bloco-7 { animation-delay: 1.08s; }
+
+@keyframes resultado-balancar-direita {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-2.5deg) scale(1.02); }
+}
+
+@keyframes resultado-balancar-esquerda {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(2.5deg) scale(1.02); }
+}
+
+.resultado-decoracao .ilustracao-cluster:first-child {
+  animation: resultado-balancar-direita 7.5s ease-in-out infinite;
+}
+
+.resultado-decoracao .ilustracao-cluster:last-child {
+  animation: resultado-balancar-esquerda 8s ease-in-out infinite;
+}
+
+@keyframes resultado-blob-pulsar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.resultado-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: resultado-blob-pulsar 4.5s ease-in-out infinite;
+}
+
+@keyframes resultado-coracao-bater {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.resultado-selo-animado {
+  display: inline-block;
+  animation: resultado-coracao-bater 2.4s ease-in-out infinite;
+}
+
+@keyframes resultado-cta-brilho {
+  0%, 100% { box-shadow: 0 6px 20px rgba(184, 105, 122, 0.25); }
+  50% { box-shadow: 0 10px 34px rgba(184, 105, 122, 0.5); }
+}
+
+.resultado-cta {
+  animation: resultado-cta-brilho 3s ease-in-out infinite;
+  transition: transform 0.25s ease;
+}
+
+.resultado-cta:hover {
+  transform: scale(1.03);
+}

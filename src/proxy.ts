@@ -20,6 +20,14 @@ const ROTAS_PUBLICAS = [
   // silêncio. A rota em si já valida o código com o Supabase; não abre
   // nenhum acesso além do que um login normal já concede.
   '/api/perfil/confirmar-exclusao',
+  // Funil de venda avulsa do ebook (/ebook e /ebook/obrigado, cobertos pelo
+  // startsWith abaixo, mais a API de checkout que ambos acionam): compra
+  // deliberadamente sem conta (ver spec 2026-09-02-funil-ebook-design.md) —
+  // bloquear aqui redirecionaria qualquer visitante sem sessão para /login
+  // antes mesmo de ver a oferta, quebrando o funil inteiro pra exatamente o
+  // público que ele existe para atender.
+  '/ebook',
+  '/api/stripe/checkout-ebook',
   // Chamado pelo Vercel Cron (ver vercel.json), nunca por uma usuária
   // logada no navegador — não existe sessão Supabase nessa requisição, então
   // bloquear aqui redirecionaria toda execução do cron para /login antes de

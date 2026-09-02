@@ -53,6 +53,7 @@ describe('POST /api/stripe/checkout-ebook', () => {
       expect.objectContaining({
         mode: 'payment',
         line_items: [{ price: 'price_ebook_teste', quantity: 1 }],
+        currency: 'brl',
         success_url: 'https://app.exemplo.com/ebook/obrigado?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: 'https://app.exemplo.com/ebook',
       })
@@ -77,6 +78,27 @@ describe('POST /api/stripe/checkout-ebook', () => {
     const resposta = await POST();
 
     expect(resposta.status).toBe(503);
+  });
+
+  it('recusa o checkout com mensagem segura quando o Price não tem currency_options para a moeda esperada, em vez de cobrar na moeda default do Price silenciosamente', async () => {
+    const spyConsole = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const stripeFake = criarStripeFake({
+      // Price sem currency_options.brl — cenário de configuração incompleta no Stripe.
+      retrievePrice: async () => ({
+        currency: 'eur',
+        unit_amount: 499,
+        currency_options: { eur: { unit_amount: 499 } },
+      }),
+    });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST();
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(503);
+    expect(corpo.erro).toBeTruthy();
+    expect(stripeFake.checkout.sessions.create).not.toHaveBeenCalled();
+    spyConsole.mockRestore();
   });
 
   it('retorna 500 quando a criação da sessão falha no Stripe', async () => {

@@ -4,6 +4,8 @@
 -- é liberado via signed URL de curta duração, depois que o pagamento é
 -- confirmado no Stripe (ver /ebook/obrigado). Upload do PDF em si é manual,
 -- via Supabase Studio — fora do escopo desta migration.
+-- Nome exato exigido pelo objeto: 'rose-reset-21-dias.pdf', na raiz do
+-- bucket (sem subpasta) — ver NOME_ARQUIVO_EBOOK em src/lib/stripe/ebook.ts.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('ebooks', 'ebooks', false, 10485760, array['application/pdf'])

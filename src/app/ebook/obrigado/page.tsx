@@ -39,6 +39,7 @@ export default async function EbookObrigadoPage({
       {urlDownload ? (
         <a
           href={urlDownload}
+          download="rose-reset-21-dias.pdf"
           className="w-full rounded-2xl bg-acao p-3 text-center font-medium text-white transition-colors hover:bg-acao/90"
         >
           Baixar meu ebook

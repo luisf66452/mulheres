@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { obterStripe } from '@/lib/stripe/client';
-import { obterMoedaELocaleDoPais, obterPriceIdEbook } from '@/lib/stripe/planos';
+import { obterMoedaELocaleDoPais, obterPriceIdEbook, obterUnitAmountNaMoeda } from '@/lib/stripe/planos';
 import { obterUrlBaseDoRequest } from '@/lib/site-url';
 
 // Cria uma Checkout Session avulsa (mode: 'payment') para o ebook "Rose
 // Reset 21 dias" — sem autenticação, sem Customer vinculado a conta,
 // diferente de /api/stripe/checkout (assinatura, exige usuária logada). Não
-// há país confirmado (sem perfil), então usa o fallback padrão de
-// obterMoedaELocaleDoPais (Portugal/EUR) — o Stripe Checkout também detecta
-// o país do cartão e pode ajustar a exibição por conta própria.
+// há país confirmado (sem perfil), então usa 'BR' como padrão — mesmo país
+// que a página /ebook usa para exibir o preço (ver src/app/ebook/page.tsx) —
+// e confirma com o Stripe que o Price realmente tem essa moeda antes de
+// criar a sessão, para o valor exibido e o valor cobrado nunca divergirem.
 export async function POST() {
   const stripe = obterStripe();
   if (!stripe) {
@@ -20,13 +21,29 @@ export async function POST() {
     return NextResponse.json({ erro: 'O ebook ainda não está disponível.' }, { status: 503 });
   }
 
-  const { locale } = obterMoedaELocaleDoPais(null);
+  const { moeda, locale } = obterMoedaELocaleDoPais('BR');
   const siteUrl = await obterUrlBaseDoRequest();
 
   try {
+    // Os Prices são multimoeda (currency_options) — confirma que o Price
+    // realmente tem a moeda esperada ANTES de criar a sessão. Sem essa
+    // checagem, um Price mal configurado (sem BRL) cairia na moeda default
+    // do Price no Stripe, cobrando em uma moeda diferente da exibida em
+    // /ebook silenciosamente (mesmo cuidado de /api/stripe/checkout).
+    const price = await stripe.prices.retrieve(priceId, { expand: ['currency_options'] });
+    const unitAmount = obterUnitAmountNaMoeda(price, moeda);
+    if (unitAmount === null) {
+      console.error('[stripe/checkout-ebook] price sem currency_options para a moeda esperada', {
+        priceId,
+        moeda,
+      });
+      return NextResponse.json({ erro: 'O ebook ainda não está disponível nessa moeda.' }, { status: 503 });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: priceId, quantity: 1 }],
+      currency: moeda,
       locale,
       success_url: `${siteUrl}/ebook/obrigado?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/ebook`,

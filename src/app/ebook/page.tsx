@@ -2,6 +2,11 @@ import { obterStripe } from '@/lib/stripe/client';
 import { buscarPrecoExibicao, ebookConfigurado, obterMoedaELocaleDoPais, obterPriceIdEbook } from '@/lib/stripe/planos';
 import EbookClient from './EbookClient';
 
+// Revalida a cada hora — sem isso, Next.js prerenderia esta página estática
+// no build e o preço exibido ficaria congelado no valor de build time,
+// mesmo que o Price no Stripe (ou STRIPE_PRICE_ID_EBOOK) mude depois.
+export const revalidate = 3600;
+
 // Sem conta/país confirmado nesta rota (compra sem login) — mesma decisão
 // já usada em /comecar/resultado: exibe o preço em BRL como padrão. O
 // Stripe Checkout ainda pode ajustar a cobrança pelo país real do cartão.

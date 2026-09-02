@@ -144,3 +144,15 @@ export function stripeConfigurado(): boolean {
       (process.env.STRIPE_PRICE_ID_MENSAL || process.env.STRIPE_PRICE_ID_ANUAL)
   );
 }
+
+// Price avulso (one-time) do ebook — separado dos price ids de assinatura
+// (STRIPE_PRICE_ID_MENSAL/ANUAL) porque é um mode: 'payment', não
+// 'subscription'. Mesmo padrão de degradar honestamente (null) quando não
+// configurado, em vez de lançar.
+export function obterPriceIdEbook(): string | null {
+  return process.env.STRIPE_PRICE_ID_EBOOK || null;
+}
+
+export function ebookConfigurado(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID_EBOOK);
+}

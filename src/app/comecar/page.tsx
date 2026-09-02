@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Botao from '@/app/components/Botao';
+import IlustracaoBotanica from '@/app/components/decoracao/IlustracaoBotanica';
+import RosasDecorativas from '@/app/components/decoracao/RosasDecorativas';
 import {
   OBJETIVOS,
   TEMAS_SENSIVEIS,
@@ -52,11 +54,13 @@ export default function ComecarPage() {
 
   if (etapa === 'identificacao') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-        <h1 className="text-center font-display text-2xl text-texto">
+      <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
+        <IlustracaoBotanica tamanho="compacto" />
+        <RosasDecorativas tamanho="compacto" />
+        <h1 className="relative text-center font-display text-2xl text-texto">
           Qual dessas frases mais parece com você hoje?
         </h1>
-        <div className="flex flex-col gap-3">
+        <div className="relative flex flex-col gap-3">
           {IDENTIFICACAO_OPCOES.map((opcao) => (
             <button
               key={opcao.id}
@@ -77,11 +81,13 @@ export default function ComecarPage() {
 
   if (etapa === 'frequencia') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-        <h1 className="text-center font-display text-2xl text-texto">
+      <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
+        <IlustracaoBotanica tamanho="compacto" />
+        <RosasDecorativas tamanho="compacto" />
+        <h1 className="relative text-center font-display text-2xl text-texto">
           Com que frequência você se sente insatisfeita com sua imagem corporal?
         </h1>
-        <div className="flex flex-col gap-3">
+        <div className="relative flex flex-col gap-3">
           {FREQUENCIA_EMOCIONAL_OPCOES.map((opcao) => (
             <button
               key={opcao.id}
@@ -102,9 +108,11 @@ export default function ComecarPage() {
 
   if (etapa === 'objetivo') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-        <h1 className="text-center font-display text-2xl text-texto">O que você quer priorizar agora?</h1>
-        <div className="flex flex-col gap-3">
+      <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
+        <IlustracaoBotanica tamanho="compacto" />
+        <RosasDecorativas tamanho="compacto" />
+        <h1 className="relative text-center font-display text-2xl text-texto">O que você quer priorizar agora?</h1>
+        <div className="relative flex flex-col gap-3">
           {OBJETIVOS.map((item) => (
             <button
               key={item.id}
@@ -125,9 +133,11 @@ export default function ComecarPage() {
 
   if (etapa === 'temas') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-        <h1 className="text-center font-display text-2xl text-texto">Algum desses temas é sensível para você?</h1>
-        <div className="flex flex-col gap-3">
+      <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
+        <IlustracaoBotanica tamanho="compacto" />
+        <RosasDecorativas tamanho="compacto" />
+        <h1 className="relative text-center font-display text-2xl text-texto">Algum desses temas é sensível para você?</h1>
+        <div className="relative flex flex-col gap-3">
           {TEMAS_SENSIVEIS.filter((tema) => tema.id !== 'prefiro_nao_responder').map((tema) => (
             <button
               key={tema.id}
@@ -152,11 +162,13 @@ export default function ComecarPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-      <h1 className="text-center font-display text-2xl text-texto">
+    <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
+      <IlustracaoBotanica tamanho="compacto" />
+      <RosasDecorativas tamanho="compacto" />
+      <h1 className="relative text-center font-display text-2xl text-texto">
         Quanto tempo você consegue reservar por dia pra se cuidar?
       </h1>
-      <div className="flex flex-col gap-3">
+      <div className="relative flex flex-col gap-3">
         {TEMPO_DISPONIVEL_OPCOES.map((opcao) => (
           <button key={opcao.id} type="button" className={BOTAO_OPCAO} onClick={() => finalizar(opcao.id)}>
             {opcao.rotulo}

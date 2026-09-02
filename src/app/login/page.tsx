@@ -4,8 +4,8 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { confirmarCodigoAcesso, enviarLinkMagico } from './actions';
 import Botao from '@/app/components/Botao';
-import IlustracaoBotanica from './IlustracaoBotanica';
-import RosasDecorativas from './RosasDecorativas';
+import IlustracaoBotanica from '@/app/components/decoracao/IlustracaoBotanica';
+import RosasDecorativas from '@/app/components/decoracao/RosasDecorativas';
 
 function LoginForm() {
   const searchParams = useSearchParams();

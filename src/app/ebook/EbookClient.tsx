@@ -26,12 +26,18 @@ export default function EbookClient({ precoExibicao }: { precoExibicao: string |
   }
 
   return (
-    <div className="space-y-3">
+    <div className="ebook-cta relative space-y-3 rounded-2xl border border-acao/25 bg-creme-rosado/35 p-4 text-center">
+      {precoExibicao && (
+        <div className="space-y-0.5">
+          <p className="font-display text-3xl font-medium tracking-tight text-texto tabular-nums">{precoExibicao}</p>
+          <p className="text-xs text-texto-suave">pagamento único · acesso pra sempre</p>
+        </div>
+      )}
       <Botao type="button" onClick={comprar} disabled={carregando}>
-        {carregando ? 'Abrindo pagamento...' : `Quero o ebook${precoExibicao ? ` — ${precoExibicao}` : ''}`}
+        {carregando ? 'Abrindo pagamento...' : 'Quero começar hoje'}
       </Botao>
       {erro && (
-        <p role="alert" className="text-center text-sm text-red-600">
+        <p role="alert" className="text-sm text-red-600">
           {erro}
         </p>
       )}

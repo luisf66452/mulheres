@@ -27,7 +27,7 @@ describe('EbookClient', () => {
     } as Response);
 
     render(<EbookClient precoExibicao="R$ 27,00" />);
-    fireEvent.click(screen.getByRole('button', { name: /quero o ebook/i }));
+    fireEvent.click(screen.getByRole('button', { name: /quero começar hoje/i }));
 
     await waitFor(() => {
       expect(window.location.href).toBe('https://checkout.stripe.com/sessao-ebook');
@@ -43,7 +43,7 @@ describe('EbookClient', () => {
     } as Response);
 
     render(<EbookClient precoExibicao="R$ 27,00" />);
-    fireEvent.click(screen.getByRole('button', { name: /quero o ebook/i }));
+    fireEvent.click(screen.getByRole('button', { name: /quero começar hoje/i }));
 
     expect(await screen.findByText('O ebook ainda não está disponível.')).toBeInTheDocument();
   });
@@ -57,7 +57,7 @@ describe('EbookClient', () => {
     );
 
     render(<EbookClient precoExibicao="R$ 27,00" />);
-    const botao = screen.getByRole('button', { name: /quero o ebook/i });
+    const botao = screen.getByRole('button', { name: /quero começar hoje/i });
     fireEvent.click(botao);
 
     expect(botao).toBeDisabled();

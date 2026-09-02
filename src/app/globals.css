@@ -308,3 +308,88 @@ html[data-reduzir-animacoes="true"] .notificacao-petalas {
 .resultado-cta:hover {
   transform: scale(1.03);
 }
+
+/* Landing page do ebook (/ebook): blocos entram em cascata (mesmo princípio
+   de /comecar/resultado — revelação, não só uma lista de preço), a capa
+   flutua suavemente como um objeto físico, os pontinhos do rastreador de 21
+   dias entram em leque um a um, e o bloco de preço "respira" para guiar o
+   olhar até o botão sem gritar. */
+@keyframes ebook-bloco-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ebook-bloco {
+  opacity: 0;
+  animation: ebook-bloco-entrada 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ebook-bloco-1 { animation-delay: 0s; }
+.ebook-bloco-2 { animation-delay: 0.12s; }
+.ebook-bloco-3 { animation-delay: 0.24s; }
+.ebook-bloco-4 { animation-delay: 0.36s; }
+.ebook-bloco-5 { animation-delay: 0.48s; }
+.ebook-bloco-6 { animation-delay: 0.6s; }
+.ebook-bloco-7 { animation-delay: 0.72s; }
+
+@keyframes ebook-capa-flutuar {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+.ebook-capa {
+  animation: ebook-capa-flutuar 5s ease-in-out infinite;
+}
+
+@keyframes ebook-ponto-entrada {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ebook-ponto {
+  opacity: 0;
+  animation: ebook-ponto-entrada 0.4s ease-out both;
+}
+
+@keyframes ebook-cta-respirar {
+  0%, 100% { box-shadow: 0 6px 20px rgba(184, 105, 122, 0.22); }
+  50% { box-shadow: 0 10px 30px rgba(184, 105, 122, 0.4); }
+}
+
+.ebook-cta {
+  animation: ebook-cta-respirar 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ebook-bloco,
+  .ebook-capa,
+  .ebook-ponto,
+  .ebook-cta {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 6px 20px rgba(184, 105, 122, 0.22);
+  }
+}
+
+html[data-reduzir-animacoes="true"] .ebook-bloco,
+html[data-reduzir-animacoes="true"] .ebook-capa,
+html[data-reduzir-animacoes="true"] .ebook-ponto,
+html[data-reduzir-animacoes="true"] .ebook-cta {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  box-shadow: 0 6px 20px rgba(184, 105, 122, 0.22);
+}

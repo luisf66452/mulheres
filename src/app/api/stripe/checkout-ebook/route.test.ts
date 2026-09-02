@@ -44,7 +44,7 @@ describe('POST /api/stripe/checkout-ebook', () => {
     const stripeFake = criarStripeFake({});
     vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
 
-    const resposta = await POST(new Request('http://localhost/api/stripe/checkout-ebook', { method: 'POST' }));
+    const resposta = await POST();
     const corpo = await resposta.json();
 
     expect(resposta.status).toBe(200);
@@ -65,7 +65,7 @@ describe('POST /api/stripe/checkout-ebook', () => {
   it('retorna 503 quando Stripe não está configurado', async () => {
     vi.mocked(obterStripe).mockReturnValue(null);
 
-    const resposta = await POST(new Request('http://localhost/api/stripe/checkout-ebook', { method: 'POST' }));
+    const resposta = await POST();
 
     expect(resposta.status).toBe(503);
   });
@@ -74,7 +74,7 @@ describe('POST /api/stripe/checkout-ebook', () => {
     vi.stubEnv('STRIPE_PRICE_ID_EBOOK', '');
     vi.mocked(obterStripe).mockReturnValue(criarStripeFake({}) as never);
 
-    const resposta = await POST(new Request('http://localhost/api/stripe/checkout-ebook', { method: 'POST' }));
+    const resposta = await POST();
 
     expect(resposta.status).toBe(503);
   });
@@ -88,7 +88,7 @@ describe('POST /api/stripe/checkout-ebook', () => {
     });
     vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
 
-    const resposta = await POST(new Request('http://localhost/api/stripe/checkout-ebook', { method: 'POST' }));
+    const resposta = await POST();
 
     expect(resposta.status).toBe(500);
     spyConsole.mockRestore();

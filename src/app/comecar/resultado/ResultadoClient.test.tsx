@@ -38,8 +38,9 @@ describe('ResultadoClient', () => {
     expect(screen.getByText(/sem dieta, sem contagem, sem julgamento/i)).toBeInTheDocument();
     expect(screen.getByText(/5 a 10 minutos por dia/i)).toBeInTheDocument();
     expect(screen.getByText(/R\$ 39,99/)).toBeInTheDocument();
-    expect(screen.getByText(/economize 25%/i)).toBeInTheDocument();
+    expect(screen.getByText(/economiza 25%/i)).toBeInTheDocument();
     expect(screen.getByText(/preço de referência para o brasil/i)).toBeInTheDocument();
+    expect(screen.getByText(/todas as jornadas guiadas/i)).toBeInTheDocument();
   });
 
   it('redireciona pro quiz quando não há respostas salvas', () => {
@@ -60,7 +61,7 @@ describe('ResultadoClient', () => {
     });
 
     render(<ResultadoClient precoMensal={null} precoAnual={null} percentualEconomiaAnual={null} />);
-    screen.getByRole('button', { name: /quero começar agora/i }).click();
+    screen.getByRole('button', { name: /quero começar minha transformação/i }).click();
 
     expect(push).toHaveBeenCalledWith('/login');
   });

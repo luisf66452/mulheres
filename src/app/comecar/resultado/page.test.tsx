@@ -37,6 +37,8 @@ describe('ComecarResultadoPage', () => {
       precoMensal: 'R$ 39,99',
       precoAnual: 'R$ 359,99',
       percentualEconomiaAnual: 25,
+      precoAnualPorMes: 'R$ 30,00',
+      precoMensalPorDia: 'R$ 1,33',
     });
   });
 
@@ -49,6 +51,8 @@ describe('ComecarResultadoPage', () => {
       precoMensal: null,
       precoAnual: null,
       percentualEconomiaAnual: null,
+      precoAnualPorMes: null,
+      precoMensalPorDia: null,
     });
   });
 });

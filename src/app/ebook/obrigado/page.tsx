@@ -1,3 +1,4 @@
+import MetaPurchaseEbook from '@/app/components/meta/MetaPurchaseEbook';
 import { obterStripe } from '@/lib/stripe/client';
 import { obterDownloadEbook } from '@/lib/stripe/ebook';
 
@@ -10,6 +11,8 @@ export default async function EbookObrigadoPage({
 
   let confirmado = false;
   let urlDownload: string | null = null;
+  let valor: number | null = null;
+  let moeda: string | null = null;
 
   if (sessionId) {
     const stripe = obterStripe();
@@ -17,6 +20,8 @@ export default async function EbookObrigadoPage({
       const resultado = await obterDownloadEbook(stripe, sessionId);
       confirmado = resultado.confirmado;
       urlDownload = resultado.urlDownload;
+      valor = resultado.valor;
+      moeda = resultado.moeda;
     }
   }
 
@@ -34,6 +39,8 @@ export default async function EbookObrigadoPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-6 text-center">
+      {sessionId && <MetaPurchaseEbook sessionId={sessionId} valor={valor} moeda={moeda} />}
+
       <h1 className="font-display text-2xl font-medium text-texto">Sua compra foi confirmada!</h1>
 
       {urlDownload ? (

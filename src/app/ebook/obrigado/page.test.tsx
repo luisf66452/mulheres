@@ -25,6 +25,8 @@ describe('/ebook/obrigado', () => {
     vi.mocked(obterDownloadEbook).mockResolvedValue({
       confirmado: true,
       urlDownload: 'https://storage.exemplo.com/assinada',
+      valor: 19.99,
+      moeda: 'BRL',
     });
 
     const jsx = await EbookObrigadoPage({ searchParams: Promise.resolve({ session_id: 'cs_pago' }) });
@@ -44,7 +46,7 @@ describe('/ebook/obrigado', () => {
 
   it('mostra mensagem genérica quando o pagamento não está confirmado', async () => {
     vi.mocked(obterStripe).mockReturnValue({} as never);
-    vi.mocked(obterDownloadEbook).mockResolvedValue({ confirmado: false, urlDownload: null });
+    vi.mocked(obterDownloadEbook).mockResolvedValue({ confirmado: false, urlDownload: null, valor: null, moeda: null });
 
     const jsx = await EbookObrigadoPage({ searchParams: Promise.resolve({ session_id: 'cs_nao_pago' }) });
     render(jsx);
@@ -54,7 +56,7 @@ describe('/ebook/obrigado', () => {
 
   it('mostra mensagem de contato quando confirmado mas a signed url falhou', async () => {
     vi.mocked(obterStripe).mockReturnValue({} as never);
-    vi.mocked(obterDownloadEbook).mockResolvedValue({ confirmado: true, urlDownload: null });
+    vi.mocked(obterDownloadEbook).mockResolvedValue({ confirmado: true, urlDownload: null, valor: 19.99, moeda: 'BRL' });
 
     const jsx = await EbookObrigadoPage({ searchParams: Promise.resolve({ session_id: 'cs_pago' }) });
     render(jsx);

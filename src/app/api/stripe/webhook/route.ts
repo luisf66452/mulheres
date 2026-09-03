@@ -62,10 +62,17 @@ export async function POST(request: Request) {
         const subscriptionId =
           typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
 
-        if (!usuariaId || !customerId) {
-          throw new Error(
-            '[stripe/webhook] checkout.session.completed sem usuariaId ou customerId no evento.'
-          );
+        if (!customerId) {
+          throw new Error('[stripe/webhook] checkout.session.completed sem customerId no evento.');
+        }
+
+        // Compra avulsa sem conta vinculada (ex.: order bump da assinatura
+        // no checkout do ebook, que não exige login — ver
+        // /api/stripe/checkout-ebook). Não há perfil pra atualizar; ativar o
+        // Pro pra essa pessoa hoje é manual (metadata.origem = 'ebook_bump'
+        // identifica essas vendas no painel do Stripe).
+        if (!usuariaId) {
+          break;
         }
 
         // Vincula customer/subscription sempre. Só promove a plano 'premium' aqui
@@ -122,6 +129,13 @@ export async function POST(request: Request) {
           throw new Error(`[stripe/webhook] falha ao atualizar perfil em ${evento.type}: ${erroUpdate.message}`);
         }
         if (!atualizado || atualizado.length === 0) {
+          // Assinatura sem usuaria_id nos metadata nunca teve conta vinculada
+          // (ex.: order bump do ebook) — não achar perfil é esperado, não é
+          // falha. Com usuaria_id presente e mesmo assim sem perfil, é uma
+          // divergência real de dados e continua lançando erro.
+          if (!subscription.metadata?.usuaria_id) {
+            break;
+          }
           throw new Error(`[stripe/webhook] ${evento.type}: nenhum perfil encontrado para o customer.`);
         }
         break;
@@ -144,6 +158,11 @@ export async function POST(request: Request) {
           throw new Error(`[stripe/webhook] falha ao atualizar perfil em ${evento.type}: ${erroUpdate.message}`);
         }
         if (!atualizado || atualizado.length === 0) {
+          // Mesmo raciocínio de customer.subscription.updated: assinatura
+          // sem usuaria_id nunca teve perfil (ex.: bump do ebook cancelado).
+          if (!subscription.metadata?.usuaria_id) {
+            break;
+          }
           throw new Error(`[stripe/webhook] ${evento.type}: nenhum perfil encontrado para o customer.`);
         }
         break;

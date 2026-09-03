@@ -95,6 +95,52 @@ const EVENTO_CHECKOUT_COMPLETO_PAGAMENTO_PENDENTE = {
   },
 };
 
+// Compra avulsa sem conta vinculada — ex.: order bump da assinatura no
+// checkout do ebook (/api/stripe/checkout-ebook), que não exige login.
+const EVENTO_CHECKOUT_COMPLETO_SEM_USUARIA = {
+  id: 'evt_checkout_3',
+  type: 'checkout.session.completed',
+  data: {
+    object: {
+      metadata: { origem: 'ebook_bump' },
+      client_reference_id: null,
+      customer: 'cus_guest',
+      subscription: 'sub_guest',
+      payment_status: 'paid',
+    },
+  },
+};
+
+const EVENTO_SUBSCRIPTION_UPDATED_COM_USUARIA = {
+  id: 'evt_sub_1',
+  type: 'customer.subscription.updated',
+  data: {
+    object: {
+      id: 'sub_1',
+      customer: 'cus_1',
+      status: 'active',
+      metadata: { usuaria_id: 'user-1' },
+      items: { data: [{ current_period_end: 1893456000 }] },
+    },
+  },
+};
+
+// Assinatura do bump guest (sem usuaria_id) — customer não corresponde a
+// nenhum perfil porque nunca houve conta criada pra essa compra.
+const EVENTO_SUBSCRIPTION_UPDATED_SEM_USUARIA = {
+  id: 'evt_sub_2',
+  type: 'customer.subscription.updated',
+  data: {
+    object: {
+      id: 'sub_guest',
+      customer: 'cus_guest',
+      status: 'active',
+      metadata: {},
+      items: { data: [{ current_period_end: 1893456000 }] },
+    },
+  },
+};
+
 describe('POST /api/stripe/webhook', () => {
   beforeEach(() => {
     vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'segredo-de-teste');
@@ -168,5 +214,57 @@ describe('POST /api/stripe/webhook', () => {
         stripe_subscription_id: 'sub_1',
       },
     ]);
+  });
+
+  it('não lança erro em checkout.session.completed sem usuária vinculada (compra avulsa, ex.: bump do ebook)', async () => {
+    const stripeFake = criarStripeFake(EVENTO_CHECKOUT_COMPLETO_SEM_USUARIA);
+    const adminFake = criarAdminClienteFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(adminFake as never);
+
+    const resposta = await POST(criarRequisicao());
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(corpo).toEqual({ recebido: true, duplicado: false });
+    expect(adminFake.__chamadasUpdate).toHaveLength(0);
+  });
+
+  it('atualiza o perfil em customer.subscription.updated quando encontra a usuária pelo customer', async () => {
+    const stripeFake = criarStripeFake(EVENTO_SUBSCRIPTION_UPDATED_COM_USUARIA);
+    const adminFake = criarAdminClienteFake({});
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(adminFake as never);
+
+    const resposta = await POST(criarRequisicao());
+
+    expect(resposta.status).toBe(200);
+    expect(adminFake.__chamadasUpdate).toHaveLength(1);
+  });
+
+  it('retorna 500 quando customer.subscription.updated de uma assinatura COM usuária vinculada não encontra o perfil (falha real)', async () => {
+    const spyConsole = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const stripeFake = criarStripeFake(EVENTO_SUBSCRIPTION_UPDATED_COM_USUARIA);
+    const adminFake = criarAdminClienteFake({ linhasAtualizadas: [] });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(adminFake as never);
+
+    const resposta = await POST(criarRequisicao());
+
+    expect(resposta.status).toBe(500);
+    spyConsole.mockRestore();
+  });
+
+  it('não lança erro quando customer.subscription.updated de uma assinatura SEM usuária vinculada não encontra perfil (assinante guest, ex.: bump do ebook)', async () => {
+    const stripeFake = criarStripeFake(EVENTO_SUBSCRIPTION_UPDATED_SEM_USUARIA);
+    const adminFake = criarAdminClienteFake({ linhasAtualizadas: [] });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(adminFake as never);
+
+    const resposta = await POST(criarRequisicao());
+    const corpo = await resposta.json();
+
+    expect(resposta.status).toBe(200);
+    expect(corpo).toEqual({ recebido: true, duplicado: false });
   });
 });

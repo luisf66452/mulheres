@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { obterStripe } from '@/lib/stripe/client';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { gerarUrlDownloadEbook, SEGUNDOS_EXPIRACAO_SIGNED_URL_EMAIL } from '@/lib/stripe/ebook';
+import { enviarEmailDownloadEbook } from '@/lib/email/ebook';
 
 // Único lugar do app que promove/rebaixa perfis.plano — nunca o frontend,
 // nunca a rota de checkout. Só processa eventos com assinatura verificada
@@ -66,15 +68,6 @@ export async function POST(request: Request) {
           throw new Error('[stripe/webhook] checkout.session.completed sem customerId no evento.');
         }
 
-        // Compra avulsa sem conta vinculada (ex.: order bump da assinatura
-        // no checkout do ebook, que não exige login — ver
-        // /api/stripe/checkout-ebook). Não há perfil pra atualizar; ativar o
-        // Pro pra essa pessoa hoje é manual (metadata.origem = 'ebook_bump'
-        // identifica essas vendas no painel do Stripe).
-        if (!usuariaId) {
-          break;
-        }
-
         // Vincula customer/subscription sempre. Só promove a plano 'premium' aqui
         // se o pagamento já está confirmado (payment_status === 'paid') — com
         // meios de pagamento assíncronos (ex.: boleto) este evento chega com a
@@ -83,6 +76,42 @@ export async function POST(request: Request) {
         // confirma a cobrança. Sem essa checagem, a usuária ganharia acesso Pro
         // antes do pagamento ser garantido.
         const pagamentoConfirmado = session.payment_status === 'paid';
+
+        // Compra avulsa sem conta vinculada (ex.: order bump da assinatura
+        // no checkout do ebook, que não exige login — ver
+        // /api/stripe/checkout-ebook). Não há perfil pra atualizar; ativar o
+        // Pro pra essa pessoa hoje é manual (metadata.origem = 'ebook_bump'
+        // identifica essas vendas no painel do Stripe). O que dá pra
+        // automatizar aqui é o envio do link de download do ebook — backup
+        // do link exibido em /ebook/obrigado, pra cliente não ficar sem
+        // acesso se sair da página antes de baixar. Reentregas do Stripe
+        // (duplicado) não reenviam e-mail, só a primeira entrega.
+        if (!usuariaId) {
+          if (pagamentoConfirmado && !duplicado) {
+            const emailCliente = session.customer_details?.email ?? session.customer_email;
+            if (!emailCliente) {
+              console.error('[stripe/webhook] checkout.session.completed sem e-mail do cliente para enviar o ebook', {
+                sessionId: session.id,
+              });
+            } else {
+              const urlDownload = await gerarUrlDownloadEbook(adminClient, SEGUNDOS_EXPIRACAO_SIGNED_URL_EMAIL);
+              if (!urlDownload) {
+                console.error('[stripe/webhook] não foi possível gerar o link do ebook para o e-mail', {
+                  sessionId: session.id,
+                });
+              } else {
+                const enviado = await enviarEmailDownloadEbook(emailCliente, urlDownload);
+                if (!enviado) {
+                  console.error('[stripe/webhook] falha ao enviar e-mail do ebook', {
+                    sessionId: session.id,
+                    emailCliente,
+                  });
+                }
+              }
+            }
+          }
+          break;
+        }
 
         const { data: atualizado, error: erroUpdate } = await adminClient
           .from('perfis')

@@ -6,7 +6,15 @@ import type { PlanoStripe } from '@/lib/stripe/planos';
 import { rastrearEvento as rastrearEventoTikTok } from '@/lib/tiktok/eventos';
 import { rastrearEvento as rastrearEventoMeta } from '@/lib/meta/eventos';
 
-export default function BotaoAssinar({ plano, rotulo }: { plano: PlanoStripe; rotulo: string }) {
+export default function BotaoAssinar({
+  plano,
+  rotulo,
+  promo,
+}: {
+  plano: PlanoStripe;
+  rotulo: string;
+  promo?: string;
+}) {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -17,7 +25,7 @@ export default function BotaoAssinar({ plano, rotulo }: { plano: PlanoStripe; ro
       const resposta = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plano }),
+        body: JSON.stringify({ plano, promo }),
       });
       const dados = await resposta.json();
       if (!resposta.ok || !dados.url) {

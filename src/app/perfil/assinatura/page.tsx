@@ -37,9 +37,9 @@ const ROTULOS_STATUS: Record<string, string> = {
 export default async function AssinaturaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string; session_id?: string }>;
+  searchParams: Promise<{ checkout?: string; session_id?: string; promo?: string }>;
 }) {
-  const { checkout, session_id: sessionId } = await searchParams;
+  const { checkout, session_id: sessionId, promo } = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -147,18 +147,24 @@ export default async function AssinaturaPage({
 
           {!ehPremium && assinaturaConfigurada && (
             <div className="space-y-3 rounded-2xl border border-borda bg-superficie p-4">
+              {promo && (
+                <div className="rounded-xl bg-acao/10 p-3 text-sm text-acao">
+                  Desconto especial aplicado ao assinar 🎉
+                </div>
+              )}
               {(precoMensal || precoAnual) && (
                 <div className="space-y-1 text-sm text-texto-suave">
                   {precoMensal && <p>Mensal: {precoMensal}</p>}
                   {precoAnual && <p>Anual: {precoAnual}</p>}
                 </div>
               )}
-              <BotaoAssinar plano="mensal" rotulo="Assinar mensal" />
+              <BotaoAssinar plano="mensal" rotulo="Assinar mensal" promo={promo} />
               <BotaoAssinar
                 plano="anual"
                 rotulo={
                   percentualEconomiaAnual ? `Assinar anual (economize ${percentualEconomiaAnual}%)` : 'Assinar anual'
                 }
+                promo={promo}
               />
               <p className="text-xs text-texto-suave">
                 Pagamento processado com segurança pelo Stripe. Cancele quando quiser, sem multa.

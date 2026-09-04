@@ -79,6 +79,7 @@ function criarStripeFake(opts: {
   createCustomer?: () => unknown;
   createCheckoutSession?: () => unknown;
   retrievePrice?: () => unknown;
+  listPromotionCodes?: () => unknown;
 }) {
   return {
     customers: {
@@ -102,6 +103,9 @@ function criarStripeFake(opts: {
             },
           }))
       ),
+    },
+    promotionCodes: {
+      list: vi.fn(opts.listPromotionCodes ?? (async () => ({ data: [] }))),
     },
   };
 }
@@ -410,5 +414,44 @@ describe('POST /api/stripe/checkout', () => {
     expect(corpo.moeda).toBeUndefined();
     expect(stripeFake.checkout.sessions.create).not.toHaveBeenCalled();
     spyConsole.mockRestore();
+  });
+
+  it('aplica o desconto quando o corpo traz um código promocional ativo no Stripe', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({
+      listPromotionCodes: async () => ({ data: [{ id: 'promo_123' }] }),
+    });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal', promo: 'ROSE20' }));
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.promotionCodes.list).toHaveBeenCalledWith({ code: 'ROSE20', active: true, limit: 1 });
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ discounts: [{ promotion_code: 'promo_123' }] })
+    );
+  });
+
+  it('ignora um código promocional inexistente/inativo e cria o checkout sem desconto', async () => {
+    const serverFake = criarSupabaseServerFake({
+      user: { id: USUARIA_ID, email: 'usuaria@exemplo.com' },
+      perfil: { stripe_customer_id: 'cus_valido', plano: 'free' },
+    });
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(serverFake as never);
+    vi.mocked(createSupabaseAdminClient).mockReturnValue(criarSupabaseAdminFake() as never);
+    const stripeFake = criarStripeFake({ listPromotionCodes: async () => ({ data: [] }) });
+    vi.mocked(obterStripe).mockReturnValue(stripeFake as never);
+
+    const resposta = await POST(criarRequisicao({ plano: 'mensal', promo: 'CODIGO-INVALIDO' }));
+
+    expect(resposta.status).toBe(200);
+    expect(stripeFake.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.not.objectContaining({ discounts: expect.anything() })
+    );
   });
 });

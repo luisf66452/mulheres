@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ erro: 'Não autenticada.' }, { status: 401 });
   }
 
-  let corpo: { plano?: string };
+  let corpo: { plano?: string; promo?: string };
   try {
     corpo = await request.json();
   } catch {
@@ -116,6 +116,17 @@ export async function POST(request: Request) {
 
     const siteUrl = await obterUrlBaseDoRequest();
 
+    // O código promocional só chega até aqui via link próprio (?promo=...
+    // repassado pela página de assinatura) — nunca um campo digitável pela
+    // usuária no nosso app. Ainda assim, resolve contra o Stripe (em vez de
+    // confiar num id vindo do corpo da requisição) para garantir que só um
+    // Promotion Code realmente ativo é aplicado.
+    let promotionCodeId: string | undefined;
+    if (corpo.promo) {
+      const promotionCodes = await stripe.promotionCodes.list({ code: corpo.promo, active: true, limit: 1 });
+      promotionCodeId = promotionCodes.data[0]?.id;
+    }
+
     // {CHECKOUT_SESSION_ID} é substituído pelo Stripe no redirect real — é o
     // id que a página de sucesso usa para confirmar com o Stripe (fonte de
     // verdade) que o pagamento foi mesmo efetivado, antes de reportar
@@ -131,6 +142,7 @@ export async function POST(request: Request) {
       client_reference_id: user.id,
       subscription_data: { metadata: { usuaria_id: user.id } },
       metadata: { usuaria_id: user.id },
+      ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : {}),
     });
 
     if (!session.url) {

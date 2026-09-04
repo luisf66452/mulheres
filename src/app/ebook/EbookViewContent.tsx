@@ -14,7 +14,7 @@ export default function EbookViewContent() {
     jaDisparou.current = true;
     rastrearEvento('ViewContent', {
       content_name: 'Guia Rose — Ebook 21 dias',
-      value: 19.99,
+      value: 29.99,
       currency: 'BRL',
     });
   }, []);

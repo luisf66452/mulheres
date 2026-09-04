@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { rastrearEvento } from '@/lib/meta/eventos';
 
 const NOME_PRODUTO = 'Guia Rose — Ebook 21 dias';
-const VALOR_PRODUTO = 19.99;
+const VALOR_PRODUTO = 29.99;
 
 type EbookClientProps = {
   precoExibicao: string | null;
@@ -80,7 +80,7 @@ export default function EbookClient({
             className="mt-0.5"
           />
           <span>
-            Quero também a assinatura <strong>Rose Pro</strong> — 1º mês por {precoBumpExibicao ?? 'R$ 39,99'}{' '}
+            Quero também a assinatura <strong>Rose Pro</strong> — 1º mês por {precoBumpExibicao ?? 'R$ 9,99'}{' '}
             (cancele quando quiser)
           </span>
         </label>

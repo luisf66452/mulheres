@@ -31,9 +31,9 @@ const manrope = Manrope({
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Guia Rose — 21 dias pra sair do piloto automático | Ebook por R$ 19,99',
+  title: 'Guia Rose — 21 dias pra sair do piloto automático | Ebook por R$ 29,99',
   description:
-    'Um guia diário, direto ao ponto: 5 a 10 minutos por dia pra voltar a se sentir em casa no seu corpo. 21 práticas, acesso imediato, pagamento único de R$ 19,99.',
+    'Um guia diário, direto ao ponto: 5 a 10 minutos por dia pra voltar a se sentir em casa no seu corpo. 21 práticas, acesso imediato, pagamento único de R$ 29,99.',
   openGraph: {
     title: 'Guia Rose — 21 dias pra sair do piloto automático',
     description:
@@ -107,7 +107,7 @@ const FAQ = [
   },
   {
     pergunta: 'É uma assinatura?',
-    resposta: 'Não. O valor de R$ 19,99 é um pagamento único e o acesso é pra sempre.',
+    resposta: 'Não. O valor de R$ 29,99 é um pagamento único e o acesso é pra sempre.',
   },
   {
     pergunta: 'Preciso imprimir?',
@@ -146,7 +146,7 @@ export default async function EbookPage() {
     }
   }
 
-  const precoFormatado = precoExibicao ?? 'R$ 19,99';
+  const precoFormatado = precoExibicao ?? 'R$ 29,99';
 
   return (
     <main

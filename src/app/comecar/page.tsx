@@ -27,6 +27,24 @@ type EtapaQuiz = 'identificacao' | 'frequencia' | 'objetivo' | 'temas' | 'tempo'
 const BOTAO_OPCAO =
   'rounded-2xl border border-borda bg-superficie p-4 text-left font-medium text-texto-suave transition-colors hover:border-acao';
 
+const NUMERO_DA_ETAPA: Record<EtapaQuiz, number> = {
+  identificacao: 1,
+  frequencia: 2,
+  objetivo: 3,
+  temas: 4,
+  tempo: 5,
+};
+
+const TOTAL_DE_ETAPAS = 5;
+
+function Progresso({ etapa }: { etapa: EtapaQuiz }) {
+  return (
+    <p className="relative text-center text-xs font-medium tracking-wide text-texto-suave uppercase">
+      Pergunta {NUMERO_DA_ETAPA[etapa]} de {TOTAL_DE_ETAPAS}
+    </p>
+  );
+}
+
 export default function ComecarPage() {
   const router = useRouter();
   const [etapa, setEtapa] = useState<EtapaQuiz>('identificacao');
@@ -57,9 +75,15 @@ export default function ComecarPage() {
       <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
         <IlustracaoBotanica tamanho="compacto" />
         <RosasDecorativas tamanho="compacto" />
-        <h1 className="relative text-center font-display text-2xl text-texto">
-          Qual dessas frases mais parece com você hoje?
-        </h1>
+        <div className="relative space-y-2">
+          <Progresso etapa={etapa} />
+          <h1 className="text-center font-display text-2xl text-texto">
+            Qual dessas frases mais parece com você hoje?
+          </h1>
+          <p className="text-center text-sm text-texto-suave">
+            Leva 1 minuto — no final você recebe seu plano personalizado, grátis.
+          </p>
+        </div>
         <div className="relative flex flex-col gap-3">
           {IDENTIFICACAO_OPCOES.map((opcao) => (
             <button
@@ -84,9 +108,10 @@ export default function ComecarPage() {
       <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
         <IlustracaoBotanica tamanho="compacto" />
         <RosasDecorativas tamanho="compacto" />
-        <h1 className="relative text-center font-display text-2xl text-texto">
-          Com que frequência você se sente insatisfeita com sua imagem corporal?
-        </h1>
+        <div className="relative space-y-2">
+          <Progresso etapa={etapa} />
+          <h1 className="text-center font-display text-2xl text-texto">E com que frequência esse sentimento aparece?</h1>
+        </div>
         <div className="relative flex flex-col gap-3">
           {FREQUENCIA_EMOCIONAL_OPCOES.map((opcao) => (
             <button
@@ -111,7 +136,11 @@ export default function ComecarPage() {
       <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
         <IlustracaoBotanica tamanho="compacto" />
         <RosasDecorativas tamanho="compacto" />
-        <h1 className="relative text-center font-display text-2xl text-texto">O que você quer priorizar agora?</h1>
+        <div className="relative space-y-2">
+          <Progresso etapa={etapa} />
+          <h1 className="text-center font-display text-2xl text-texto">O que você quer priorizar agora?</h1>
+          <p className="text-center text-sm text-texto-suave">Isso ajusta o foco do seu plano — dá pra mudar depois.</p>
+        </div>
         <div className="relative flex flex-col gap-3">
           {OBJETIVOS.map((item) => (
             <button
@@ -136,7 +165,13 @@ export default function ComecarPage() {
       <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
         <IlustracaoBotanica tamanho="compacto" />
         <RosasDecorativas tamanho="compacto" />
-        <h1 className="relative text-center font-display text-2xl text-texto">Algum desses temas é sensível para você?</h1>
+        <div className="relative space-y-2">
+          <Progresso etapa={etapa} />
+          <h1 className="text-center font-display text-2xl text-texto">Algum desses temas é sensível para você?</h1>
+          <p className="text-center text-sm text-texto-suave">
+            Isso só ajuda a gente a falar com você do jeito certo. Pode pular se preferir.
+          </p>
+        </div>
         <div className="relative flex flex-col gap-3">
           {TEMAS_SENSIVEIS.filter((tema) => tema.id !== 'prefiro_nao_responder').map((tema) => (
             <button
@@ -165,9 +200,12 @@ export default function ComecarPage() {
     <main className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 overflow-hidden p-6">
       <IlustracaoBotanica tamanho="compacto" />
       <RosasDecorativas tamanho="compacto" />
-      <h1 className="relative text-center font-display text-2xl text-texto">
-        Quanto tempo você consegue reservar por dia pra se cuidar?
-      </h1>
+      <div className="relative space-y-2">
+        <Progresso etapa={etapa} />
+        <h1 className="text-center font-display text-2xl text-texto">
+          Última pergunta: quanto tempo você consegue reservar por dia pra se cuidar?
+        </h1>
+      </div>
       <div className="relative flex flex-col gap-3">
         {TEMPO_DISPONIVEL_OPCOES.map((opcao) => (
           <button key={opcao.id} type="button" className={BOTAO_OPCAO} onClick={() => finalizar(opcao.id)}>

@@ -51,3 +51,6 @@ supabase/.temp
 
 # git worktrees for isolated feature work
 .worktrees/
+
+# superpowers subagent-driven-development scratch workspace (ledgers, briefs, review packages)
+.superpowers/

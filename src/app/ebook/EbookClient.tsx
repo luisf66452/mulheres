@@ -22,7 +22,7 @@ type EbookClientProps = {
 export default function EbookClient({
   precoExibicao,
   location = 'hero',
-  rotulo = 'Quero começar hoje',
+  rotulo = 'Quero minha transformação',
   className = '',
   mostrarBump = false,
   precoBumpExibicao,
@@ -72,7 +72,7 @@ export default function EbookClient({
         </div>
       )}
       {mostrarBump && (
-        <label className="flex items-start gap-2 rounded-xl border border-[var(--eb-ink)]/15 bg-white/60 p-3 text-left text-sm text-[var(--eb-ink)]/80">
+        <label className="flex items-start gap-2 rounded-xl border border-[var(--eb-ink)]/15 bg-[var(--eb-card)]/80 p-3 text-left text-sm text-[var(--eb-ink)]/80">
           <input
             type="checkbox"
             checked={comBump}
@@ -91,7 +91,7 @@ export default function EbookClient({
         disabled={carregando}
         className={
           className ||
-          'ebook-cta-glow w-full rounded-full bg-[var(--eb-bordo)] px-8 py-4 text-center text-sm font-bold tracking-wide text-white uppercase shadow-lg shadow-[var(--eb-bordo)]/25 transition-all hover:-translate-y-0.5 hover:bg-[var(--eb-wine)] disabled:pointer-events-none disabled:opacity-40'
+          'ebook-cta-glow w-full rounded-full bg-[var(--eb-bordo)] px-8 py-6 text-center text-lg font-bold tracking-wide text-white uppercase shadow-lg shadow-[var(--eb-bordo)]/25 transition-all hover:-translate-y-0.5 hover:bg-[var(--eb-wine)] disabled:pointer-events-none disabled:opacity-40'
         }
       >
         {carregando ? 'Abrindo pagamento...' : rotulo}

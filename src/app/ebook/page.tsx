@@ -31,13 +31,13 @@ const manrope = Manrope({
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Guia Rose — 21 dias pra sair do piloto automático | Ebook por R$ 29,99',
+  title: 'Guia Rose — 21 dias pra silenciar os pensamentos que não param | Ebook por R$ 29,99',
   description:
-    'Um guia diário, direto ao ponto: 5 a 10 minutos por dia pra voltar a se sentir em casa no seu corpo. 21 práticas, acesso imediato, pagamento único de R$ 29,99.',
+    'Um guia diário, direto ao ponto: 5 a 10 minutos por dia pra parar de remoer, se comparar e se cobrar. 21 práticas, acesso imediato, pagamento único de R$ 29,99.',
   openGraph: {
-    title: 'Guia Rose — 21 dias pra sair do piloto automático',
+    title: 'Guia Rose — 21 dias pra silenciar os pensamentos que não param',
     description:
-      '5 a 10 minutos por dia pra voltar a se sentir em casa no seu corpo. 21 práticas, acesso imediato, pagamento único.',
+      '5 a 10 minutos por dia pra parar de remoer, se comparar e se cobrar. 21 práticas, acesso imediato, pagamento único.',
     type: 'website',
     images: ['/rose-ebook-capa.png'],
   },
@@ -70,7 +70,7 @@ const FASES = [
   {
     numero: 1,
     titulo: 'Dias 1–7 — Entenda',
-    texto: 'Observe pensamentos, emoções, autocobrança e padrões com mais clareza.',
+    texto: 'Observe os pensamentos que mais se repetem, a autocobrança e os padrões, com mais clareza.',
   },
   {
     numero: 2,
@@ -165,11 +165,11 @@ export default async function EbookPage() {
               ✨ Guia Rose · Ebook
             </span>
             <h1 className="font-[family-name:var(--eb-font-serif)] text-4xl leading-[1.08] font-medium tracking-tight text-[var(--eb-ink)] sm:text-5xl lg:text-6xl">
-              21 dias pra sair do <span className="text-[var(--eb-bordo)]">piloto automático</span>
+              21 dias pra silenciar os <span className="text-[var(--eb-bordo)]">pensamentos que não te deixam em paz</span>
             </h1>
             <p className="mx-auto max-w-md text-lg leading-relaxed text-[var(--eb-ink)]/80 lg:mx-0">
-              Um guia diário, direto ao ponto — 5 a 10 minutos por dia pra voltar a se sentir em casa no seu corpo.
-              Sem dieta, sem cobrança, sem recomeço toda segunda-feira.
+              Um guia diário, direto ao ponto — 5 a 10 minutos por dia pra parar de remoer o mesmo pensamento, de se
+              comparar e de se cobrar. Sem fórmula mágica, sem recomeço toda segunda-feira.
             </p>
             <ul className="mx-auto max-w-md space-y-2.5 text-left">
               {[
@@ -188,6 +188,9 @@ export default async function EbookPage() {
                 </li>
               ))}
             </ul>
+            <p className="mx-auto max-w-md text-sm font-medium text-[var(--eb-bordo)] lg:mx-0">
+              ✓ Conteúdo validado por uma psicóloga
+            </p>
 
             <div
               className="ebook-anim-delay mx-auto max-w-sm space-y-4 rounded-[1.5rem] bg-white p-6 text-center shadow-lg lg:mx-0"
@@ -228,8 +231,8 @@ export default async function EbookPage() {
       <section className="bg-[var(--eb-cream)] px-6 py-16 text-center sm:py-20">
         <div className="mx-auto max-w-3xl space-y-6">
           <blockquote className="font-[family-name:var(--eb-font-serif)] text-2xl leading-snug font-medium text-[var(--eb-ink)] sm:text-3xl">
-            Você se compara. Evita o espelho.{' '}
-            <span className="text-[var(--eb-bordo)]">Sabe que precisa se cuidar — só não sabe por onde começar.</span>
+            Você se compara. Se cobra. O mesmo pensamento volta, de novo e de novo.{' '}
+            <span className="text-[var(--eb-bordo)]">Você sabe que precisa de algo diferente — só não sabe por onde começar.</span>
           </blockquote>
           <p className="text-[var(--eb-ink)]/70">Comece aqui, no dia 1, exatamente como você está agora.</p>
 
@@ -262,7 +265,8 @@ export default async function EbookPage() {
               O que você recebe no Guia Rose
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--eb-ink)]/70">
-              Não é um PDF pra ler e esquecer. É uma jornada pra preencher, praticar e acompanhar durante 21 dias.
+              Não é um PDF pra ler e esquecer. É uma ferramenta pra organizar o que se passa na sua cabeça, dia após
+              dia, durante 21 dias.
             </p>
           </div>
 
@@ -343,7 +347,8 @@ export default async function EbookPage() {
             Comece hoje os seus 21 dias
           </h2>
           <p className="mx-auto mt-3 max-w-md text-[var(--eb-ink)]/70">
-            Você não precisa mudar tudo de uma vez. Só precisa de um primeiro passo — e ele leva 5 minutos.
+            Você não precisa mudar tudo de uma vez. Só precisa de um primeiro passo pra aquietar a mente — e ele leva
+            5 minutos.
           </p>
           <p className="mt-6 font-[family-name:var(--eb-font-serif)] text-5xl font-semibold text-[var(--eb-bordo)] sm:text-6xl">
             {precoFormatado}
@@ -393,16 +398,13 @@ export default async function EbookPage() {
           Rose — Autocuidado, clareza emocional e pequenos recomeços.
         </p>
         <nav className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-[var(--eb-ink)]/70">
-          <a href="#" className="hover:text-[var(--eb-bordo)]">
+          <a href="/privacidade" className="hover:text-[var(--eb-bordo)]">
             Termos de uso
           </a>
-          <a href="#" className="hover:text-[var(--eb-bordo)]">
+          <a href="/privacidade" className="hover:text-[var(--eb-bordo)]">
             Política de privacidade
           </a>
-          <a href="#" className="hover:text-[var(--eb-bordo)]">
-            Política de reembolso
-          </a>
-          <a href="#" className="hover:text-[var(--eb-bordo)]">
+          <a href="mailto:rosewomand123@gmail.com" className="hover:text-[var(--eb-bordo)]">
             Contato
           </a>
         </nav>

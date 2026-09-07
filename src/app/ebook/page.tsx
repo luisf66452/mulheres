@@ -11,7 +11,8 @@ import {
 } from '@/lib/stripe/planos';
 import EbookClient from './EbookClient';
 import EbookViewContent from './EbookViewContent';
-import RamoFloral from './RamoFloral';
+import SetaCompra from './SetaCompra';
+import RevelarAoRolar from './RevelarAoRolar';
 
 const lora = Lora({
   variable: '--eb-font-serif',
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     description:
       '5 a 10 minutos por dia pra parar de remoer, se comparar e se cobrar. 21 práticas, acesso imediato, pagamento único.',
     type: 'website',
-    images: ['/rose-ebook-capa.png'],
+    images: ['/rose-ebook-lifestyle.png'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -156,12 +157,22 @@ export default async function EbookPage() {
 
       {/* 1. HERO */}
       <section className="relative overflow-hidden bg-[var(--eb-blush)]/70 px-6 py-16 sm:py-20">
-        <RamoFloral className="pointer-events-none absolute -top-4 right-2 w-24 opacity-40 sm:w-32" />
-        <RamoFloral className="pointer-events-none absolute -bottom-6 -left-6 w-28 opacity-30 sm:w-36" espelhado />
+        <img
+          src="/ilustracao-superior-direita-flor.png"
+          alt=""
+          aria-hidden="true"
+          className="animate-bloom pointer-events-none absolute -top-6 right-0 w-40 opacity-80 sm:w-56"
+        />
+        <img
+          src="/ilustracao-inferior-esquerda-flor.png"
+          alt=""
+          aria-hidden="true"
+          className="animate-bloom pointer-events-none absolute -bottom-10 -left-6 w-36 opacity-70 sm:w-48"
+        />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           <div className="ebook-anim space-y-6 text-center lg:text-left">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-semibold tracking-[0.08em] text-[var(--eb-bordo)] uppercase shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--eb-card)] px-3.5 py-1.5 text-xs font-semibold tracking-[0.08em] text-[var(--eb-bordo)] uppercase shadow-sm">
               ✨ Guia Rose · Ebook
             </span>
             <h1 className="font-[family-name:var(--eb-font-serif)] text-4xl leading-[1.08] font-medium tracking-tight text-[var(--eb-ink)] sm:text-5xl lg:text-6xl">
@@ -171,7 +182,7 @@ export default async function EbookPage() {
               Um guia diário, direto ao ponto — 5 a 10 minutos por dia pra parar de remoer o mesmo pensamento, de se
               comparar e de se cobrar. Sem fórmula mágica, sem recomeço toda segunda-feira.
             </p>
-            <ul className="mx-auto max-w-md space-y-2.5 text-left">
+            <ul className="mx-auto max-w-md space-y-3 rounded-2xl bg-[var(--eb-noir)] p-5 text-left shadow-lg">
               {[
                 'Uma prática guiada por dia, sem enrolação',
                 'PDF pra ler no celular ou imprimir, no seu ritmo',
@@ -180,11 +191,11 @@ export default async function EbookPage() {
                 <li key={item} className="flex items-start gap-2.5">
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--eb-bordo)] text-xs text-white"
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--eb-rose-soft)] text-xs font-bold text-[var(--eb-noir)]"
                   >
                     ✓
                   </span>
-                  <span className="text-[var(--eb-ink)]/85">{item}</span>
+                  <span className="text-white/90">{item}</span>
                 </li>
               ))}
             </ul>
@@ -193,7 +204,7 @@ export default async function EbookPage() {
             </p>
 
             <div
-              className="ebook-anim-delay mx-auto max-w-sm space-y-4 rounded-[1.5rem] bg-white p-6 text-center shadow-lg lg:mx-0"
+              className="ebook-anim-delay relative mx-auto max-w-sm space-y-4 rounded-[1.5rem] bg-[var(--eb-card)] p-6 text-center shadow-lg lg:mx-0"
               style={{ animationDelay: '0.25s' }}
             >
               <div>
@@ -204,13 +215,16 @@ export default async function EbookPage() {
                   Pagamento único · acesso pra sempre — menos de R$ 0,96 por dia
                 </p>
               </div>
-              <EbookClient
-                precoExibicao={null}
-                location="hero"
-                mostrarBump={Boolean(precoBumpExibicao)}
-                precoBumpExibicao={precoBumpExibicao}
-                precoBumpValor={precoBumpValor}
-              />
+              <div className="relative">
+                <SetaCompra className="pointer-events-none absolute -top-9 right-2 w-14 -rotate-6 sm:-top-10 sm:w-16" />
+                <EbookClient
+                  precoExibicao={null}
+                  location="hero"
+                  mostrarBump={Boolean(precoBumpExibicao)}
+                  precoBumpExibicao={precoBumpExibicao}
+                  precoBumpValor={precoBumpValor}
+                />
+              </div>
               <p className="flex items-center justify-center gap-1.5 text-xs text-[var(--eb-ink)]/55">
                 🛡️ Pagamento seguro pela Stripe
               </p>
@@ -219,24 +233,30 @@ export default async function EbookPage() {
 
           <div className="ebook-anim-delay flex justify-center" style={{ animationDelay: '0.25s' }}>
             <img
-              src="/rose-ebook-capa.png"
-              alt="Capa do ebook Guia Rose: 21 dias pra sair do piloto automático"
-              className="w-64 rounded-2xl shadow-2xl sm:w-80"
+              src="/rose-ebook-lifestyle.png"
+              alt="Mulher lendo o ebook Guia Rose em um tablet, num momento calmo de autocuidado"
+              className="w-72 rounded-2xl shadow-2xl sm:w-96"
             />
           </div>
         </div>
       </section>
 
       {/* 2. IDENTIFICAÇÃO */}
-      <section className="bg-[var(--eb-cream)] px-6 py-16 text-center sm:py-20">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <section className="relative overflow-hidden bg-[var(--eb-cream)] px-6 py-16 text-center sm:py-20">
+        <img
+          src="/ilustracao-superior-direita-flor.png"
+          alt=""
+          aria-hidden="true"
+          className="animate-bloom pointer-events-none absolute -top-8 left-0 w-32 -scale-x-100 opacity-50 sm:w-40"
+        />
+        <RevelarAoRolar className="relative mx-auto max-w-3xl space-y-6">
           <blockquote className="font-[family-name:var(--eb-font-serif)] text-2xl leading-snug font-medium text-[var(--eb-ink)] sm:text-3xl">
             Você se compara. Se cobra. O mesmo pensamento volta, de novo e de novo.{' '}
             <span className="text-[var(--eb-bordo)]">Você sabe que precisa de algo diferente — só não sabe por onde começar.</span>
           </blockquote>
           <p className="text-[var(--eb-ink)]/70">Comece aqui, no dia 1, exatamente como você está agora.</p>
 
-          <div className="mx-auto max-w-xl space-y-4 rounded-2xl border border-[var(--eb-rose-burnt)]/30 bg-white p-6">
+          <div className="mx-auto max-w-xl space-y-4 rounded-2xl border border-[var(--eb-rose-burnt)]/30 bg-[var(--eb-card)] p-6">
             <div className="flex flex-wrap justify-center gap-1.5" aria-hidden="true">
               {DIAS_DO_GUIA.map((dia) => (
                 <span
@@ -254,12 +274,12 @@ export default async function EbookPage() {
             </p>
             <p className="text-sm text-[var(--eb-ink)]/60">Pulou um dia? Sem culpa — é só voltar amanhã de onde parou.</p>
           </div>
-        </div>
+        </RevelarAoRolar>
       </section>
 
       {/* 3. PILHA DE VALOR */}
       <section className="bg-[var(--eb-blush)]/70 px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-5xl">
+        <RevelarAoRolar className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <h2 className="font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
               O que você recebe no Guia Rose
@@ -272,7 +292,7 @@ export default async function EbookPage() {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {PILHA_DE_VALOR.map((item) => (
-              <div key={item} className="flex items-start gap-3 rounded-xl bg-white p-4 shadow-sm">
+              <div key={item} className="flex items-start gap-3 rounded-xl bg-[var(--eb-card)] p-4 shadow-sm">
                 <span aria-hidden="true" className="mt-0.5 text-[var(--eb-bordo)]">
                   ✓
                 </span>
@@ -281,16 +301,18 @@ export default async function EbookPage() {
             ))}
           </div>
 
-          <div className="mt-10 mx-auto max-w-sm space-y-3 text-center">
+          <div className="relative mt-10 mx-auto max-w-sm space-y-3 text-center">
+            <SetaCompra className="pointer-events-none absolute -top-16 right-4 w-20 -rotate-6 sm:w-24" />
             <EbookClient precoExibicao={null} location="valor" />
             <p className="text-xs text-[var(--eb-ink)]/55">Pagamento único · acesso imediato</p>
+            <p className="text-xs font-medium text-[var(--eb-bordo)]">✓ Conteúdo validado por uma psicóloga</p>
           </div>
-        </div>
+        </RevelarAoRolar>
       </section>
 
       {/* 4. COMO FUNCIONA */}
       <section className="bg-[var(--eb-cream)] px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-5xl text-center">
+        <RevelarAoRolar className="mx-auto max-w-5xl text-center">
           <h2 className="font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
             21 dias divididos em três fases
           </h2>
@@ -312,13 +334,16 @@ export default async function EbookPage() {
           <p className="mt-8 flex items-center justify-center gap-2 font-semibold text-[var(--eb-bordo)]">
             🕐 Todos os dias: conteúdo curto + reflexão + exercício + pequena ação.
           </p>
-        </div>
+        </RevelarAoRolar>
       </section>
 
       {/* 5. AUTORIDADE */}
       <section className="bg-[var(--eb-blush)]/70 px-6 py-16 text-center sm:py-20">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
+        <RevelarAoRolar className="mx-auto max-w-4xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--eb-card)] px-3.5 py-1.5 text-xs font-semibold tracking-[0.08em] text-[var(--eb-bordo)] uppercase shadow-sm">
+            🛡️ Compromisso de confiança
+          </span>
+          <h2 className="mt-4 font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
             Criado com cuidado. Validado com responsabilidade.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-[var(--eb-ink)]/75">
@@ -329,20 +354,32 @@ export default async function EbookPage() {
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {AUTORIDADE.map((item) => (
-              <div key={item.texto} className="rounded-2xl bg-white p-6 shadow-sm">
-                <span aria-hidden="true" className="text-2xl">
+              <div
+                key={item.texto}
+                className="rounded-2xl border-2 border-[var(--eb-rose-soft)] bg-[var(--eb-card)] p-6 shadow-sm transition-transform hover:-translate-y-1"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--eb-rose-soft)] text-2xl ring-4 ring-[var(--eb-rose-soft)]/40"
+                >
                   {item.icone}
                 </span>
                 <p className="mt-3 text-sm font-medium text-[var(--eb-ink)]">{item.texto}</p>
               </div>
             ))}
           </div>
-        </div>
+        </RevelarAoRolar>
       </section>
 
       {/* 6. OFERTA FINAL */}
-      <section className="bg-[var(--eb-wine)] px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-2xl rounded-[2rem] bg-[var(--eb-cream)] p-8 text-center shadow-2xl sm:p-12">
+      <section className="relative overflow-hidden bg-[var(--eb-wine)] px-6 py-16 sm:py-20">
+        <img
+          src="/ilustracao-inferior-esquerda-flor.png"
+          alt=""
+          aria-hidden="true"
+          className="animate-bloom pointer-events-none absolute -bottom-8 -right-6 w-40 -scale-x-100 opacity-60 sm:w-52"
+        />
+        <RevelarAoRolar className="relative mx-auto max-w-2xl rounded-[2rem] bg-[var(--eb-card)] p-8 text-center shadow-2xl sm:p-12">
           <h2 className="font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
             Comece hoje os seus 21 dias
           </h2>
@@ -355,22 +392,20 @@ export default async function EbookPage() {
           </p>
           <p className="mt-1 text-sm text-[var(--eb-ink)]/60">Pagamento único · acesso pra sempre</p>
 
-          <div className="mt-6">
-            <EbookClient
-              precoExibicao={null}
-              location="oferta-final"
-              className="ebook-cta-glow w-full rounded-full bg-[var(--eb-bordo)] px-8 py-4 text-center text-sm font-bold tracking-wide text-white uppercase shadow-lg shadow-[var(--eb-bordo)]/25 transition-all hover:-translate-y-0.5 hover:bg-[var(--eb-wine)] disabled:pointer-events-none disabled:opacity-40"
-            />
+          <div className="relative mt-6">
+            <SetaCompra className="pointer-events-none absolute -top-9 right-4 w-14 -rotate-6 sm:w-16" />
+            <EbookClient precoExibicao={null} location="oferta-final" />
           </div>
           <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[var(--eb-ink)]/55">
             🛡️ Pagamento seguro pela Stripe
           </p>
-        </div>
+          <p className="mt-1 text-xs font-medium text-[var(--eb-bordo)]">✓ Conteúdo validado por uma psicóloga</p>
+        </RevelarAoRolar>
       </section>
 
       {/* 7. FAQ */}
       <section className="bg-[var(--eb-cream)] px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-3xl">
+        <RevelarAoRolar className="mx-auto max-w-3xl">
           <h2 className="text-center font-[family-name:var(--eb-font-serif)] text-3xl font-medium text-[var(--eb-ink)] sm:text-4xl">
             Perguntas frequentes
           </h2>
@@ -389,7 +424,7 @@ export default async function EbookPage() {
               </details>
             ))}
           </div>
-        </div>
+        </RevelarAoRolar>
       </section>
 
       {/* 8. RODAPÉ */}
@@ -422,7 +457,7 @@ export default async function EbookPage() {
         <EbookClient
           precoExibicao={null}
           location="sticky-mobile"
-          rotulo="Começar agora"
+          rotulo="Minha transformação"
           className="ebook-cta-glow shrink-0 rounded-full bg-[var(--eb-bordo)] px-5 py-2.5 text-xs font-bold tracking-wide text-white uppercase shadow-md transition-all hover:bg-[var(--eb-wine)] disabled:pointer-events-none disabled:opacity-40"
         />
       </div>
@@ -431,9 +466,12 @@ export default async function EbookPage() {
         .pagina-ebook {
           --eb-blush: #f9edef;
           --eb-cream: #fff9f8;
+          --eb-card: #fffdfb;
+          --eb-rose-soft: #f6dbe1;
           --eb-rose-burnt: #c96a87;
           --eb-bordo: #8f274d;
           --eb-wine: #641d38;
+          --eb-noir: #2b1620;
           --eb-ink: #442d35;
         }
         @keyframes eb-drift-up {
@@ -449,20 +487,26 @@ export default async function EbookPage() {
           50% { transform: scale(1.15); opacity: 0.85; }
         }
         @keyframes eb-glow-cta {
-          0%, 100% { box-shadow: 0 10px 30px -8px rgba(143, 39, 77, 0.45); }
-          50% { box-shadow: 0 14px 40px -6px rgba(143, 39, 77, 0.65); }
+          0%, 100% { box-shadow: 0 10px 30px -8px rgba(143, 39, 77, 0.45); transform: scale(1); }
+          50% { box-shadow: 0 16px 46px -6px rgba(143, 39, 77, 0.7); transform: scale(1.035); }
+        }
+        @keyframes eb-seta-aponta {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(-4px, 6px) rotate(-6deg); }
         }
         .pagina-ebook .ebook-anim { animation: eb-drift-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .pagina-ebook .ebook-anim-delay { animation: eb-drift-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .pagina-ebook .animate-bloom { animation: eb-bloom-sway 7s ease-in-out infinite; }
         .pagina-ebook .ebook-ponto { animation: eb-pulse-soft 4.5s ease-in-out infinite; }
-        .pagina-ebook .ebook-cta-glow { animation: eb-glow-cta 3s ease-in-out infinite; }
+        .pagina-ebook .ebook-cta-glow { animation: eb-glow-cta 2.4s ease-in-out infinite; }
+        .pagina-ebook .ebook-seta { animation: eb-seta-aponta 1.6s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .pagina-ebook .ebook-anim,
           .pagina-ebook .ebook-anim-delay,
           .pagina-ebook .animate-bloom,
           .pagina-ebook .ebook-ponto,
-          .pagina-ebook .ebook-cta-glow {
+          .pagina-ebook .ebook-cta-glow,
+          .pagina-ebook .ebook-seta {
             animation: none;
           }
         }

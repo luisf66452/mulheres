@@ -11,7 +11,6 @@ import {
 } from '@/lib/stripe/planos';
 import EbookClient from './EbookClient';
 import EbookViewContent from './EbookViewContent';
-import SetaCompra from './SetaCompra';
 import RevelarAoRolar from './RevelarAoRolar';
 
 const lora = Lora({
@@ -215,16 +214,13 @@ export default async function EbookPage() {
                   Pagamento único · acesso pra sempre — menos de R$ 0,96 por dia
                 </p>
               </div>
-              <div className="relative">
-                <SetaCompra className="pointer-events-none absolute -top-9 right-2 w-14 -rotate-6 sm:-top-10 sm:w-16" />
-                <EbookClient
-                  precoExibicao={null}
-                  location="hero"
-                  mostrarBump={Boolean(precoBumpExibicao)}
-                  precoBumpExibicao={precoBumpExibicao}
-                  precoBumpValor={precoBumpValor}
-                />
-              </div>
+              <EbookClient
+                precoExibicao={null}
+                location="hero"
+                mostrarBump={Boolean(precoBumpExibicao)}
+                precoBumpExibicao={precoBumpExibicao}
+                precoBumpValor={precoBumpValor}
+              />
               <p className="flex items-center justify-center gap-1.5 text-xs text-[var(--eb-ink)]/55">
                 🛡️ Pagamento seguro pela Stripe
               </p>
@@ -301,8 +297,7 @@ export default async function EbookPage() {
             ))}
           </div>
 
-          <div className="relative mt-10 mx-auto max-w-sm space-y-3 text-center">
-            <SetaCompra className="pointer-events-none absolute -top-16 right-4 w-20 -rotate-6 sm:w-24" />
+          <div className="mt-10 mx-auto max-w-sm space-y-3 text-center">
             <EbookClient precoExibicao={null} location="valor" />
             <p className="text-xs text-[var(--eb-ink)]/55">Pagamento único · acesso imediato</p>
             <p className="text-xs font-medium text-[var(--eb-bordo)]">✓ Conteúdo validado por uma psicóloga</p>
@@ -392,8 +387,7 @@ export default async function EbookPage() {
           </p>
           <p className="mt-1 text-sm text-[var(--eb-ink)]/60">Pagamento único · acesso pra sempre</p>
 
-          <div className="relative mt-6">
-            <SetaCompra className="pointer-events-none absolute -top-9 right-4 w-14 -rotate-6 sm:w-16" />
+          <div className="mt-6">
             <EbookClient precoExibicao={null} location="oferta-final" />
           </div>
           <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[var(--eb-ink)]/55">
@@ -490,23 +484,17 @@ export default async function EbookPage() {
           0%, 100% { box-shadow: 0 10px 30px -8px rgba(143, 39, 77, 0.45); transform: scale(1); }
           50% { box-shadow: 0 16px 46px -6px rgba(143, 39, 77, 0.7); transform: scale(1.035); }
         }
-        @keyframes eb-seta-aponta {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(-4px, 6px) rotate(-6deg); }
-        }
         .pagina-ebook .ebook-anim { animation: eb-drift-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .pagina-ebook .ebook-anim-delay { animation: eb-drift-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .pagina-ebook .animate-bloom { animation: eb-bloom-sway 7s ease-in-out infinite; }
         .pagina-ebook .ebook-ponto { animation: eb-pulse-soft 4.5s ease-in-out infinite; }
         .pagina-ebook .ebook-cta-glow { animation: eb-glow-cta 2.4s ease-in-out infinite; }
-        .pagina-ebook .ebook-seta { animation: eb-seta-aponta 1.6s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .pagina-ebook .ebook-anim,
           .pagina-ebook .ebook-anim-delay,
           .pagina-ebook .animate-bloom,
           .pagina-ebook .ebook-ponto,
-          .pagina-ebook .ebook-cta-glow,
-          .pagina-ebook .ebook-seta {
+          .pagina-ebook .ebook-cta-glow {
             animation: none;
           }
         }

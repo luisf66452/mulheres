@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { rastrearEvento, jaDisparado, marcarDisparado } from '@/lib/meta/eventos';
+import { rastrearEvento, jaDisparado, marcarDisparado, aoFbqFicarDisponivel } from '@/lib/meta/eventos';
 
 // Montado em /perfil/assinatura junto com TikTokPurchase, só quando a
 // usuária volta do Stripe com ?checkout=sucesso&session_id=... (ver
@@ -29,11 +29,13 @@ export default function MetaSubscribe({ sessionId }: { sessionId: string }) {
         const dados = await resposta.json();
 
         if (resposta.ok && dados.confirmado) {
-          rastrearEvento('Subscribe', {
-            value: dados.valor ?? undefined,
-            currency: dados.moeda ?? undefined,
+          aoFbqFicarDisponivel(() => {
+            rastrearEvento('Subscribe', {
+              value: dados.valor ?? undefined,
+              currency: dados.moeda ?? undefined,
+            });
+            marcarDisparado(chaveDedup);
           });
-          marcarDisparado(chaveDedup);
         }
       } catch {
         // Falha de rede ao confirmar não deve quebrar a página de

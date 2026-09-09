@@ -11,9 +11,37 @@ declare global {
   }
 }
 
-export function rastrearEvento(evento: string, params?: Record<string, unknown>): void {
-  if (typeof window === 'undefined' || !window.fbq) return;
+export function rastrearEvento(evento: string, params?: Record<string, unknown>): boolean {
+  if (typeof window === 'undefined' || !window.fbq) return false;
   window.fbq('track', evento, params);
+  return true;
+}
+
+// No carregamento inicial da página, o pixel base (FacebookPixel.tsx) ainda
+// não existe enquanto a usuária não aceitar o banner de cookies — então um
+// evento disparado direto no mount (ex.: ViewContent) quase sempre perde a
+// corrida contra a decisão do banner e o `rastrearEvento` vira um no-op
+// silencioso. Esta função tenta na hora e, se `fbq` ainda não existir, fica
+// tentando de novo por um tempo (o suficiente pra cobrir o tempo até a
+// usuária decidir sobre o consentimento) em vez de desistir de vez.
+export function aoFbqFicarDisponivel(callback: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  if (window.fbq) {
+    callback();
+    return () => {};
+  }
+  const intervalo = window.setInterval(() => {
+    if (window.fbq) {
+      window.clearInterval(intervalo);
+      callback();
+    }
+  }, 300);
+  const TEMPO_LIMITE_MS = 30_000;
+  const limite = window.setTimeout(() => window.clearInterval(intervalo), TEMPO_LIMITE_MS);
+  return () => {
+    window.clearInterval(intervalo);
+    window.clearTimeout(limite);
+  };
 }
 
 // PageView em navegação client-side (App Router não recarrega a página, então

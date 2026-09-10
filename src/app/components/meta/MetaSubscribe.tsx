@@ -30,10 +30,14 @@ export default function MetaSubscribe({ sessionId }: { sessionId: string }) {
 
         if (resposta.ok && dados.confirmado) {
           aoFbqFicarDisponivel(() => {
-            rastrearEvento('Subscribe', {
-              value: dados.valor ?? undefined,
-              currency: dados.moeda ?? undefined,
-            });
+            rastrearEvento(
+              'Subscribe',
+              {
+                value: dados.valor ?? undefined,
+                currency: dados.moeda ?? undefined,
+              },
+              sessionId
+            );
             marcarDisparado(chaveDedup);
           });
         }

@@ -11,9 +11,17 @@ declare global {
   }
 }
 
-export function rastrearEvento(evento: string, params?: Record<string, unknown>): boolean {
+// `eventId`, quando informado, é repassado como `eventID` do fbq — deve ser
+// o mesmo id usado na chamada equivalente da Conversions API no servidor
+// (ver src/lib/meta/conversionsApi.ts), para a Meta deduplicar o evento
+// quando os dois canais disparam para a mesma conversão.
+export function rastrearEvento(evento: string, params?: Record<string, unknown>, eventId?: string): boolean {
   if (typeof window === 'undefined' || !window.fbq) return false;
-  window.fbq('track', evento, params);
+  if (eventId) {
+    window.fbq('track', evento, params, { eventID: eventId });
+  } else {
+    window.fbq('track', evento, params);
+  }
   return true;
 }
 

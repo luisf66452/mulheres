@@ -33,10 +33,14 @@ export default function MetaPurchaseEbook({
       if (executouNestaMontagem.current) return;
       executouNestaMontagem.current = true;
 
-      rastrearEvento('Purchase', {
-        value: valor ?? undefined,
-        currency: moeda ?? undefined,
-      });
+      rastrearEvento(
+        'Purchase',
+        {
+          value: valor ?? undefined,
+          currency: moeda ?? undefined,
+        },
+        sessionId
+      );
       marcarDisparado(chaveDedup);
     });
   }, [sessionId, valor, moeda]);

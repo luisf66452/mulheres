@@ -20,7 +20,11 @@ describe('MetaPurchaseEbook', () => {
 
     render(<MetaPurchaseEbook sessionId="cs_ebook_123" valor={19.99} moeda="BRL" />);
 
-    await waitFor(() => expect(chamadas).toEqual([['track', 'Purchase', { value: 19.99, currency: 'BRL' }]]));
+    await waitFor(() =>
+      expect(chamadas).toEqual([
+        ['track', 'Purchase', { value: 19.99, currency: 'BRL' }, { eventID: 'cs_ebook_123' }],
+      ])
+    );
     expect(jaDisparado('purchase-ebook:cs_ebook_123')).toBe(true);
   });
 
@@ -31,7 +35,9 @@ describe('MetaPurchaseEbook', () => {
     render(<MetaPurchaseEbook sessionId="cs_ebook_456" valor={null} moeda={null} />);
 
     await waitFor(() =>
-      expect(chamadas).toEqual([['track', 'Purchase', { value: undefined, currency: undefined }]])
+      expect(chamadas).toEqual([
+        ['track', 'Purchase', { value: undefined, currency: undefined }, { eventID: 'cs_ebook_456' }],
+      ])
     );
   });
 

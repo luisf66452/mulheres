@@ -4,6 +4,7 @@ import { obterStripe } from '@/lib/stripe/client';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { gerarUrlDownloadEbook, SEGUNDOS_EXPIRACAO_SIGNED_URL_EMAIL } from '@/lib/stripe/ebook';
 import { enviarEmailDownloadEbook } from '@/lib/email/ebook';
+import { enviarEventoConversionsApi } from '@/lib/meta/conversionsApi';
 
 // Único lugar do app que promove/rebaixa perfis.plano — nunca o frontend,
 // nunca a rota de checkout. Só processa eventos com assinatura verificada
@@ -109,6 +110,21 @@ export async function POST(request: Request) {
                 }
               }
             }
+
+            // Reporta o Purchase pra Meta direto do servidor — não depende
+            // da cliente aceitar cookies de marketing nem de ela não ter
+            // bloqueador de anúncios (ver MetaPurchaseEbook.tsx, que reporta
+            // o mesmo evento pelo navegador com o mesmo session.id como
+            // eventId, para a Meta deduplicar os dois disparos).
+            await enviarEventoConversionsApi({
+              nomeEvento: 'Purchase',
+              eventId: session.id,
+              value: typeof session.amount_total === 'number' ? session.amount_total / 100 : undefined,
+              currency: session.currency ? session.currency.toUpperCase() : undefined,
+              urlOrigem: process.env.NEXT_PUBLIC_SITE_URL
+                ? `${process.env.NEXT_PUBLIC_SITE_URL}/ebook/obrigado`
+                : undefined,
+            });
           }
           break;
         }
@@ -132,6 +148,21 @@ export async function POST(request: Request) {
           throw new Error(
             '[stripe/webhook] checkout.session.completed: nenhum perfil encontrado para a usuária.'
           );
+        }
+
+        // Mesma lógica do bump do ebook acima: reporta o Subscribe direto do
+        // servidor, complementando o disparo do navegador (ver
+        // MetaSubscribe.tsx), que usa o mesmo session.id como eventId.
+        if (pagamentoConfirmado && !duplicado) {
+          await enviarEventoConversionsApi({
+            nomeEvento: 'Subscribe',
+            eventId: session.id,
+            value: typeof session.amount_total === 'number' ? session.amount_total / 100 : undefined,
+            currency: session.currency ? session.currency.toUpperCase() : undefined,
+            urlOrigem: process.env.NEXT_PUBLIC_SITE_URL
+              ? `${process.env.NEXT_PUBLIC_SITE_URL}/perfil/assinatura`
+              : undefined,
+          });
         }
         break;
       }

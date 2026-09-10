@@ -28,7 +28,11 @@ describe('MetaSubscribe', () => {
 
     render(<MetaSubscribe sessionId="sess_123" />);
 
-    await waitFor(() => expect(chamadas).toEqual([['track', 'Subscribe', { value: 19.9, currency: 'BRL' }]]));
+    await waitFor(() =>
+      expect(chamadas).toEqual([
+        ['track', 'Subscribe', { value: 19.9, currency: 'BRL' }, { eventID: 'sess_123' }],
+      ])
+    );
     expect(jaDisparado('subscribe:sess_123')).toBe(true);
   });
 

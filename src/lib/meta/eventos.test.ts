@@ -24,6 +24,17 @@ describe('rastrearEvento', () => {
 
     expect(chamadas).toEqual([['track', 'Subscribe', { value: 19.9, currency: 'BRL' }]]);
   });
+
+  it('inclui eventID quando um eventId é passado, para a Meta deduplicar com a Conversions API', () => {
+    const chamadas: unknown[][] = [];
+    window.fbq = (...args: unknown[]) => chamadas.push(args);
+
+    rastrearEvento('Purchase', { value: 19.9, currency: 'BRL' }, 'cs_teste_123');
+
+    expect(chamadas).toEqual([
+      ['track', 'Purchase', { value: 19.9, currency: 'BRL' }, { eventID: 'cs_teste_123' }],
+    ]);
+  });
 });
 
 describe('rastrearPageView', () => {

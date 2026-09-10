@@ -5,6 +5,7 @@ import { obterStripe } from '@/lib/stripe/client';
 import { obterCustomerValido } from '@/lib/stripe/customer';
 import { ehPlanoValido, obterMoedaELocaleDoPais, obterPriceId, obterUnitAmountNaMoeda } from '@/lib/stripe/planos';
 import { obterUrlBaseDoRequest } from '@/lib/site-url';
+import { obterDadosClienteParaMetadata } from '@/lib/meta/dadosCliente';
 
 // Cria uma Checkout Session do Stripe para a usuária autenticada assinar o
 // Rose Pro. Nunca ativa o plano diretamente aqui — quem promove
@@ -131,6 +132,13 @@ export async function POST(request: Request) {
     // id que a página de sucesso usa para confirmar com o Stripe (fonte de
     // verdade) que o pagamento foi mesmo efetivado, antes de reportar
     // Purchase ao TikTok Pixel (ver /api/stripe/confirmar-pagamento).
+    // client_ip/client_ua: capturados aqui porque é o único ponto do fluxo
+    // em que o request vem direto do navegador da usuária — o webhook do
+    // Stripe (que usa esses dados pra reportar o Subscribe na Conversions
+    // API) só recebe requests dos servidores do Stripe. Ver
+    // src/lib/meta/dadosCliente.ts.
+    const { ip, userAgent } = obterDadosClienteParaMetadata(request);
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -141,7 +149,11 @@ export async function POST(request: Request) {
       cancel_url: `${siteUrl}/perfil/assinatura?checkout=cancelado`,
       client_reference_id: user.id,
       subscription_data: { metadata: { usuaria_id: user.id } },
-      metadata: { usuaria_id: user.id },
+      metadata: {
+        usuaria_id: user.id,
+        ...(ip ? { client_ip: ip } : {}),
+        ...(userAgent ? { client_ua: userAgent } : {}),
+      },
       ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : {}),
     });
 

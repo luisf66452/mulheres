@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 import { obterStripe } from '@/lib/stripe/client';
 import { obterMoedaELocaleDoPais, obterPriceId, obterPriceIdEbook, obterUnitAmountNaMoeda } from '@/lib/stripe/planos';
 import { obterUrlBaseDoRequest } from '@/lib/site-url';
+import { obterDadosClienteParaMetadata } from '@/lib/meta/dadosCliente';
 
 // Cria uma Checkout Session avulsa (mode: 'payment') para o ebook "Rose
 // Reset 21 dias" — sem autenticação, sem Customer vinculado a conta,
@@ -59,7 +60,17 @@ export async function POST(request: Request) {
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [{ price: priceId, quantity: 1 }];
     let mode: Stripe.Checkout.SessionCreateParams.Mode = 'payment';
-    let metadata: Record<string, string> | undefined;
+
+    // client_ip/client_ua: capturados aqui porque é o único ponto do fluxo
+    // em que o request vem direto do navegador da cliente — o webhook do
+    // Stripe (que usa esses dados pra reportar o Purchase na Conversions
+    // API) só recebe requests dos servidores do Stripe. Ver
+    // src/lib/meta/dadosCliente.ts.
+    const { ip, userAgent } = obterDadosClienteParaMetadata(request);
+    const metadata: Record<string, string> = {
+      ...(ip ? { client_ip: ip } : {}),
+      ...(userAgent ? { client_ua: userAgent } : {}),
+    };
 
     if (comBump) {
       const bumpPriceId = obterPriceId('mensal');
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
         if (bumpUnitAmount !== null) {
           lineItems.push({ price: bumpPriceId, quantity: 1 });
           mode = 'subscription';
-          metadata = { origem: 'ebook_bump' };
+          metadata.origem = 'ebook_bump';
         }
       }
     }
@@ -83,7 +94,7 @@ export async function POST(request: Request) {
       locale,
       success_url: `${siteUrl}/ebook/obrigado?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/ebook`,
-      ...(metadata ? { metadata } : {}),
+      ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
     });
 
     if (!session.url) {

@@ -124,6 +124,8 @@ export async function POST(request: Request) {
               urlOrigem: process.env.NEXT_PUBLIC_SITE_URL
                 ? `${process.env.NEXT_PUBLIC_SITE_URL}/ebook/obrigado`
                 : undefined,
+              clientIpAddress: session.metadata?.client_ip,
+              clientUserAgent: session.metadata?.client_ua,
             });
           }
           break;
@@ -162,6 +164,8 @@ export async function POST(request: Request) {
             urlOrigem: process.env.NEXT_PUBLIC_SITE_URL
               ? `${process.env.NEXT_PUBLIC_SITE_URL}/perfil/assinatura`
               : undefined,
+            clientIpAddress: session.metadata?.client_ip,
+            clientUserAgent: session.metadata?.client_ua,
           });
         }
         break;

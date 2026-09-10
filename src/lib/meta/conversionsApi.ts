@@ -8,8 +8,12 @@
 // os dois caminhos disparam.
 //
 // Segue a mesma política de privacidade do pixel do navegador: nenhum dado
-// pessoal (email, telefone, nome) é enviado, só os parâmetros mínimos de
-// conversão.
+// pessoal (email, telefone, nome) é enviado — só client_ip_address e
+// client_user_agent (metadados padrão de qualquer request HTTP, não PII no
+// mesmo sentido) e os parâmetros mínimos de conversão. A própria Meta EXIGE
+// pelo menos um dado de identificação do cliente: sem isso, ela recusa o
+// evento com HTTP 400 ("Invalid parameter" / error_subcode 2804050) — não é
+// opcional, foi confirmado testando contra a API real.
 
 const VERSAO_GRAPH_API = 'v21.0';
 
@@ -19,6 +23,8 @@ type EventoConversionsApi = {
   value?: number;
   currency?: string;
   urlOrigem?: string;
+  clientIpAddress?: string;
+  clientUserAgent?: string;
 };
 
 export async function enviarEventoConversionsApi(evento: EventoConversionsApi): Promise<void> {
@@ -28,6 +34,17 @@ export async function enviarEventoConversionsApi(evento: EventoConversionsApi): 
   if (!pixelId || !tokenAcesso) {
     // Sem configuração, o evento simplesmente não é enviado por este canal
     // — o webhook do Stripe continua funcionando normalmente.
+    return;
+  }
+
+  if (!evento.clientIpAddress && !evento.clientUserAgent) {
+    // Sem nenhum dado de identificação do cliente a Meta recusa o evento de
+    // qualquer forma (ver comentário acima) — evita a chamada fadada a
+    // falhar e o log de erro correspondente.
+    console.error('[meta/conversionsApi] evento sem client_ip_address/client_user_agent, não enviado', {
+      nomeEvento: evento.nomeEvento,
+      eventId: evento.eventId,
+    });
     return;
   }
 
@@ -44,6 +61,10 @@ export async function enviarEventoConversionsApi(evento: EventoConversionsApi): 
             event_id: evento.eventId,
             action_source: 'website',
             event_source_url: evento.urlOrigem,
+            user_data: {
+              client_ip_address: evento.clientIpAddress,
+              client_user_agent: evento.clientUserAgent,
+            },
             custom_data: {
               value: evento.value,
               currency: evento.currency,
